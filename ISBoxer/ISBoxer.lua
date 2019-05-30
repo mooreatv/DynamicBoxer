@@ -153,7 +153,7 @@ function isboxer.LoadBinds()
 			isboxer.Character.LoadBinds();
 			isboxer.Output("WoW Macros for Character '"..isboxer.Character.Name.."' in Set '"..isboxer.CharacterSet.Name.."' Loaded.");
 			if (isboxer.Character.ActualName~="*" and isboxer.Character.ActualName:upper()~=GetUnitName("player"):upper()) then
-				if not DynamicBoxer.DynamicInit(isboxer.Character.ActualName, GetUnitName("player")) then
+				if not DynamicBoxer.DynamicSetup(isboxer.Character.ActualName, GetUnitName("player")) then
 					StaticPopupDialogs["ISBOXER_WRONGCHARACTER"] = {
 				  	text = "We are soon replacing "..isboxer.Character.ActualName.." dynamically by "..GetUnitName("player")..".",
 				  	button1 = OKAY,

@@ -45,23 +45,31 @@ DynamicBoxer.channelId = nil
 function DynamicBoxer.Sync()
   if DynamicBoxer.maxIter <= 0 or DynamicBoxer.teamComplete then
     -- TODO: unregister the event/cb/timer
-    --DynamicBoxer.Debug("CB shouldn't be called when maxIter is " .. DynamicBoxer.maxIter .. " or teamComplete is " ..
+    -- DynamicBoxer.Debug("CB shouldn't be called when maxIter is " .. DynamicBoxer.maxIter .. " or teamComplete is " ..
     --                     tostring(DynamicBoxer.teamComplete))
     return
+  end
+  if not DynamicBoxer.channelId then
+    DynamicBoxer.DynamicInit()
   end
   DynamicBoxer.maxIter = DynamicBoxer.maxIter - 1
   DynamicBoxer.Debug("Sync CB called for slot " .. DynamicBoxer.slot .. ", actual " .. DynamicBoxer.actual .. ", maxIter is now " ..
                        DynamicBoxer.maxIter)
-  local ret = C_ChatInfo.SendAddonMessage(DynamicBoxer.chatPrefix, DynamicBoxer.slot .. " is " .. DynamicBoxer.actual, "CHANNEL",
-                                          DynamicBoxer.channelId)
+  local payload = DynamicBoxer.slot .. " is " .. DynamicBoxer.actual .. " msg " .. tostring(DynamicBoxer.maxIter)
+  local ret = C_ChatInfo.SendAddonMessage(DynamicBoxer.chatPrefix, payload, "CHANNEL", DynamicBoxer.channelId)
   DynamicBoxer.Debug("Message success " .. tostring(ret) .. " on chanId " .. tostring(DynamicBoxer.channelId))
 end
 
 function DynamicBoxer.OnUpdate(self, elapsed)
   local now = GetTime()
   if now >= DynamicBoxer.nextUpdate then
+    -- skip the very first time
+    if DynamicBoxer.nextUpdate ~= 0 then
+      DynamicBoxer.Sync()
+    else
+      DynamicBoxer.Debug("Skipping first timer event")
+    end
     DynamicBoxer.nextUpdate = now + DynamicBoxer.refresh
-    DynamicBoxer.Sync()
   end
 end
 
@@ -71,7 +79,7 @@ function DynamicBoxer.OnChatEvent(this, event, prefix, data, channel, sender, zo
                        " name=" .. name .. ", instance = " .. tostring(instanceID))
 end
 
-function DynamicBoxer.DynamicInit(slot, actual)
+function DynamicBoxer.DynamicSetup(slot, actual)
   DynamicBoxer.slot = slot
   DynamicBoxer.actual = actual
   if DynamicBoxer.frame == nil then
@@ -80,10 +88,14 @@ function DynamicBoxer.DynamicInit(slot, actual)
   DynamicBoxer.frame:SetScript("OnUpdate", DynamicBoxer.OnUpdate)
   DynamicBoxer.frame:SetScript("OnEvent", DynamicBoxer.OnChatEvent)
   DynamicBoxer.frame:RegisterEvent("CHAT_MSG_ADDON")
-  DynamicBoxer.Join()
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DynamicBoxer.chatPrefix)
   DynamicBoxer.Debug("Prefix register success " .. tostring(ret))
-  return true -- TODO: only return true if we are setup
+  return true -- TODO: only return true if we are good to go (but then the sync may take a while and fail later)
+end
+
+function DynamicBoxer.DynamicInit(slot, actual)
+  DynamicBoxer.Debug("Delayed init called")
+  DynamicBoxer.Join()
 end
 
 function DynamicBoxer.Join()
