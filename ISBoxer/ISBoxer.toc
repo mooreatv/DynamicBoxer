@@ -1,0 +1,12 @@
+## Interface: 80000
+## Title: ISBoxer
+## Author: Joe Thaler
+## Version: 1.0
+## eMail: lax@lavishsoft.com
+## URL: http://isboxer.com
+## DefaultState: Enabled
+## LoadOnDemand: 0
+ISBoxer.lua
+
+ISBoxer_Character_Set.lua
+ISBoxer_Character.lua
