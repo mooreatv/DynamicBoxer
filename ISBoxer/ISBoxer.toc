@@ -1,12 +1,14 @@
 ## Interface: 80000
 ## Title: ISBoxer
 ## Author: Joe Thaler
+## Modified By: MooreaTV moorea@ymail.com to prototype dynamic teams
 ## Version: 1.0
 ## eMail: lax@lavishsoft.com
 ## URL: http://isboxer.com
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ISBoxer.lua
+DynamicBoxer.lua
 
 ISBoxer_Character_Set.lua
 ISBoxer_Character.lua

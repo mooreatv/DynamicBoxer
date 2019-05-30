@@ -153,16 +153,17 @@ function isboxer.LoadBinds()
 			isboxer.Character.LoadBinds();
 			isboxer.Output("WoW Macros for Character '"..isboxer.Character.Name.."' in Set '"..isboxer.CharacterSet.Name.."' Loaded.");
 			if (isboxer.Character.ActualName~="*" and isboxer.Character.ActualName:upper()~=GetUnitName("player"):upper()) then
-
-				StaticPopupDialogs["ISBOXER_WRONGCHARACTER"] = {
-				  text = "Character in wrong window? ISBoxer expected "..isboxer.Character.ActualName.." but got "..GetUnitName("player")..". Some functionality may not work correctly!",
-				  button1 = OKAY,
-				  timeout = 0,
-				  whileDead = true,
-				  hideOnEscape = true,
-				}
-				StaticPopup_Show("ISBOXER_WRONGCHARACTER");
-				isboxer.Warning("Expected "..isboxer.Character.ActualName.." but got "..GetUnitName("player"));
+				if not DynamicBoxer.DynamicInit(isboxer.Character.ActualName, GetUnitName("player")) then
+					StaticPopupDialogs["ISBOXER_WRONGCHARACTER"] = {
+				  	text = "We are soon replacing "..isboxer.Character.ActualName.." dynamically by "..GetUnitName("player")..".",
+				  	button1 = OKAY,
+				  	timeout = 0,
+				  	whileDead = true,
+				  	hideOnEscape = true,
+					}
+					StaticPopup_Show("ISBOXER_WRONGCHARACTER");
+					isboxer.Warning("Expected "..isboxer.Character.ActualName.." but got "..GetUnitName("player"))
+				end
 			end
 		end
 	else
