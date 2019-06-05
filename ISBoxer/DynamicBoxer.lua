@@ -7,15 +7,16 @@
    Read from slot1 the team list
    Slot1 (master) reading the other slots
 
-   [todo have isboxer just save the team cardinality so we know when to stop]
-]] if DynamicBoxer == nil then
-  DynamicBoxer = {}
-end
+   [todo have isboxer just save the team cardinality so we know when to stop
+   for now let's hack the toon name to be "i/n"]
+]] 
+
+DynamicBoxer = {}
 
 -- TODO: for something actually secure, this must be generated and kept secret
 -- also consider using bnet communication as a common case is all characters are from same bnet
 
-DynamicBoxer.Channel = "DBprivate12345" -- use bnet maybe or some other unique but personal channel
+DynamicBoxer.Channel = string.gsub(select(2, BNGetInfo()), "#", "") -- also support multiple bnet/make this confirgurable
 DynamicBoxer.Secret = "PrototypeSecret12345" -- this should be secure, unique,...
 
 -- TODO: isboxer saves the name of the character set and indirectly the size in each slot but not directly the size
@@ -101,7 +102,7 @@ end
 function DynamicBoxer.Join()
   local type, name = JoinTemporaryChannel(DynamicBoxer.Channel, DynamicBoxer.Secret)
   DynamicBoxer.channelId = GetChannelName(DynamicBoxer.Channel)
-  DynamicBoxer.Debug("Joined channel, type " .. type .. " name " .. (name or "<unset>") .. " id " ..
+  DynamicBoxer.Debug("Joined channel " .. DynamicBoxer.Channel .. ", type " .. type .. " name " .. (name or "<unset>") .. " id " ..
                        tostring(DynamicBoxer.channelId))
   return DynamicBoxer.channelId
 end
