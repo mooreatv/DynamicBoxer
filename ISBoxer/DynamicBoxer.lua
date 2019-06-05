@@ -11,109 +11,128 @@
    for now let's hack the toon name to be "i/n"]
 ]] 
 
-DynamicBoxer = {}
+local addon, ns = ... -- our name, our empty default anonymous ns
+
+CreateFrame("frame", "DynamicBoxer", UIParent) -- this creates the global table/ns of namesake
+
+local DB = DynamicBoxer
 
 -- TODO: for something actually secure, this must be generated and kept secret
 -- also consider using bnet communication as a common case is all characters are from same bnet
 
-DynamicBoxer.Channel = string.gsub(select(2, BNGetInfo()), "#", "") -- also support multiple bnet/make this confirgurable
-DynamicBoxer.Secret = "PrototypeSecret12345" -- this should be secure, unique,...
+DB.Channel = string.gsub(select(2, BNGetInfo()), "#", "") -- also support multiple bnet/make this confirgurable
+DB.Secret = "PrototypeSecret12345" -- this should be secure, unique,... and/or ask the user to /dbox secret <something> and save it
 
 -- TODO: isboxer saves the name of the character set and indirectly the size in each slot but not directly the size
-DynamicBoxer.TeamSize = 2
+DB.TeamSize = 2
 
-DynamicBoxer.debug = 1
+DB.debug = 1
 
-function DynamicBoxer.Print(...)
+function DB.Print(...)
   DEFAULT_CHAT_FRAME:AddMessage(...)
 end
 
-function DynamicBoxer.Debug(msg)
-  if DynamicBoxer.debug == 1 then
-    DynamicBoxer.Print("DynamicBoxer DBG: " .. msg, 0, 1, 0)
+function DB.Debug(msg)
+  if DB.debug == 1 then
+    DB.Print("DB DBG: " .. msg, 0, 1, 0)
   end
 end
 
 -- [[]]
 
-DynamicBoxer.teamComplete = false
-DynamicBoxer.maxIter = 20
-DynamicBoxer.refresh = 3
-DynamicBoxer.nextUpdate = 0
-DynamicBoxer.chatPrefix = "dbox"
-DynamicBoxer.channelId = nil
+DB.teamComplete = false
+DB.maxIter = 20
+DB.refresh = 3
+DB.nextUpdate = 0
+DB.chatPrefix = "dbox0" -- protocol version in prefix
+DB.channelId = nil
 
-function DynamicBoxer.Sync()
-  if DynamicBoxer.maxIter <= 0 or DynamicBoxer.teamComplete then
+function DB.Sync()
+  if DB.maxIter <= 0 or DB.teamComplete then
     -- TODO: unregister the event/cb/timer
-    -- DynamicBoxer.Debug("CB shouldn't be called when maxIter is " .. DynamicBoxer.maxIter .. " or teamComplete is " ..
-    --                     tostring(DynamicBoxer.teamComplete))
+    -- DB.Debug("CB shouldn't be called when maxIter is " .. DB.maxIter .. " or teamComplete is " ..
+    --                     tostring(DB.teamComplete))
     return
   end
-  if not DynamicBoxer.channelId then
-    DynamicBoxer.DynamicInit()
+  if not DB.channelId then
+    DB.DynamicInit()
   end
-  DynamicBoxer.maxIter = DynamicBoxer.maxIter - 1
-  DynamicBoxer.Debug("Sync CB called for slot " .. DynamicBoxer.slot .. ", actual " .. DynamicBoxer.actual .. ", maxIter is now " ..
-                       DynamicBoxer.maxIter)
-  local payload = DynamicBoxer.slot .. " is " .. DynamicBoxer.actual .. " msg " .. tostring(DynamicBoxer.maxIter)
-  local ret = C_ChatInfo.SendAddonMessage(DynamicBoxer.chatPrefix, payload, "CHANNEL", DynamicBoxer.channelId)
-  DynamicBoxer.Debug("Message success " .. tostring(ret) .. " on chanId " .. tostring(DynamicBoxer.channelId))
+  DB.maxIter = DB.maxIter - 1
+  DB.Debug("Sync CB called for slot " .. DB.slot .. ", actual " .. DB.actual .. ", maxIter is now " .. DB.maxIter)
+  local payload = DB.slot .. " is " .. DB.actual .. " msg " .. tostring(DB.maxIter)
+  local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
+  DB.Debug("Message success " .. tostring(ret) .. " on chanId " .. tostring(DB.channelId))
 end
 
-function DynamicBoxer.OnUpdate(self, elapsed)
+function DB.OnUpdate(self, elapsed)
   local now = GetTime()
-  if now >= DynamicBoxer.nextUpdate then
+  if now >= DB.nextUpdate then
     -- skip the very first time
-    if DynamicBoxer.nextUpdate ~= 0 then
-      DynamicBoxer.Sync()
+    if DB.nextUpdate ~= 0 then
+      DB.Sync()
     else
-      DynamicBoxer.Debug("Skipping first timer event")
+      DB.Debug("Skipping first timer event")
     end
-    DynamicBoxer.nextUpdate = now + DynamicBoxer.refresh
+    DB.nextUpdate = now + DB.refresh
   end
 end
 
-function DynamicBoxer.OnChatEvent(this, event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
-  DynamicBoxer.Debug("OnEvent called for " .. this:GetName() .. " e=" .. event .. " channel=" .. channel .. " p=" .. prefix ..
-                       " data=" .. data .. " from " .. sender .. " z=" .. tostring(zoneChannelID) .. ", lid=" .. tostring(localID) ..
-                       " name=" .. name .. ", instance = " .. tostring(instanceID))
+DB.EventD = {
+
+  CHAT_MSG_ADDON = function(this, event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
+    DB.Debug(
+                  "OnChatEvent called for " .. this:GetName() .. " e=" .. event .. " channel=" .. channel .. " p=" .. prefix ..
+                    " data=" .. data .. " from " .. sender .. " z=" .. tostring(zoneChannelID) .. ", lid=" .. tostring(localID) ..
+                    " name=" .. name .. ", instance = " .. tostring(instanceID))
+  end,
+
+  PLAYER_ENTERING_WORLD = function(this, event)
+    DB.Debug("OnPlayerEntering world")
+    C_Timer.After(1, DB.Sync)
+  end,
+
+  CHANNEL_COUNT_UPDATE = function(this, event, displayIndex, count) -- TODO: never seem to fire
+    DB.Debug("OnChannelCountUpdate didx=" .. tostring(displayIndex) .. ", count=".. tostring(count))
+  end,
+}
+
+function DB.OnEvent(this, event, ...)
+  DB.Debug("OnEvent called for " .. this:GetName() .. " e=" .. event)
+  local handler = DB.EventD[event]
+  if handler then
+    return handler(this, event, ...)
+  end
+  DB.Print("Unexpected event without handler " .. event, 1, 0, 0)
 end
 
-function DynamicBoxer.DynamicSetup(slot, actual)
-  DynamicBoxer.slot = slot
-  DynamicBoxer.actual = actual
-  if DynamicBoxer.frame == nil then
-    DynamicBoxer.frame = CreateFrame("frame", "DynamicBoxer", UIParent)
-  end
-  DynamicBoxer.frame:SetScript("OnUpdate", DynamicBoxer.OnUpdate)
-  DynamicBoxer.frame:SetScript("OnEvent", DynamicBoxer.OnChatEvent)
-  DynamicBoxer.frame:RegisterEvent("CHAT_MSG_ADDON")
-  local ret = C_ChatInfo.RegisterAddonMessagePrefix(DynamicBoxer.chatPrefix)
-  DynamicBoxer.Debug("Prefix register success " .. tostring(ret))
+function DB.DynamicSetup(slot, actual)
+  DB.slot = slot
+  DB.actual = actual
+  local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
+  DB.Debug("Prefix register success " .. tostring(ret))
   return true -- TODO: only return true if we are good to go (but then the sync may take a while and fail later)
 end
 
-function DynamicBoxer.DynamicInit(slot, actual)
-  DynamicBoxer.Debug("Delayed init called")
-  DynamicBoxer.Join()
+function DB.DynamicInit(slot, actual)
+  DB.Debug("Delayed init called")
+  DB.Join()
 end
 
-function DynamicBoxer.Join()
-  local type, name = JoinTemporaryChannel(DynamicBoxer.Channel, DynamicBoxer.Secret)
-  DynamicBoxer.channelId = GetChannelName(DynamicBoxer.Channel)
-  DynamicBoxer.Debug("Joined channel " .. DynamicBoxer.Channel .. ", type " .. type .. " name " .. (name or "<unset>") .. " id " ..
-                       tostring(DynamicBoxer.channelId))
-  return DynamicBoxer.channelId
+function DB.Join()
+  local type, name = JoinTemporaryChannel(DB.Channel, DB.Secret, 99)
+  DB.channelId = GetChannelName(DB.Channel)
+  DB.Debug("Joined channel " .. DB.Channel .. ", type " .. type .. " name " .. (name or "<unset>") .. " id " ..
+             tostring(DB.channelId))
+  return DB.channelId
 end
 
-function DynamicBoxer.Help(msg)
-  DynamicBoxer.Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox join -- join channel.\n" .. "/dbox more... coming...later...")
+function DB.Help(msg)
+  DB.Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox join -- join channel.\n" .. "/dbox more... coming...later...")
 end
 
-function DynamicBoxer.Slash(arg)
+function DB.Slash(arg)
   if #arg == 0 then
-    DynamicBoxer.Help("commands")
+    DB.Help("commands")
     return
   end
   local cmd = string.lower(string.sub(arg, 1, 1))
@@ -124,24 +143,32 @@ function DynamicBoxer.Slash(arg)
   end
   if cmd == "j" then
     -- join
-    DynamicBoxer.Join()
+    DB.Join()
   elseif cmd == "q" then
     -- query 
     -- for debug, needs exact match:
   elseif arg == "debug on" then
     -- debug
-    DynamicBoxer.debug = 1
-    DynamicBoxer.Print("DynamicBoxer Debug ON")
+    DB.debug = 1
+    DB.Print("DynamicBoxer Debug ON")
   elseif arg == "debug off" then
     -- debug
-    DynamicBoxer.debug = nil
-    DynamicBoxer.Print("DynamicBoxer Debug OFF")
+    DB.debug = nil
+    DB.Print("DynamicBoxer Debug OFF")
   else
-    DynamicBoxer.Help("unknown command \"" .. arg .. "\", usage:")
+    DB.Help("unknown command \"" .. arg .. "\", usage:")
   end
 end
 
-SlashCmdList["DynamicBoxer_Slash_Command"] = DynamicBoxer.Slash
+SlashCmdList["DynamicBoxer_Slash_Command"] = DB.Slash
 
 SLASH_DynamicBoxer_Slash_Command1 = "/dbox"
 SLASH_DynamicBoxer_Slash_Command2 = "/dynamicboxer"
+
+DB:SetScript("OnEvent", DB.OnEvent)
+for k,_ in pairs(DB.EventD) do
+  DB:RegisterEvent(k)
+end
+
+DB.Debug("End of file reached")
+-- DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Ticker)
