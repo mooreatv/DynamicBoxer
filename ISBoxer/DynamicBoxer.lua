@@ -36,18 +36,19 @@ end
 -- string arguments are quoted (ie "Zone") so you can distinguish nil from "nil" etc
 -- and works for all types (like boolean), unlike format
 function DB.format(fmtstr, firstarg, ...)
-  local i = string.find(fmtstr, "%%")
+  local i = fmtstr:find("%%")
   if not i then
-    return fmtstr
+    return fmtstr -- no % in the format string anymore, we're done with literal value returned
   end
   local t = type(firstarg)
-  local s = ""
-  if t == "string" then
+  local s
+  if t == "string" then -- if the argument is a string, quote it, else tostring it
     s = format("%q", firstarg)
   else
     s = tostring(firstarg)
   end
-  return string.sub(fmtstr, 0, i - 1) .. s .. DB.format(string.sub(fmtstr, i + 1), ...)
+  -- emit the part of the format string up to %, the processed first argument and recurse with the rest
+  return fmtstr:sub(1, i - 1) .. s .. DB.format(fmtstr:sub(i + 1), ...)
 end
 
 function DB.Debug(...)
