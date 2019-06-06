@@ -32,9 +32,27 @@ function DB.Print(...)
   DEFAULT_CHAT_FRAME:AddMessage(...)
 end
 
-function DB.Debug(msg)
+-- like format except simpler... just use % to replace a value that will be tostring()'ed
+-- string arguments are quoted (ie "Zone") so you can distinguish nil from "nil" etc
+-- and works for all types (like boolean), unlike format
+function DB.format(fmtstr, firstarg, ...)
+  local i = string.find(fmtstr, "%%")
+  if not i then
+    return fmtstr
+  end
+  local t = type(firstarg)
+  local s = ""
+  if t == "string" then
+    s = format("%q", firstarg)
+  else
+    s = tostring(firstarg)
+  end
+  return string.sub(fmtstr, 0, i - 1) .. s .. DB.format(string.sub(fmtstr, i + 1), ...)
+end
+
+function DB.Debug(...)
   if DB.debug == 1 then
-    DB.Print("DB DBG: " .. msg, 0, 1, 0)
+    DB.Print("DynBoxer DBG: " .. DB.format(...), 0, 1, 0)
   end
 end
 
@@ -57,11 +75,15 @@ function DB.Sync()
   if not DB.channelId then
     DB.DynamicInit()
   end
+  if not DB.actual then
+    DB.Debug("We don't know our slot/actual yet")
+    return
+  end
   DB.maxIter = DB.maxIter - 1
-  DB.Debug("Sync CB called for slot " .. DB.slot .. ", actual " .. DB.actual .. ", maxIter is now " .. DB.maxIter)
+  DB.Debug("Sync CB called for slot % actual %, maxIter is now %", DB.slot, DB.actual, DB.maxIter)
   local payload = DB.slot .. " is " .. DB.actual .. " msg " .. tostring(DB.maxIter)
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
-  DB.Debug("Message success " .. tostring(ret) .. " on chanId " .. tostring(DB.channelId))
+  DB.Debug("Message success % on chanId %", ret, DB.channelId)
 end
 
 function DB.OnUpdate(self, elapsed)
@@ -80,24 +102,22 @@ end
 DB.EventD = {
 
   CHAT_MSG_ADDON = function(this, event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
-    DB.Debug(
-                  "OnChatEvent called for " .. this:GetName() .. " e=" .. event .. " channel=" .. channel .. " p=" .. prefix ..
-                    " data=" .. data .. " from " .. sender .. " z=" .. tostring(zoneChannelID) .. ", lid=" .. tostring(localID) ..
-                    " name=" .. name .. ", instance = " .. tostring(instanceID))
+    DB.Debug("OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", this:GetName(), event,
+             channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
   end,
 
   PLAYER_ENTERING_WORLD = function(this, event)
     DB.Debug("OnPlayerEntering world")
-    C_Timer.After(1, DB.Sync)
+    DB.Sync()
   end,
 
   CHANNEL_COUNT_UPDATE = function(this, event, displayIndex, count) -- TODO: never seem to fire
-    DB.Debug("OnChannelCountUpdate didx=" .. tostring(displayIndex) .. ", count=".. tostring(count))
-  end,
+    DB.Debug("OnChannelCountUpdate didx=%, count=%", displayIndex, count)
+  end
 }
 
 function DB.OnEvent(this, event, ...)
-  DB.Debug("OnEvent called for " .. this:GetName() .. " e=" .. event)
+  DB.Debug("OnEvent called for % e=%", this:GetName(), event)
   local handler = DB.EventD[event]
   if handler then
     return handler(this, event, ...)
@@ -109,7 +129,7 @@ function DB.DynamicSetup(slot, actual)
   DB.slot = slot
   DB.actual = actual
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
-  DB.Debug("Prefix register success " .. tostring(ret))
+  DB.Debug("Prefix register success %", ret)
   return true -- TODO: only return true if we are good to go (but then the sync may take a while and fail later)
 end
 
@@ -119,10 +139,23 @@ function DB.DynamicInit(slot, actual)
 end
 
 function DB.Join()
-  local type, name = JoinTemporaryChannel(DB.Channel, DB.Secret, 99)
+  -- First check if we have joined the last std channel and reschedule if not
+  -- (so our channel doesn't end up as first one, and /1, /2 etc are normal)
+  local id, name, instanceID = GetChannelName(1)
+  DB.Debug("Checking std channel, res % name % instanceId %", id, name, instanceID)
+  if id <= 0 then
+    DB.Debug("Not yet in std channel, retrying in 1 sec")
+    C_Timer.After(1, DB.Join)
+    return
+  end
+  -- First join the std channels to make sure we end up being at the end and not first
+  -- for _, c in next, {"General", "Trade", "LocalDefense", "LookingForGroup", "World"} do
+  --   type, name = JoinPermanentChannel(c)
+  --   DB.Debug("Joined channel " .. c .. ", type " .. (type or "<nil>") .. " name " .. (name or "<unset>"))
+  -- end
+  local t, n = JoinTemporaryChannel(DB.Channel, DB.Secret, 99)
   DB.channelId = GetChannelName(DB.Channel)
-  DB.Debug("Joined channel " .. DB.Channel .. ", type " .. type .. " name " .. (name or "<unset>") .. " id " ..
-             tostring(DB.channelId))
+  DB.Debug("Joined channel % type % name % id %", DB.Channel, t, n, DB.channelId)
   return DB.channelId
 end
 
@@ -166,7 +199,7 @@ SLASH_DynamicBoxer_Slash_Command1 = "/dbox"
 SLASH_DynamicBoxer_Slash_Command2 = "/dynamicboxer"
 
 DB:SetScript("OnEvent", DB.OnEvent)
-for k,_ in pairs(DB.EventD) do
+for k, _ in pairs(DB.EventD) do
   DB:RegisterEvent(k)
 end
 
