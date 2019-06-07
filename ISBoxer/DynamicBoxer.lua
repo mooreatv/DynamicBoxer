@@ -54,7 +54,7 @@ function DB.Sync()
   end
   DB.maxIter = DB.maxIter - 1
   DB:Debug("Sync CB called for slot % actual %, maxIter is now %", DB.slot, DB.actual, DB.maxIter)
-  local payload = DB.slot .. " is " .. DB.actual .. " msg " .. tostring(DB.maxIter)
+  local payload = DB.slot .. " is " .. DB.fullName .. " msg " .. tostring(DB.maxIter)
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Message success % on chanId %", ret, DB.channelId)
 end
@@ -94,7 +94,10 @@ function DB.DynamicSetup(slot, actual)
   DB.slot = slot
   DB.actual = actual
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
-  DB:Debug("Prefix register success %", ret)
+  DB:Debug("Prefix register success % in dynamic setup % %", ret, slot, actual)
+  isboxer.Character.ActualName = actual
+  DB.fullName = DB:GetMyFQN()
+  isboxer.Character.QualifiedName = DB.fullName
   return true -- TODO: only return true if we are good to go (but then the sync may take a while and fail later)
 end
 
