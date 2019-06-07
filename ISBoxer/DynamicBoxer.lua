@@ -33,14 +33,14 @@ DB.debug = 1
 
 DB.teamComplete = false
 DB.maxIter = 20
-DB.refresh = 3
+DB.refresh = 5
 DB.nextUpdate = 0
 DB.chatPrefix = "dbox0" -- protocol version in prefix
 DB.channelId = nil
 
 function DB.Sync()
   if DB.maxIter <= 0 or DB.teamComplete then
-    -- TODO: unregister the event/cb/timer
+    -- TODO: unregister the event/cb/timer/ticker
     -- DB:Debug("CB shouldn't be called when maxIter is " .. DB.maxIter .. " or teamComplete is " ..
     --                     tostring(DB.teamComplete))
     return
@@ -57,19 +57,6 @@ function DB.Sync()
   local payload = DB.slot .. " is " .. DB.actual .. " msg " .. tostring(DB.maxIter)
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Message success % on chanId %", ret, DB.channelId)
-end
-
-function DB.OnUpdate(self, elapsed)
-  local now = GetTime()
-  if now >= DB.nextUpdate then
-    -- skip the very first time
-    if DB.nextUpdate ~= 0 then
-      DB.Sync()
-    else
-      DB:Debug("Skipping first timer event")
-    end
-    DB.nextUpdate = now + DB.refresh
-  end
 end
 
 DB.EventD = {
@@ -183,4 +170,4 @@ for k, _ in pairs(DB.EventD) do
 end
 
 DB:Debug("dbox file loaded")
--- DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Ticker)
+DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync)
