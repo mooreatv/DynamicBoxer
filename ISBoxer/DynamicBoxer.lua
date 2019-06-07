@@ -100,7 +100,7 @@ function DB:OnEvent(event, ...)
   if handler then
     return handler(self, event, ...)
   end
-  DB.Print("Unexpected event without handler " .. event, 1, 0, 0)
+  DB:Print("Unexpected event without handler " .. event, 1, 0, 0)
 end
 
 function DB.DynamicSetup(slot, actual)
@@ -139,7 +139,7 @@ function DB.Join()
 end
 
 function DB.Help(msg)
-  DB.Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox join -- join channel.\n" .. "/dbox more... coming...later...")
+  DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox join -- join channel.\n" .. "/dbox more... coming...later...")
 end
 
 function DB.Slash(arg)
@@ -162,11 +162,11 @@ function DB.Slash(arg)
   elseif arg == "debug on" then
     -- debug
     DB.debug = 1
-    DB.Print("DynamicBoxer Debug ON")
+    DB:Print("DynamicBoxer Debug ON")
   elseif arg == "debug off" then
     -- debug
     DB.debug = nil
-    DB.Print("DynamicBoxer Debug OFF")
+    DB:Print("DynamicBoxer Debug OFF")
   else
     DB.Help("unknown command \"" .. arg .. "\", usage:")
   end
