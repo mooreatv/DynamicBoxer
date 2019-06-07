@@ -8,6 +8,7 @@
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ISBoxer.lua
+MoLib/MoLib.lua
 DynamicBoxer.lua
 
 ISBoxer_Character_Set.lua
