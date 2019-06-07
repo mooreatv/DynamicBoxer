@@ -98,7 +98,6 @@ function DB:OnEvent(event, ...)
   DB:Debug("OnEvent called for % e=%", self:GetName(), event)
   local handler = self.EventD[event]
   if handler then
-    DB:Debug("calling %", handler)
     return handler(self, event, ...)
   end
   DB.Print("Unexpected event without handler " .. event, 1, 0, 0)
