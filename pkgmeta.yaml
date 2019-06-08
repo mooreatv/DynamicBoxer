@@ -2,6 +2,8 @@ package-as: DynamicBoxer
 
 ignore:
     - installdb.bat
+    - DynamicBoxer.png
+    - luaformat.cfg
     - MoLib/installmolib.bat
     - MoLib/MoLib.toc
     - MoLib/luaformat.cfg
