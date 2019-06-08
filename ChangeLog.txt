@@ -1,5 +1,11 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+0.1.2 June 7th 2019
+    - First version which loads correctly along ISBoxer as independant addon
+    - Support for saved variables
+    - Fix for ISBoxer loading bindings too early (when realm name isn't yet available), unregister its UPDATE_BINDINGS
+    - updated /dbox help and commands
+
 0.1.1 June 7th 2019
     - Same as 0.1.0 without the logo in the addon zip
 

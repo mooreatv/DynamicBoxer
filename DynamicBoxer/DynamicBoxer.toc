@@ -7,5 +7,6 @@
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ## Dependencies: ISBoxer
+## SavedVariables:  dynamicBoxerSaved
 MoLib/MoLib.lua
 DynamicBoxer.lua

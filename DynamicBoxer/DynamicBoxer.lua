@@ -17,11 +17,11 @@ local addon, ns = ...
 
 local shortName = "DynBoxer"
 
- -- this creates the global table/ns of namesake
- -- we can't use DynamicBoxer as that's already created by MoLib
- -- alternatively we can change the order of molib and this lua but
- -- then we can't use Debug() at top level
- -- Another alternative is to put our frame on DB.frame which may be cleaner (TODO/to consider)
+-- this creates the global table/ns of namesake
+-- we can't use DynamicBoxer as that's already created by MoLib
+-- alternatively we can change the order of molib and this lua but
+-- then we can't use Debug() at top level
+-- Another alternative is to put our frame on DB.frame which may be cleaner (TODO/to consider)
 CreateFrame("frame", shortName, UIParent)
 
 local DB = DynBoxer
@@ -51,6 +51,9 @@ DB.isbHooks = {LoadBinds = isboxer.LoadBinds, SetMacro = isboxer.SetMacro}
 function DB.LoadBinds()
   DB:Debug("Hooked LoadBinds()")
   DB.ReconstructTeam()
+  -- Avoid the mismatch complaint:
+  isboxer.Character.ActualName = GetUnitName("player")
+  isboxer.Character.QualifiedName = DB.fullName
   DB.isbHooks["LoadBinds"]()
 end
 
@@ -65,11 +68,12 @@ end
 
 -- Reverse engineer what isboxer will hopefully be providing more directly soon
 -- (isboxer.CharacterSet.Members isn't always set when making teams without realm)
-function DB.ReconstructTeam()
+function DB:ReconstructTeam()
   if DB.ISBTeam then
     DB:Debug("Already know team to be % and my index % (isb members %)", DB.ISBTeam, DB.ISBIndex, isboxer.CharacterSet.Members)
     return
   end
+  DB.fullName = DB:GetMyFQN()
   local prev = isboxer.SetMacro
   DB.ISBTeam = {}
   -- parse the text which looks like
@@ -129,27 +133,32 @@ DB.EventD = {
 
   CHAT_MSG_CHANNEL_JOIN = DB.DebugEvCall,
 
-  CHAT_MSG_CHANNEL_LEAVE = DB.DebugEvCall
+  CHAT_MSG_CHANNEL_LEAVE = DB.DebugEvCall,
+
+  UPDATE_BINDINGS = DB.DebugEvCall,
+
+  ADDON_LOADED = function(self, event, name)
+    if name ~= addon then
+      return -- not us, return
+    end
+    if dynamicBoxerSaved then
+      DB.deepmerge(DB, nil, dynamicBoxerSaved)
+      DB:Debug("Loaded saved vars %", dynamicBoxerSaved)
+    else
+      DB:Debug("Initialized empty saved vars")
+      dynamicBoxerSaved = {}
+    end
+  end
 
 }
 
-function DB:OnEvent(event, ...)
-  DB:Debug("OnEvent called for % e=%", self:GetName(), event)
+function DB:OnEvent(event, first, ...)
+  DB:Debug("OnEvent called for % e=% %", self:GetName(), event, first)
   local handler = self.EventD[event]
   if handler then
-    return handler(self, event, ...)
+    return handler(self, event, first, ...)
   end
   DB:Print("Unexpected event without handler " .. event, 1, 0, 0)
-end
-
-function DB.DynamicSetup(slot, actual)
-  DB.slot = slot
-  DB.actual = actual
-  local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
-  DB:Debug("Prefix register success % in dynamic setup % %", ret, slot, actual)
-  isboxer.Character.ActualName = actual
-  isboxer.Character.QualifiedName = DB.fullName
-  return true -- TODO: only return true if we are good to go (but then the sync may take a while and fail later)
 end
 
 function DB.DynamicInit(slot, actual)
@@ -168,21 +177,30 @@ function DB.Join()
     C_Timer.After(1, DB.Join)
     return
   end
-  DB.fullName = DB:GetMyFQN()
   DB.ReconstructTeam()
+  local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
+  DB:Debug("Prefix register success % in dynamic setup % %", ret, slot, actual)
   -- First join the std channels to make sure we end up being at the end and not first
   -- for _, c in next, {"General", "Trade", "LocalDefense", "LookingForGroup", "World"} do
   --   type, name = JoinPermanentChannel(c)
   --   DB:Debug("Joined channel " .. c .. ", type " .. (type or "<nil>") .. " name " .. (name or "<unset>"))
   -- end
-  local t, n = JoinTemporaryChannel(DB.Channel, DB.Secret, 99)
+  local t, n = JoinTemporaryChannel(DB.Channel, DB.Secret)
   DB.channelId = GetChannelName(DB.Channel)
-  DB:Debug("Joined channel % type % name % id %", DB.Channel, t, n, DB.channelId)
+  DB:Debug("Joined channel % / % type % name % id %", DB.Channel, DB.Secret, t, n, DB.channelId)
   return DB.channelId
 end
 
 function DB.Help(msg)
-  DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox join -- join channel.\n" .. "/dbox more... coming...later...")
+  DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox c channel -- to change channel.\n" ..
+             "/dbox s secret -- to change the secret.\n" .. "/dbox join -- (re)join channel.\n" ..
+             "/dbox debug on/off -- for debugging on or off.\n" .. "/dbox dump global -- to dump a global.")
+end
+
+function DB:SetSaved(name, value)
+  self[name] = value
+  dynamicBoxerSaved[name] = value
+  DB:Debug("(Saved) Setting % set to % - dynamicBoxerSaved=%", name, value, dynamicBoxerSaved)
 end
 
 function DB.Slash(arg)
@@ -199,17 +217,24 @@ function DB.Slash(arg)
   if cmd == "j" then
     -- join
     DB.Join()
-  elseif cmd == "q" then
-    -- query 
+  elseif cmd == "c" then
+    -- change channel 
+    DB.SetSaved("Channel", rest)
+  elseif cmd == "s" then
+    -- change secret
+    DB:SetSaved("Secret", rest)
     -- for debug, needs exact match:
   elseif arg == "debug on" then
     -- debug
-    DB.debug = 1
-    DB:Print("DynamicBoxer Debug ON")
+    DB:SetSaved("debug", 1)
+    DB:Print("DynBoxer debug ON")
   elseif arg == "debug off" then
     -- debug
-    DB.debug = nil
-    DB:Print("DynamicBoxer Debug OFF")
+    DB:SetSaved("debug", nil)
+    DB:Print("DynBoxer debug OFF")
+  elseif cmd == "d" then
+    -- dump
+    DB:Print(DB.format("DynBoxer dump of % = " .. DB.Dump(_G[rest]), rest), 0, 1, 1)
   else
     DB.Help("unknown command \"" .. arg .. "\", usage:")
   end
@@ -224,6 +249,10 @@ DB:SetScript("OnEvent", DB.OnEvent)
 for k, _ in pairs(DB.EventD) do
   DB:RegisterEvent(k)
 end
+
+-- This event too early and the realm isn't available yet
+-- causing nil error trying to get the fully qualified name
+isboxer.frame:UnregisterEvent("UPDATE_BINDINGS")
 
 DB:Debug("dbox file loaded")
 DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync)
