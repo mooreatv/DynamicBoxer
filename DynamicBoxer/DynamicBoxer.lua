@@ -15,11 +15,18 @@
 -- our name, our empty default (and unused) anonymous ns
 local addon, ns = ...
 
-CreateFrame("frame", "DynamicBoxer", UIParent) -- this creates the global table/ns of namesake
+local shortName = "DynBoxer"
 
-local DB = DynamicBoxer
+ -- this creates the global table/ns of namesake
+ -- we can't use DynamicBoxer as that's already created by MoLib
+ -- alternatively we can change the order of molib and this lua but
+ -- then we can't use Debug() at top level
+ -- Another alternative is to put our frame on DB.frame which may be cleaner (TODO/to consider)
+CreateFrame("frame", shortName, UIParent)
 
-ISBoxer.MoLibInstallInto(DB, "DynBoxer") -- copy the library here under our (shorter) name (and not ISBoxer)
+local DB = DynBoxer
+
+DynamicBoxer.MoLibInstallInto(DB, shortName)
 
 -- TODO: for something actually secure, this must be generated and kept secret
 -- also consider using bnet communication as a common case is all characters are from same bnet
@@ -94,12 +101,12 @@ function DB.Sync()
     DB.DynamicInit()
   end
   DB.maxIter = DB.maxIter - 1
-  DB:Debug("Sync CB called for slot % actual %, our fullname is %, maxIter is now %", DB.slot, DB.actual, DB.fullName, DB.maxIter)
+  DB:Debug("Sync CB called for slot % our fullname is %, maxIter is now %", DB.ISBIndex, DB.fullName, DB.maxIter)
   if not DB.ISBIndex then
     DB:Debug("We don't know our slot/actual yet")
     return
   end
-  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.DBISBIndex] .. " msg " .. tostring(DB.maxIter)
+  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " msg " .. tostring(DB.maxIter)
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Message success % on chanId %", ret, DB.channelId)
 end
