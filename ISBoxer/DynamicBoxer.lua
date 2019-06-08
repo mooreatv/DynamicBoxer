@@ -7,9 +7,10 @@
    Read from slot1 the team list
    Slot1 (master) reading the other slots
 
-   [todo have isboxer just save the team cardinality so we know when to stop
-   for now let's hack the toon name to be "i/n"]
-]] --
+   [todo have isboxer just save the team list and slot # more directly
+   so we don't have to hook and use variables/that team structure in macros
+   instead of generating the same hardcoded stuff we end up search/replacing into.
+   ]] --
 --
 -- our name, our empty default (and unused) anonymous ns
 local addon, ns = ...
@@ -24,19 +25,63 @@ ISBoxer.MoLibInstallInto(DB, "DynBoxer") -- copy the library here under our (sho
 -- also consider using bnet communication as a common case is all characters are from same bnet
 
 DB.Channel = string.gsub(select(2, BNGetInfo()), "#", "") -- also support multiple bnet/make this confirgurable
-DB.Secret = "PrototypeSecret12345" -- this should be secure, unique,... and/or ask the user to /dbox secret <something> and save it
-
--- TODO: isboxer saves the name of the character set and indirectly the size in each slot but not directly the size
-DB.TeamSize = 2
+-- this should be secure, unique,... and/or ask the user to /dbox secret <something> and save it
+-- or a StaticPopupDialogs / StaticPopup_Show
+DB.Secret = "PrototypeSecret12345"
 
 DB.debug = 1
 
 DB.teamComplete = false
-DB.maxIter = 20
+DB.maxIter = 1
 DB.refresh = 5
-DB.nextUpdate = 0
+
 DB.chatPrefix = "dbox0" -- protocol version in prefix
 DB.channelId = nil
+
+-- hook/replace isboxer functions by ours, keeping the original for post hook
+DB.isbHooks = {LoadBinds = isboxer.LoadBinds, SetMacro = isboxer.SetMacro}
+
+function DB.LoadBinds()
+  DB:Debug("Hooked LoadBinds()")
+  DB.ReconstructTeam()
+  DB.isbHooks["LoadBinds"]()
+end
+
+function DB.SetMacro(username, key, macro, ...)
+  DB:Debug("Hooked SetMacro(%, %, %, %)", username, key, macro, DB.Dump(...))
+  DB.isbHooks["SetMacro"](username, key, macro, ...)
+end
+
+for k, v in pairs(DB.isbHooks) do
+  isboxer[k] = DB[k]
+end
+
+-- Reverse engineer what isboxer will hopefully be providing more directly soon
+-- (isboxer.CharacterSet.Members isn't always set when making teams without realm)
+function DB.ReconstructTeam()
+  if DB.ISBTeam then
+    DB:Debug("Already know team to be % and my index % (isb members %)", DB.ISBTeam, DB.ISBIndex, isboxer.CharacterSet.Members)
+    return
+  end
+  local prev = isboxer.SetMacro
+  DB.ISBTeam = {}
+  -- parse the text which looks like
+  -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]CHAR1;[nomod:alt,mod:rshift,nomod:ctrl]CHAR2;[nomod:alt,nomod:shift,mod:lctrl]CHAR3;..."
+  isboxer.SetMacro = function(macro, key, text)
+    if macro ~= "FTLAssist" then
+      return
+    end
+    for x in text:gmatch("]([^;]+)[;\n]") do
+      table.insert(DB.ISBTeam, x)
+      if x == isboxer.Character.ActualName then
+        DB.ISBIndex = #DB.ISBTeam
+      end
+    end
+  end
+  isboxer.Character_LoadBinds()
+  isboxer.SetMacro = prev
+  DB:Debug("Found team to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex, isboxer.CharacterSet.Members)
+end
 
 function DB.Sync()
   if DB.maxIter <= 0 or DB.teamComplete then
@@ -48,13 +93,13 @@ function DB.Sync()
   if not DB.channelId then
     DB.DynamicInit()
   end
-  if not DB.actual then
+  DB.maxIter = DB.maxIter - 1
+  DB:Debug("Sync CB called for slot % actual %, our fullname is %, maxIter is now %", DB.slot, DB.actual, DB.fullName, DB.maxIter)
+  if not DB.ISBIndex then
     DB:Debug("We don't know our slot/actual yet")
     return
   end
-  DB.maxIter = DB.maxIter - 1
-  DB:Debug("Sync CB called for slot % actual %, maxIter is now %", DB.slot, DB.actual, DB.maxIter)
-  local payload = DB.slot .. " is " .. DB.fullName .. " msg " .. tostring(DB.maxIter)
+  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.DBISBIndex] .. " msg " .. tostring(DB.maxIter)
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Message success % on chanId %", ret, DB.channelId)
 end
@@ -96,7 +141,6 @@ function DB.DynamicSetup(slot, actual)
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
   DB:Debug("Prefix register success % in dynamic setup % %", ret, slot, actual)
   isboxer.Character.ActualName = actual
-  DB.fullName = DB:GetMyFQN()
   isboxer.Character.QualifiedName = DB.fullName
   return true -- TODO: only return true if we are good to go (but then the sync may take a while and fail later)
 end
@@ -117,6 +161,8 @@ function DB.Join()
     C_Timer.After(1, DB.Join)
     return
   end
+  DB.fullName = DB:GetMyFQN()
+  DB.ReconstructTeam()
   -- First join the std channels to make sure we end up being at the end and not first
   -- for _, c in next, {"General", "Trade", "LocalDefense", "LookingForGroup", "World"} do
   --   type, name = JoinPermanentChannel(c)
