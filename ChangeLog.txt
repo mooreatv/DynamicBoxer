@@ -1,7 +1,7 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 0.1.0 June 7th 2019
-	- Initial build as seperate addon
+	- Initial build as separate addon
 
 commit 5434f70c5f4242488513368f4587b60030c6a504
 Author: Moorea Tv <moorea@ymail.com>
