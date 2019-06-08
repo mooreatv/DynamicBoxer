@@ -1,4 +1,4 @@
-![DynamicBoxer addon logo](DynamicBoxer.png)
+![DynamicBoxer addon logo](DynamicBoxer.png  | height=100)
 
 # DynamicBoxer
 
