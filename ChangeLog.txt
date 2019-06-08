@@ -1,0 +1,44 @@
+ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
+
+0.1.0 June 7th 2019
+	- Initial build as seperate addon
+
+commit 5434f70c5f4242488513368f4587b60030c6a504
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Sat Jun 8 05:32:21 2019 -0700
+
+    make dynamicboxer its own addon
+
+commit 1c8247560579b349e16bef77197310d3514f6a4c
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Sat Jun 8 05:25:24 2019 -0700
+
+    new working  DB.ReconstructTeam()
+
+    using hooks into isboxer
+
+    so we can move to be independant addon instead of patching isboxer
+
+commit 2735bc9aa31b8360769ee5fd18fb5d04b8686b03
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Thu Jun 6 21:17:43 2019 -0700
+
+    use MoLib
+
+commit 0a7ff2de92973b7b0af9c10ff0d7dad61e2445f2
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Tue Jun 4 23:43:28 2019 -0700
+
+    use bnet for channel
+
+commit 96c741aeb8d9d07fd00786a17f91baf6559ebbd1
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Thu May 30 03:21:37 2019 -0700
+
+    delay initialization (avoids the channel end up being /1)
+
+commit 5d770e3f539c220f695613f8691e274c0d8e78d1
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Thu May 30 01:52:59 2019 -0700
+
+    wip
