@@ -1,5 +1,8 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+0.1.3 June 7th 2019
+    - Auto resync on channel join
+
 0.1.2 June 7th 2019
     - First working version !! (and loads correctly along ISBoxer as independant addon)
     - Support for saved variables

@@ -243,7 +243,12 @@ DB.EventD = {
     self:Debug("OnChannelCountUpdate didx=%, count=%", displayIndex, count)
   end,
 
-  CHAT_MSG_CHANNEL_JOIN = DB.DebugEvCall,
+  CHAT_MSG_CHANNEL_JOIN = function(self, event, text, playerName, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName)
+    if channelBaseName == self["Channel"] then
+      self:Debug("Join on our channel by %", playerName)
+      self["maxIter"] = 1
+    end
+  end,
 
   CHAT_MSG_CHANNEL_LEAVE = DB.DebugEvCall,
 
