@@ -1,3 +1,5 @@
+package-as: DynamicBoxer
+
 ignore:
     - installdb.bat
     - MoLib/installmolib.bat
