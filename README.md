@@ -1,6 +1,6 @@
 # DynamicBoxer
 
-The way [http://isboxer.com/wiki/WoW:Quicker_Start_Guide](ISBoxer) works currently is you need to 
+The way [ISBoxer](http://isboxer.com/wiki/WoW:Quicker_Start_Guide) works currently is you need to 
 create a new team for each and every combination of characters you may be multi-boxing with
 
 This addon allows you to create only 1 team per layout and dynamically load any characters you wish into it
