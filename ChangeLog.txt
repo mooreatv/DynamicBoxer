@@ -1,5 +1,8 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+0.1.1 June 7th 2019
+    - Same as 0.1.0 without the logo in the addon zip
+
 0.1.0 June 7th 2019
 	- Initial build as separate addon
 
