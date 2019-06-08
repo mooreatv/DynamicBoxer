@@ -1,3 +1,5 @@
+![DynamicBoxer addon logo](DynamicBoxer.png)
+
 # DynamicBoxer
 
 The way [ISBoxer](http://isboxer.com/wiki/WoW:Quicker_Start_Guide) works currently is you need to 
