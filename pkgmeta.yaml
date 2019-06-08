@@ -1,0 +1,15 @@
+ignore:
+    - installdb.bat
+    - MoLib/installmolib.bat
+    - MoLib/MoLib.toc
+    - MoLib/luaformat.cfg
+
+manual-changelog: ChangeLog.txt
+
+externals:
+    MoLib:
+        url: https://github.com/mooreatv/MoLib
+
+move-folders:
+  DynamicBoxer/DynamicBoxer: DynamicBoxer
+
