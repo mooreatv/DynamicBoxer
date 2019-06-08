@@ -1,5 +1,4 @@
-![DynamicBoxer addon logo](DynamicBoxer.png  | height=100)
-
+<img src="https://raw.githubusercontent.com/mooreatv/DynamicBoxer/master/DynamicBoxer.png" height=150 width=150 align=right>
 # DynamicBoxer
 
 The way [ISBoxer](http://isboxer.com/wiki/WoW:Quicker_Start_Guide) works currently is you need to 
