@@ -15,7 +15,7 @@
 -- our name, our empty default (and unused) anonymous ns
 local addon, ns = ...
 
---Created by DBoxInit
+-- Created by DBoxInit
 local DB = DynBoxer
 
 -- TODO: for something actually secure, this must be generated and kept secret
@@ -57,7 +57,7 @@ end
 function DB:Replace(macro)
   self:Debug("macro before : %", macro)
   local count = 0
-  for i, v in ipairs(self.Team) do
+  for _, v in ipairs(self.Team) do
     local o = v.orig
     local n = v.new
     -- TODO: probably should do this when setting the value instead of each time
@@ -119,7 +119,7 @@ function DB:ReconstructTeam()
   DB.ISBTeam = {}
   -- parse the text which looks like (note the ]xxx; delimiters for most but \n at the end)
   -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt,mod:lshift,mod:lctrl]LAST\n""
-  isboxer.SetMacro = function(macro, key, text)
+  isboxer.SetMacro = function(macro, _key, text)
     if macro ~= "FTLAssist" then
       return
     end
@@ -158,7 +158,8 @@ function DB.Sync()
     DB:Debug("We don't know our slot/actual yet")
     return
   end
-  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. first .. " msg " .. tostring(DB.maxIter)
+  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. first .. " msg " ..
+                    tostring(DB.maxIter)
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Message success % on chanId %", ret, DB.channelId)
 end
@@ -218,11 +219,12 @@ DB.EventD = {
     DB.Sync()
   end,
 
-  CHANNEL_COUNT_UPDATE = function(self, event, displayIndex, count) -- TODO: never seem to fire
+  CHANNEL_COUNT_UPDATE = function(self, _event, displayIndex, count) -- TODO: never seem to fire
     self:Debug("OnChannelCountUpdate didx=%, count=%", displayIndex, count)
   end,
 
-  CHAT_MSG_CHANNEL_JOIN = function(self, event, text, playerName, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName)
+  CHAT_MSG_CHANNEL_JOIN = function(self, _event, _text, playerName, _languageName, _channelName, _playerName2, _specialFlags,
+                       _zoneChannelID, _channelIndex, channelBaseName)
     if channelBaseName == self["Channel"] then
       self:Debug("Join on our channel by %", playerName)
       self["maxIter"] = 1
@@ -233,15 +235,15 @@ DB.EventD = {
 
   UPDATE_BINDINGS = DB.DebugEvCall,
 
-  ADDON_LOADED = function(self, event, name)
+  ADDON_LOADED = function(self, _event, name)
     if name ~= addon then
       return -- not us, return
     end
     if dynamicBoxerSaved then
       DB.deepmerge(DB, nil, dynamicBoxerSaved)
-      DB:Debug("Loaded saved vars %", dynamicBoxerSaved)
+      self:Debug("Loaded saved vars %", dynamicBoxerSaved)
     else
-      DB:Debug("Initialized empty saved vars")
+      self:Debug("Initialized empty saved vars")
       dynamicBoxerSaved = {}
     end
   end
@@ -257,7 +259,7 @@ function DB:OnEvent(event, first, ...)
   DB:Error("Unexpected event without handler %", event)
 end
 
-function DB.DynamicInit(slot, actual)
+function DB.DynamicInit()
   DB:Debug("Delayed init called")
   DB:MoLibInit()
   DB.Join()
@@ -275,7 +277,7 @@ function DB.Join()
   end
   DB.ReconstructTeam()
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
-  DB:Debug("Prefix register success % in dynamic setup % %", ret, slot, actual)
+  DB:Debug("Prefix register success % in dynamic setup", ret)
   local t, n = JoinTemporaryChannel(DB.Channel, DB.Secret)
   DB.channelId = GetChannelName(DB.Channel)
   DB:Debug("Joined channel % / % type % name % id %", DB.Channel, DB.Secret, t, n, DB.channelId)

@@ -17,4 +17,3 @@ CreateFrame("frame", shortName, UIParent)
 local DB = DynBoxer
 
 DynamicBoxer.MoLibInstallInto(DB, shortName)
-
