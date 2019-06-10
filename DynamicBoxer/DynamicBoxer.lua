@@ -15,18 +15,8 @@
 -- our name, our empty default (and unused) anonymous ns
 local addon, ns = ...
 
-local shortName = "DynBoxer"
-
--- this creates the global table/ns of namesake
--- we can't use DynamicBoxer as that's already created by MoLib
--- alternatively we can change the order of molib and this lua but
--- then we can't use Debug() at top level
--- Another alternative is to put our frame on DB.frame which may be cleaner (TODO/to consider)
-CreateFrame("frame", shortName, UIParent)
-
+--Created by DBoxInit
 local DB = DynBoxer
-
-DynamicBoxer.MoLibInstallInto(DB, shortName)
 
 -- TODO: for something actually secure, this must be generated and kept secret
 -- also consider using bnet communication as a common case is all characters are from same bnet
@@ -48,62 +38,20 @@ DB.channelId = nil
 
 -- hook/replace isboxer functions by ours, keeping the original for post hook
 
-DB.isboxerwarnings = true
--- This event too early and the realm isn't available yet
--- causing nil error trying to get the fully qualified name
-isboxer.frame:UnregisterEvent("UPDATE_BINDINGS")
--- We need to fix isboxer.SetMacro so it can update buttons instead
--- of leaking some/creating new ones each call:
-function isboxer.SetMacro(usename, key, macro, conditionalshift, conditionalalt, conditionalctrl, override)
-  if (DB.isboxerwarnings and key and key ~= "" and key ~= "none") then
-    local action = GetBindingAction(key)
-    if (action and action ~= "") then
-      -- TODO: only warn once and not each reconfiguration
-      if (not override) then
-        isboxer.Warning(key .. " is bound to " .. action .. ". ISBoxer is configured to NOT override this binding.")
-        return
-      else
-        isboxer.Warning(key .. " is bound to " .. action .. ". ISBoxer is overriding this binding.")
-      end
-    end
-    if (conditionalshift or conditionalalt or conditionalctrl) then
-      isboxer.CheckBoundModifiers(key, conditionalshift, conditionalalt, conditionalctrl)
-    end
-  end
+DB.isboxeroutput = true -- Initially we let isboxer print/warn/output, but only the first time
 
-  local name
-  if (usename and usename ~= "") then
-    name = usename
-  else
-    name = "ISBoxerMacro" .. isboxer.NextButton
-  end
-  isboxer.NextButton = isboxer.NextButton + 1
-  local button
-  if _G[name] then
-    DB:Debug("Button for % already exist, reusing, setting macro to %", name, macro)
-    button = _G[name]
-  else
-    DB:Debug("Creating button %", name)
-    button = CreateFrame("Button", name, nil, "SecureActionButtonTemplate")
-  end
-  button:SetAttribute("type", "macro")
-  button:SetAttribute("macrotext", macro)
-  button:Hide()
-  if (key and key ~= "" and key ~= "none") then
-    SetOverrideBindingClick(isboxer.frame, false, key, name, "LeftButton")
-  end
-end
+-- ISBoxer Hooks
+DB.ISBH = {} -- new functions
+DB.ISBO = {} -- original functions
 
-DB.isbHooks = {LoadBinds = isboxer.LoadBinds, SetMacro = isboxer.SetMacro}
-
-function DB.LoadBinds()
+function DB.ISBH.LoadBinds()
   DB:Debug("Hooked LoadBinds()")
   DB.ReconstructTeam()
   -- Avoid the mismatch complaint:
   isboxer.Character.ActualName = GetUnitName("player")
   isboxer.Character.QualifiedName = DB.fullName
-  DB.isbHooks["LoadBinds"]()
-  DB.isboxerwarnings = false -- only warn once
+  DB.ISBO.LoadBinds()
+  DB.isboxeroutput = false -- only warn/output once
 end
 
 function DB:Replace(macro)
@@ -128,14 +76,30 @@ function DB:Replace(macro)
   return macro
 end
 
-function DB.SetMacro(username, key, macro, ...)
+function DB.ISBH.SetMacro(username, key, macro, ...)
   -- DB:Debug("Hooked SetMacro(%, %, %, %)", username, key, macro, DB.Dump(...))
   macro = DB:Replace(macro)
-  DB.isbHooks["SetMacro"](username, key, macro, ...)
+  DB.ISBO.SetMacro(username, key, macro, ...)
 end
 
-for k, v in pairs(DB.isbHooks) do
-  isboxer[k] = DB[k]
+function DB.ISBH.Output(...)
+  DB:Debug("Isb output " .. DB:Dump(...))
+  if DB.isboxeroutput then
+    DB.ISBO.Output(...)
+  end
+end
+
+function DB.ISBH.Warning(...)
+  DB:Debug("Isb warning " .. DB:Dump(...))
+  if DB.isboxeroutput then
+    DB.ISBO.Warning(...)
+  end
+end
+
+for k, v in pairs(DB.ISBH) do
+  DB:Debug("Changing/hooking isboxer % will call %", k, v)
+  DB.ISBO[k] = isboxer[k]
+  isboxer[k] = v
 end
 
 function DB:SplitFullname(fullname)
@@ -233,7 +197,7 @@ function DB:ProcessMessage(from, data)
     EMAApi.AddMember(realname)
   end
   isboxer.NextButton = 1 -- reset the buttons
-  DB.isbHooks["LoadBinds"]() -- maybe wait/batch/don't do it 5 times in small amount of time
+  DB.ISBO.LoadBinds() -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
   DB:Print(DB.format("New mapping for slot %, dynamically set ISBoxer character to %", idx, realname), 0, 1, 1)
 end
 
