@@ -1,14 +1,23 @@
 --[[ 
    Proof of concept of Dynamic Team by MooreaTV moorea@ymail.com
 
-   Join secret/protect channel
-   Broadcast periodically slot # and name for a while (or until all acked)
-   Stop as soon as you see slot1 (unless you are slot 1)
-   Read from slot1 the team list
-   Slot1 (master) reading the other slots
+   How it currently works:
+
+   Join secret protected channel
+   Send our slot id and name and whether this is a reload which requires getting everyone else's data again
+   Anytime someone joins the channel or we get a message we first flag, resend our info(*)
+
+   *: the send is smart as it's not actually sending right away but just renabling a periodic send within the next interval
+   that way we don't send 4 times the same thing in short sequence when everyone first logs
+
+   We could also:
+     Broadcast periodically slot # and name for a while (or until all acked)
+     Stop as soon as you see slot1 (unless you are slot 1)
+     Read from slot1 the team list
+     Slot1 (master) reading the other slots
 
    [todo have isboxer just save the team list and slot # more directly
-   so we don't have to hook and use variables/that team structure in macros
+   so we don't have to hook and ideally isboxer would use variables/that team structure in macros
    instead of generating the same hardcoded stuff we end up search/replacing into.
    ]] --
 --
