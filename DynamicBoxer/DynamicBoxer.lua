@@ -48,13 +48,14 @@ DB.channelId = nil
 
 -- hook/replace isboxer functions by ours, keeping the original for post hook
 
+DB.isboxerwarnings = true
 -- This event too early and the realm isn't available yet
 -- causing nil error trying to get the fully qualified name
 isboxer.frame:UnregisterEvent("UPDATE_BINDINGS")
 -- We need to fix isboxer.SetMacro so it can update buttons instead
 -- of leaking some/creating new ones each call:
 function isboxer.SetMacro(usename, key, macro, conditionalshift, conditionalalt, conditionalctrl, override)
-  if (key and key ~= "" and key ~= "none") then
+  if (DB.isboxerwarnings and key and key ~= "" and key ~= "none") then
     local action = GetBindingAction(key)
     if (action and action ~= "") then
       -- TODO: only warn once and not each reconfiguration
@@ -65,7 +66,6 @@ function isboxer.SetMacro(usename, key, macro, conditionalshift, conditionalalt,
         isboxer.Warning(key .. " is bound to " .. action .. ". ISBoxer is overriding this binding.")
       end
     end
-
     if (conditionalshift or conditionalalt or conditionalctrl) then
       isboxer.CheckBoundModifiers(key, conditionalshift, conditionalalt, conditionalctrl)
     end
@@ -103,6 +103,7 @@ function DB.LoadBinds()
   isboxer.Character.ActualName = GetUnitName("player")
   isboxer.Character.QualifiedName = DB.fullName
   DB.isbHooks["LoadBinds"]()
+  DB.isboxerwarnings = false -- only warn once
 end
 
 function DB:Replace(macro)
@@ -179,7 +180,9 @@ function DB.Sync()
     --                     tostring(DB.teamComplete))
     return
   end
+  local first = 0 -- the first time, ie after /reload - we will force a resync
   if not DB.channelId then
+    first = 1
     DB.DynamicInit()
   end
   if not DB.channelId then
@@ -191,7 +194,7 @@ function DB.Sync()
     DB:Debug("We don't know our slot/actual yet")
     return
   end
-  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " msg " .. tostring(DB.maxIter)
+  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. first .. " msg " .. tostring(DB.maxIter)
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Message success % on chanId %", ret, DB.channelId)
 end
@@ -199,14 +202,26 @@ end
 DB.Team = {}
 
 function DB:ProcessMessage(from, data)
-  local idxStr, realname, internalname = data:match("^([^ ]+) ([^ ]+) ([^ ]+)") -- or strplit(" ", data)
-  DB:Debug("from %, got idx=% realname=% internal name=%", from, idx, realname, internalname)
+  local idxStr, realname, internalname, forceStr = data:match("^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)") -- or strplit(" ", data)
+  DB:Debug("from %, got idx=% realname=% internal name=% first/force=%", from, idxStr, realname, internalname, forceStr)
   if from ~= realname then
     DB:Debug("skipping unexpected mismatching name % != %", from, realname)
   end
   local idx = tonumber(idxStr)
   if not idx then
-    DB:Debug("invalid non numerical idx %", idxStr)
+    DB:Error("invalid non numerical idx %", idxStr)
+    return
+  end
+  local force = tonumber(forceStr)
+  if not force then
+    DB:Error("invalid non numerical first/force flag %", forceStr)
+    return
+  end
+  if force == 1 then
+    DB:Debug("Got a reload/first from peer while our maxIter is %", DB.maxIter)
+    if DB.maxIter <= 0 then
+      DB.maxIter = 1 -- resend at next round
+    end
   end
   if DB.Team[idx] and DB.Team[idx].new == realname then
     DB:Debug("Already known mapping, skipping % %... team map is %", idx, realname, DB.Team)
@@ -275,7 +290,7 @@ function DB:OnEvent(event, first, ...)
   if handler then
     return handler(self, event, first, ...)
   end
-  DB:Print("Unexpected event without handler " .. event, 1, 0, 0)
+  DB:Error("Unexpected event without handler %", event)
 end
 
 function DB.DynamicInit(slot, actual)
@@ -297,11 +312,6 @@ function DB.Join()
   DB.ReconstructTeam()
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
   DB:Debug("Prefix register success % in dynamic setup % %", ret, slot, actual)
-  -- First join the std channels to make sure we end up being at the end and not first
-  -- for _, c in next, {"General", "Trade", "LocalDefense", "LookingForGroup", "World"} do
-  --   type, name = JoinPermanentChannel(c)
-  --   DB:Debug("Joined channel " .. c .. ", type " .. (type or "<nil>") .. " name " .. (name or "<unset>"))
-  -- end
   local t, n = JoinTemporaryChannel(DB.Channel, DB.Secret)
   DB.channelId = GetChannelName(DB.Channel)
   DB:Debug("Joined channel % / % type % name % id %", DB.Channel, DB.Secret, t, n, DB.channelId)

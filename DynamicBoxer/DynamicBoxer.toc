@@ -8,5 +8,6 @@
 ## LoadOnDemand: 0
 ## Dependencies: ISBoxer
 ## SavedVariables:  dynamicBoxerSaved
+## Globe: check-classic
 MoLib/MoLib.lua
 DynamicBoxer.lua
