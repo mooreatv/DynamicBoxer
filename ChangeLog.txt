@@ -1,5 +1,7 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+0.1.6 June 11th 2019
+    - Limit maximum number of times we'll try sending/syncing (to 20 times/20s after channel join or /dbox m command)
 0.1.5 June 10th 2019
     - Fix for lua error when not running in multiboxing setup (Issue #3)
     - Fix duplicate join event/messages
@@ -29,7 +31,7 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
     - Same as 0.1.0 without the logo in the addon zip
 
 0.1.0 June 7th 2019
-	- Initial build as separate addon
+    - Initial build as separate addon
 
 commit 5434f70c5f4242488513368f4587b60030c6a504
 Author: Moorea Tv <moorea@ymail.com>

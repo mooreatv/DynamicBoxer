@@ -3,7 +3,6 @@
 ## Notes: Augments ISBoxer to manage multiboxing teams dynamically
 ## Author: MooreaTV moorea@ymail.com
 ## Version: @project-version@
-## eMail: moorea@ymail.com
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ## Dependencies: ISBoxer

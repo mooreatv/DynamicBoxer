@@ -40,6 +40,8 @@ DB.Secret = "PrototypeSecret12345"
 
 DB.maxIter = 1 -- We really only need to send the message once (and resend when seeing join from others, batched)
 DB.refresh = 1
+DB.totalRetries = 0
+DB.maxRetries = 20 -- after 20s we stop/give up
 
 DB.chatPrefix = "dbox0" -- protocol version in prefix
 DB.channelId = nil
@@ -56,7 +58,7 @@ function DB:Replace(macro)
   for _, v in ipairs(self.Team) do
     local o = v.orig
     local n = v.new
-    -- TODO: probably should do this when setting the value instead of each time
+    -- TODO: probably should do this local/remote determination once when setting the value instead of each time
     local s, r = DB:SplitFullname(n)
     if r == DB.myRealm then
       n = s -- use the short name without realm when on same realm, using full name breaks (!)
@@ -155,7 +157,6 @@ function DB:ReconstructTeam()
   DB:Debug("Team map initial value = %", DB.Team)
 end
 
-
 -- the first time, ie after /reload - we will force a resync
 DB.firstMsg = 1
 
@@ -182,7 +183,12 @@ function DB.Sync()
   if ret then
     DB.firstMsg = 0
   else
-    DB:Debug("failed to send, will retry") -- TODO: maybe have a actual total max retries for this (and join)
+    DB:Debug("failed to send, will retry % / %", DB.totalRetries, DB.maxRetries)
+    DB.totalRetries = DB.totalRetries + 1
+    if DB.totalRetries >= DB.maxRetries then
+      DB:Error("Giving up sending/syncing after % retries. Use /dbox j to try again later", DB.totalRetries)
+      return
+    end
     if DB.maxIter <= 0 then
       DB.maxIter = 1
     end
@@ -312,6 +318,7 @@ function DB.Join()
     return
   end
   DB.joinDone = true
+  DB.totalRetries = 0 -- try at most maxRetries (20) times after this point
   DB.ReconstructTeam()
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
   DB:Debug("Prefix register success % in dynamic setup", ret)
@@ -354,6 +361,7 @@ function DB.Slash(arg)
   elseif cmd == "m" then
     -- message again
     DB.maxIter = 1
+    DB.totalRetries = 0
     DB.Sync()
   elseif cmd == "c" then
     -- change channel 
