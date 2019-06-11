@@ -1,5 +1,8 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+0.1.5 June 10th 2019
+    - Fix for lua error when not running in multiboxing setup (Issue #2)
+    - Fix duplicate join event/messages
 0.1.4 June 10th 2019
     - Fix /reload on one character needing to rebroadcast from others (Issue #1)
     - Better color scheme

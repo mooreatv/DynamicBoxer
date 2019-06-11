@@ -45,6 +45,11 @@ DB.refresh = 3
 DB.chatPrefix = "dbox0" -- protocol version in prefix
 DB.channelId = nil
 
+-- Returns if we should be operating (basically if isboxer has a static team defined)
+function DB:IsActive()
+  return isboxer.Character_LoadBinds
+end
+
 -- Replace team members in original macro text by the dynamic one.
 function DB:Replace(macro)
   self:Debug("macro before : %", macro)
@@ -123,6 +128,10 @@ function DB:ReconstructTeam()
     DB:Debug("Already know team to be % and my index % (isb members %)", DB.ISBTeam, DB.ISBIndex, isboxer.CharacterSet.Members)
     return
   end
+  if not DB:IsActive() then
+    DB:Print("DynamicBoxer skipping team reconstruction as there is no static isboxer team (not running under innerspace).")
+    return
+  end
   DB.fullName = DB:GetMyFQN()
   DB.shortName, DB.myRealm = DB:SplitFullname(DB.fullName)
   local prev = isboxer.SetMacro
@@ -148,7 +157,7 @@ function DB:ReconstructTeam()
 end
 
 function DB.Sync()
-  if DB.maxIter <= 0 or DB.teamComplete then
+  if DB.maxIter <= 0 or DB.teamComplete or not DB:IsActive() then
     -- TODO: unregister the event/cb/timer/ticker
     -- DB:Debug("CB shouldn't be called when maxIter is " .. DB.maxIter .. " or teamComplete is " ..
     --                     tostring(DB.teamComplete))
@@ -272,8 +281,14 @@ end
 function DB.DynamicInit()
   DB:Debug("Delayed init called")
   DB:MoLibInit()
+  if not DB:IsActive() then
+    DB:Print("DynamicBoxer: No static team/not running under innerspace... skipping...")
+    return
+  end
   DB.Join()
 end
+
+DB.joinDone = false -- because we reschedule the join from multiple place, lets do that only once
 
 function DB.Join()
   -- First check if we have joined the last std channel and reschedule if not
@@ -285,6 +300,11 @@ function DB.Join()
     C_Timer.After(1, DB.Join)
     return
   end
+  if DB.joinDone then
+    DB:Debug("Join already done. skipping this one")
+    return
+  end
+  DB.joinDone = true
   DB.ReconstructTeam()
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
   DB:Debug("Prefix register success % in dynamic setup", ret)
@@ -321,6 +341,7 @@ function DB.Slash(arg)
   end
   if cmd == "j" then
     -- join
+    DB.joinDone = false -- force rejoin code
     DB.Join()
   elseif cmd == "m" then
     -- message again
