@@ -45,6 +45,29 @@ DB.refresh = 3
 DB.chatPrefix = "dbox0" -- protocol version in prefix
 DB.channelId = nil
 
+-- Replace team members in original macro text by the dynamic one.
+function DB:Replace(macro)
+  self:Debug("macro before : %", macro)
+  local count = 0
+  for _, v in ipairs(self.Team) do
+    local o = v.orig
+    local n = v.new
+    -- TODO: probably should do this when setting the value instead of each time
+    local s, r = DB:SplitFullname(n)
+    if r == DB.myRealm then
+      n = s -- use the short name without realm when on same realm, using full name breaks (!)
+    end
+    local c
+    -- self:Debug("o=%, n=%", o, n)
+    macro, c = macro:gsub(o, n) -- TODO: will not work if one character is substring of another, eg foo and foobar
+    count = count + c
+  end
+  if count > 0 then
+    self:Debug("macro after %: %", count, macro)
+  end
+  return macro
+end
+
 -- hook/replace isboxer functions by ours, keeping the original for post hook
 
 DB.isboxeroutput = true -- Initially we let isboxer print/warn/output, but only the first time
@@ -61,28 +84,6 @@ function DB.ISBH.LoadBinds()
   isboxer.Character.QualifiedName = DB.fullName
   DB.ISBO.LoadBinds()
   DB.isboxeroutput = false -- only warn/output once
-end
-
-function DB:Replace(macro)
-  self:Debug("macro before : %", macro)
-  local count = 0
-  for _, v in ipairs(self.Team) do
-    local o = v.orig
-    local n = v.new
-    -- TODO: probably should do this when setting the value instead of each time
-    local s, r = DB:SplitFullname(n)
-    if r == DB.myRealm then
-      n = s -- use the short name without realm when on same realm, using full name breaks (!)
-    end
-    local c
-    -- self:Debug("o=%, n=%", o, n)
-    macro, c = macro:gsub(o, n) -- will not work if one character is substring of another, eg foo and foobar
-    count = count + c
-  end
-  if count > 0 then
-    self:Debug("macro after %: %", count, macro)
-  end
-  return macro
 end
 
 function DB.ISBH.SetMacro(username, key, macro, ...)
