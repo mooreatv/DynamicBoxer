@@ -9,3 +9,5 @@ This addon allows you to create only 1 team per layout and dynamically load any 
 Likewise it lets you create new characters and teams dynamically without having to go back to isboxer suite, make changes there and export to innerspace
 
 This is quite important for instance in classic when you can't create your teams ahead of time and want to get going asap with your teams
+
+Get the binary release using curse client or on https://www.curseforge.com/wow/addons/dynamicboxer or on [WowInterface](https://www.wowinterface.com/downloads/info25009-DynamicBoxer.html)
