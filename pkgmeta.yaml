@@ -7,6 +7,7 @@ ignore:
     - MoLib/installmolib.bat
     - MoLib/MoLib.toc
     - MoLib/luaformat.cfg
+    - MoLib/README.md
 
 manual-changelog: ChangeLog.txt
 

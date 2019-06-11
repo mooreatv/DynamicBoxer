@@ -2,7 +2,7 @@
 -- for behavior we can't change just with the hooks.
 -- This assumes ISBoxer is already loaded per our toc deps
 --
---Created by DBoxInit
+-- Created by DBoxInit
 local DB = DynBoxer
 
 -- We need to fix isboxer.SetMacro so it can update buttons instead

@@ -1,4 +1,4 @@
---[[ 
+--[[
    Initialization needed before loading ISBoxer patches
    ]] --
 --
@@ -16,4 +16,4 @@ CreateFrame("frame", shortName, UIParent)
 
 local DB = DynBoxer
 
-DynamicBoxer.MoLibInstallInto(DB, shortName)
+_G[addon].MoLibInstallInto(DB, shortName)

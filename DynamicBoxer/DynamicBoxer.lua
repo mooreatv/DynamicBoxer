@@ -1,4 +1,4 @@
---[[ 
+--[[
    Proof of concept of Dynamic Team by MooreaTV moorea@ymail.com
 
    How it currently works:
@@ -7,8 +7,8 @@
    Send our slot id and name and whether this is a reload which requires getting everyone else's data again
    Anytime someone joins the channel or we get a message we first flag, resend our info(*)
 
-   *: the send is smart as it's not actually sending right away but just renabling a periodic send within the next interval
-   that way we don't send 4 times the same thing in short sequence when everyone first logs
+   *: the send is smart as it's not actually sending right away but just renabling a periodic send within the
+  next interval, that way we don't send 4 times the same thing in short sequence when everyone first logs
 
    We could also:
      Broadcast periodically slot # and name for a while (or until all acked)
@@ -45,10 +45,11 @@ DB.maxRetries = 20 -- after 20s we stop/give up
 
 DB.chatPrefix = "dbox0" -- protocol version in prefix
 DB.channelId = nil
+DB.enabled = true -- in case we need a variable to disable the addon
 
 -- Returns if we should be operating (basically if isboxer has a static team defined)
 function DB:IsActive()
-  return isboxer.Character_LoadBinds
+  return self.enabled and isboxer.Character_LoadBinds
 end
 
 -- Replace team members in original macro text by the dynamic one.
@@ -59,7 +60,7 @@ function DB:Replace(macro)
     local o = v.orig
     local n = v.new
     -- TODO: probably should do this local/remote determination once when setting the value instead of each time
-    local s, r = DB:SplitFullname(n)
+    local s, r = DB.SplitFullname(n)
     if r == DB.myRealm then
       n = s -- use the short name without realm when on same realm, using full name breaks (!)
     end
@@ -118,27 +119,28 @@ for k, v in pairs(DB.ISBH) do
   isboxer[k] = v
 end
 
-function DB:SplitFullname(fullname)
+function DB.SplitFullname(fullname)
   return fullname:match("(.+)-(.+)")
 end
 
 -- Reverse engineer what isboxer will hopefully be providing more directly soon
 -- (isboxer.CharacterSet.Members isn't always set when making teams without realm)
-function DB:ReconstructTeam()
+function DB.ReconstructTeam()
   if DB.ISBTeam then
-    DB:Debug("Already know team to be % and my index % (isb members %)", DB.ISBTeam, DB.ISBIndex, isboxer.CharacterSet.Members)
+    DB:Debug("Already know team to be % and my index % (isb members %)", DB.ISBTeam, DB.ISBIndex,
+             isboxer.CharacterSet.Members)
     return
   end
   if not DB:IsActive() then
-    DB:Print("DynamicBoxer skipping team reconstruction as there is no static isboxer team (not running under innerspace).")
+    DB:Print("DynamicBoxer skipping team reconstruction as there is no isboxer team (not running under innerspace).")
     return
   end
   DB.fullName = DB:GetMyFQN()
-  DB.shortName, DB.myRealm = DB:SplitFullname(DB.fullName)
+  DB.shortName, DB.myRealm = DB.SplitFullname(DB.fullName)
   local prev = isboxer.SetMacro
   DB.ISBTeam = {}
   -- parse the text which looks like (note the ]xxx; delimiters for most but \n at the end)
-  -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt,mod:lshift,mod:lctrl]LAST\n""
+  -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt...,mod:lctrl]LAST\n""
   isboxer.SetMacro = function(macro, _key, text)
     if macro ~= "FTLAssist" then
       return
@@ -152,7 +154,8 @@ function DB:ReconstructTeam()
   end
   isboxer.Character_LoadBinds()
   isboxer.SetMacro = prev
-  DB:Debug("Found team to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex, isboxer.CharacterSet.Members)
+  DB:Debug("Found team to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
+           isboxer.CharacterSet.Members)
   DB.Team[DB.ISBIndex] = {orig = DB.ISBTeam[DB.ISBIndex], new = DB.fullName}
   DB:Debug("Team map initial value = %", DB.Team)
 end
@@ -176,8 +179,8 @@ function DB.Sync()
     DB:Debug("We don't know our slot/actual yet")
     return
   end
-  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. DB.firstMsg .. " msg " ..
-                    tostring(DB.maxIter)
+  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. DB.firstMsg ..
+                    " msg " .. tostring(DB.maxIter)
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Message success % on chanId %", ret, DB.channelId)
   if ret then
@@ -230,15 +233,15 @@ function DB:ProcessMessage(from, data)
     EMAApi.AddMember(realname)
   end
   isboxer.NextButton = 1 -- reset the buttons
-  DB.ISBO.LoadBinds() -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
+  -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
+  self.ISBO.LoadBinds()
   DB:Print(DB.format("New mapping for slot %, dynamically set ISBoxer character to %", idx, realname), 0, 1, 1)
 end
 
 DB.EventD = {
-
   CHAT_MSG_ADDON = function(self, event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
-    self:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", self:GetName(), event,
-               channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
+    self:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%",
+               self:GetName(), event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
     if channel ~= "CHANNEL" or instanceID ~= DB.Channel then
       self:Debug(9, "wrong channel % or instance % vs %, skipping!", channel, instanceID, DB.Channel)
       return -- not our message(s)
@@ -255,8 +258,8 @@ DB.EventD = {
     self:Debug("OnChannelCountUpdate didx=%, count=%", displayIndex, count)
   end,
 
-  CHAT_MSG_CHANNEL_JOIN = function(self, _event, _text, playerName, _languageName, _channelName, _playerName2, _specialFlags,
-                       _zoneChannelID, _channelIndex, channelBaseName)
+  CHAT_MSG_CHANNEL_JOIN = function(self, _event, _text, playerName, _languageName, _channelName, _playerName2,
+                       _specialFlags, _zoneChannelID, _channelIndex, channelBaseName)
     if channelBaseName == self["Channel"] then
       self:Debug("Join on our channel by %", playerName)
       self["maxIter"] = 1
@@ -279,7 +282,6 @@ DB.EventD = {
       dynamicBoxerSaved = {}
     end
   end
-
 }
 
 function DB:OnEvent(event, first, ...)
@@ -303,7 +305,7 @@ end
 
 DB.joinDone = false -- because we reschedule the join from multiple place, lets do that only once
 
--- note: 2 sources of retry, the dynamic init and 
+-- note: 2 sources of retry, the dynamic init and
 function DB.Join()
   -- First check if we have joined the last std channel and reschedule if not
   -- (so our channel doesn't end up as first one, and /1, /2 etc are normal)
@@ -319,21 +321,25 @@ function DB.Join()
   end
   DB.joinDone = true
   DB.totalRetries = 0 -- try at most maxRetries (20) times after this point
+  if DB.maxIter <= 0 then
+    DB.maxIter = 1
+  end
   DB.ReconstructTeam()
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
   DB:Debug("Prefix register success % in dynamic setup", ret)
   local t, n = JoinTemporaryChannel(DB.Channel, DB.Secret)
   DB.channelId = GetChannelName(DB.Channel)
   DB:Debug("Joined channel % / % type % name % id %", DB.Channel, DB.Secret, t, n, DB.channelId)
-  DB:Print(DB.format("Joined DynBoxer secure channel. This is slot % and dynamically setting ISBoxer character to %", DB.ISBIndex,
-                     DB.fullName), 0, 1, 1)
+  DB:Print(DB.format("Joined DynBoxer secure channel. This is slot % and dynamically setting ISBoxer character to %",
+                     DB.ISBIndex, DB.fullName), 0, 1, 1)
   return DB.channelId
 end
 
 function DB.Help(msg)
   DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox c channel -- to change channel.\n" ..
-             "/dbox s secret -- to change the secret.\n" .. "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
-             "/dbox debug on/off/level -- for debugging on at level or off.\n" .. "/dbox dump global -- to dump a global.")
+             "/dbox s secret -- to change the secret.\n" .. "/dbox m -- send mapping again\n" ..
+             "/dbox join -- (re)join channel.\n" .. "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
+             "/dbox dump global -- to dump a global.")
 end
 
 function DB:SetSaved(name, value)
@@ -364,7 +370,7 @@ function DB.Slash(arg)
     DB.totalRetries = 0
     DB.Sync()
   elseif cmd == "c" then
-    -- change channel 
+    -- change channel
     DB.SetSaved("Channel", rest)
   elseif cmd == "s" then
     -- change secret
@@ -385,7 +391,7 @@ function DB.Slash(arg)
     -- dump
     DB:Print(DB.format("DynBoxer dump of % = " .. DB.Dump(_G[rest]), rest), .7, .7, .9)
   else
-    DB.Help("unknown command \"" .. arg .. "\", usage:")
+    DB.Help('unknown command "' .. arg .. '", usage:')
   end
 end
 
