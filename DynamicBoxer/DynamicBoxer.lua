@@ -35,12 +35,11 @@ DB.Channel = string.gsub(select(2, BNGetInfo()), "#", "") -- also support multip
 -- or a StaticPopupDialogs / StaticPopup_Show
 DB.Secret = "PrototypeSecret12345"
 
--- to force debugging even before saved vars are loaded
--- DB.debug = 1
+-- to force all debugging on even before saved vars are loaded
+-- DB.debug = 9
 
-DB.teamComplete = false
-DB.maxIter = 3
-DB.refresh = 3
+DB.maxIter = 1 -- We really only need to send the message once (and resend when seeing join from others, batched)
+DB.refresh = 1
 
 DB.chatPrefix = "dbox0" -- protocol version in prefix
 DB.channelId = nil
@@ -52,7 +51,7 @@ end
 
 -- Replace team members in original macro text by the dynamic one.
 function DB:Replace(macro)
-  self:Debug("macro before : %", macro)
+  self:Debug(8, "macro before : %", macro)
   local count = 0
   for _, v in ipairs(self.Team) do
     local o = v.orig
@@ -68,7 +67,7 @@ function DB:Replace(macro)
     count = count + c
   end
   if count > 0 then
-    self:Debug("macro after %: %", count, macro)
+    self:Debug(8, "macro after %: %", count, macro)
   end
   return macro
 end
@@ -92,27 +91,27 @@ function DB.ISBH.LoadBinds()
 end
 
 function DB.ISBH.SetMacro(username, key, macro, ...)
-  -- DB:Debug("Hooked SetMacro(%, %, %, %)", username, key, macro, DB.Dump(...))
+  DB:Debug(9, "Hooked SetMacro(%, %, %, %)", username, key, macro, DB.Dump(...))
   macro = DB:Replace(macro)
   DB.ISBO.SetMacro(username, key, macro, ...)
 end
 
 function DB.ISBH.Output(...)
-  DB:Debug("Isb output " .. DB:Dump(...))
+  DB:Debug(7, "Isb output " .. DB.Dump(...))
   if DB.isboxeroutput then
     DB.ISBO.Output(...)
   end
 end
 
 function DB.ISBH.Warning(...)
-  DB:Debug("Isb warning " .. DB:Dump(...))
+  DB:Debug(7, "Isb warning " .. DB.Dump(...))
   if DB.isboxeroutput then
     DB.ISBO.Warning(...)
   end
 end
 
 for k, v in pairs(DB.ISBH) do
-  DB:Debug("Changing/hooking isboxer % will call %", k, v)
+  DB:Debug(3, "Changing/hooking isboxer % will call %", k, v)
   DB.ISBO[k] = isboxer[k]
   isboxer[k] = v
 end
@@ -156,16 +155,15 @@ function DB:ReconstructTeam()
   DB:Debug("Team map initial value = %", DB.Team)
 end
 
+
+-- the first time, ie after /reload - we will force a resync
+DB.firstMsg = 1
+
 function DB.Sync()
-  if DB.maxIter <= 0 or DB.teamComplete or not DB:IsActive() then
-    -- TODO: unregister the event/cb/timer/ticker
-    -- DB:Debug("CB shouldn't be called when maxIter is " .. DB.maxIter .. " or teamComplete is " ..
-    --                     tostring(DB.teamComplete))
+  if DB.maxIter <= 0 or not DB:IsActive() then
     return
   end
-  local first = 0 -- the first time, ie after /reload - we will force a resync
   if not DB.channelId then
-    first = 1
     DB.DynamicInit()
   end
   if not DB.channelId then
@@ -177,10 +175,18 @@ function DB.Sync()
     DB:Debug("We don't know our slot/actual yet")
     return
   end
-  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. first .. " msg " ..
+  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. DB.firstMsg .. " msg " ..
                     tostring(DB.maxIter)
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Message success % on chanId %", ret, DB.channelId)
+  if ret then
+    DB.firstMsg = 0
+  else
+    DB:Debug("failed to send, will retry") -- TODO: maybe have a actual total max retries for this (and join)
+    if DB.maxIter <= 0 then
+      DB.maxIter = 1
+    end
+  end
 end
 
 DB.Team = {}
@@ -189,7 +195,8 @@ function DB:ProcessMessage(from, data)
   local idxStr, realname, internalname, forceStr = data:match("^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)") -- or strplit(" ", data)
   DB:Debug("from %, got idx=% realname=% internal name=% first/force=%", from, idxStr, realname, internalname, forceStr)
   if from ~= realname then
-    DB:Debug("skipping unexpected mismatching name % != %", from, realname)
+    DB:Error("skipping unexpected mismatching name % != %", from, realname)
+    return
   end
   local idx = tonumber(idxStr)
   if not idx then
@@ -208,7 +215,7 @@ function DB:ProcessMessage(from, data)
     end
   end
   if DB.Team[idx] and DB.Team[idx].new == realname then
-    DB:Debug("Already known mapping, skipping % %... team map is %", idx, realname, DB.Team)
+    DB:Debug("Already known mapping, skipping % %", idx, realname)
     return
   end
   DB.Team[idx] = {orig = internalname, new = realname}
@@ -224,10 +231,10 @@ end
 DB.EventD = {
 
   CHAT_MSG_ADDON = function(self, event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
-    self:Debug("OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", self:GetName(), event,
+    self:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", self:GetName(), event,
                channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
     if channel ~= "CHANNEL" or instanceID ~= DB.Channel then
-      self:Debug("wrong channel % or instance % vs %, skipping!", channel, instanceID, DB.Channel)
+      self:Debug(9, "wrong channel % or instance % vs %, skipping!", channel, instanceID, DB.Channel)
       return -- not our message(s)
     end
     self:ProcessMessage(sender, data)
@@ -260,7 +267,7 @@ DB.EventD = {
     end
     if dynamicBoxerSaved then
       DB.deepmerge(DB, nil, dynamicBoxerSaved)
-      self:Debug("Loaded saved vars %", dynamicBoxerSaved)
+      self:Debug(3, "Loaded saved vars %", dynamicBoxerSaved)
     else
       self:Debug("Initialized empty saved vars")
       dynamicBoxerSaved = {}
@@ -270,7 +277,7 @@ DB.EventD = {
 }
 
 function DB:OnEvent(event, first, ...)
-  DB:Debug("OnEvent called for % e=% %", self:GetName(), event, first)
+  DB:Debug(8, "OnEvent called for % e=% %", self:GetName(), event, first)
   local handler = self.EventD[event]
   if handler then
     return handler(self, event, first, ...)
@@ -290,18 +297,18 @@ end
 
 DB.joinDone = false -- because we reschedule the join from multiple place, lets do that only once
 
+-- note: 2 sources of retry, the dynamic init and 
 function DB.Join()
   -- First check if we have joined the last std channel and reschedule if not
   -- (so our channel doesn't end up as first one, and /1, /2 etc are normal)
   local id, name, instanceID = GetChannelName(1)
   DB:Debug("Checking std channel, res % name % instanceId %", id, name, instanceID)
   if id <= 0 then
-    DB:Debug("Not yet in std channel, retrying in 1 sec")
-    C_Timer.After(1, DB.Join)
+    DB:Debug("Not yet in std channel, retry later")
     return
   end
   if DB.joinDone then
-    DB:Debug("Join already done. skipping this one")
+    DB:Debug("Join already done. skipping this one") -- Sync will retry
     return
   end
   DB.joinDone = true
@@ -319,7 +326,7 @@ end
 function DB.Help(msg)
   DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox c channel -- to change channel.\n" ..
              "/dbox s secret -- to change the secret.\n" .. "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
-             "/dbox debug on/off -- for debugging on or off.\n" .. "/dbox dump global -- to dump a global.")
+             "/dbox debug on/off/level -- for debugging on at level or off.\n" .. "/dbox dump global -- to dump a global.")
 end
 
 function DB:SetSaved(name, value)
@@ -339,6 +346,7 @@ function DB.Slash(arg)
   if not (posRest == nil) then
     rest = string.sub(arg, posRest + 1)
   end
+  local debugPrefix = "debug "
   if cmd == "j" then
     -- join
     DB.joinDone = false -- force rejoin code
@@ -353,18 +361,21 @@ function DB.Slash(arg)
   elseif cmd == "s" then
     -- change secret
     DB:SetSaved("Secret", rest)
-    -- for debug, needs exact match:
-  elseif arg == "debug on" then
+    -- for debug, needs exact match (of start of "debug ..."):
+  elseif arg:sub(1, #debugPrefix) == debugPrefix then
     -- debug
-    DB:SetSaved("debug", 1)
-    DB:Print("DynBoxer debug ON")
-  elseif arg == "debug off" then
-    -- debug
-    DB:SetSaved("debug", nil)
-    DB:Print("DynBoxer debug OFF")
+    local debugArg = arg:sub(#debugPrefix + 1)
+    if debugArg == "on" then
+      DB:SetSaved("debug", 1)
+    elseif debugArg == "off" then
+      DB:SetSaved("debug", nil)
+    else
+      DB:SetSaved("debug", tonumber(debugArg))
+    end
+    DB:Print(DB.format("DynBoxer debug now %", DB.debug))
   elseif cmd == "d" then
     -- dump
-    DB:Print(DB.format("DynBoxer dump of % = " .. DB.Dump(_G[rest]), rest), 0, 1, 1)
+    DB:Print(DB.format("DynBoxer dump of % = " .. DB.Dump(_G[rest]), rest), .7, .7, .9)
   else
     DB.Help("unknown command \"" .. arg .. "\", usage:")
   end

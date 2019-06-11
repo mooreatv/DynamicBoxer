@@ -34,10 +34,10 @@ function isboxer.SetMacro(usename, key, macro, conditionalshift, conditionalalt,
   -- Start of change comparted to original
   local button
   if _G[name] then
-    DB:Debug("Button for % already exist, reusing, setting macro to %", name, macro)
+    DB:Debug(8, "Button for % already exist, reusing, setting macro to %", name, macro)
     button = _G[name]
   else
-    DB:Debug("Creating button %", name)
+    DB:Debug(2, "Creating button %", name)
     button = CreateFrame("Button", name, nil, "SecureActionButtonTemplate")
   end
   -- End of change compared to original
