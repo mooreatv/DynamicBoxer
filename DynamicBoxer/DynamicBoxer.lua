@@ -1,7 +1,8 @@
 --[[
-   Proof of concept of Dynamic Team by MooreaTV moorea@ymail.com
+   Dynamic Team by MooreaTV moorea@ymail.com (c) 2019 All rights reserved
+   Licensed under LGPLv3 - No Warranty
 
-   How it currently works:
+   Evolving from prototype/proof of concept to usuable for "prod", here is how it currently works:
 
    Join secret protected channel
    Send our slot id and name and whether this is a reload which requires getting everyone else's data again
@@ -27,13 +28,13 @@ local addon, ns = ...
 -- Created by DBoxInit
 local DB = DynBoxer
 
--- TODO: for something actually secure, this must be generated and kept secret
--- also consider using bnet communication as a common case is all characters are from same bnet
-
-DB.Channel = string.gsub(select(2, BNGetInfo()), "#", "") -- also support multiple bnet/make this confirgurable
--- this should be secure, unique,... and/or ask the user to /dbox secret <something> and save it
--- or a StaticPopupDialogs / StaticPopup_Show
-DB.Secret = "PrototypeSecret12345"
+-- TODO: consider using bnet communication as a common case is all characters are from same bnet
+-- (also ideally innerspace or isboxer suite would generate a secure channel/password combo so we don't even
+-- need the UI/one time setup)
+-- For now we use a regular (private) addon channel:
+-- This is just the default assuming a single bnet but can be changed by the user to match on all windows
+DB.Channel = string.gsub(select(2, BNGetInfo()), "#", "")
+DB.Secret = "" -- Empty will force UI/dialog setup (unless already saved in saved vars)
 
 -- to force all debugging on even before saved vars are loaded
 -- DB.debug = 9
@@ -45,7 +46,8 @@ DB.maxRetries = 20 -- after 20s we stop/give up
 
 DB.chatPrefix = "dbox0" -- protocol version in prefix
 DB.channelId = nil
-DB.enabled = true -- in case we need a variable to disable the addon
+DB.enabled = true -- set to false if the users cancels out of the UI
+DB.minSecretLength = 5 -- at least 5 characters for channel password
 
 -- Returns if we should be operating (basically if isboxer has a static team defined)
 function DB:IsActive()
@@ -164,6 +166,7 @@ end
 DB.firstMsg = 1
 
 function DB.Sync()
+  DB:Debug(9, "DB:Sync maxIter %", DB.maxIter)
   if DB.maxIter <= 0 or not DB:IsActive() then
     return
   end
@@ -271,6 +274,7 @@ DB.EventD = {
   UPDATE_BINDINGS = DB.DebugEvCall,
 
   ADDON_LOADED = function(self, _event, name)
+    self:Debug(9, "Addon % loaded", name)
     if name ~= addon then
       return -- not us, return
     end
@@ -297,8 +301,12 @@ function DB.DynamicInit()
   DB:Debug("Delayed init called")
   DB:MoLibInit()
   if not DB:IsActive() then
-    DB:Print("DynamicBoxer: No static team/not running under innerspace... skipping...")
+    DB:Print("DynamicBoxer: No static team/not running under innerspace or user abort... skipping...")
     return
+  end
+  if #DB.Secret < DB.minSecretLength then
+    DB.ChannelUI()
+    return -- Join will be called at the positive end of the 2 dialogs
   end
   DB.Join()
 end
@@ -336,9 +344,10 @@ function DB.Join()
 end
 
 function DB.Help(msg)
-  DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox c channel -- to change channel.\n" ..
-             "/dbox s secret -- to change the secret.\n" .. "/dbox m -- send mapping again\n" ..
-             "/dbox join -- (re)join channel.\n" .. "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
+  DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox init -- redo the one time channel/secret setup UI\n" ..
+             "/dbox c channel -- to change channel.\n" .. "/dbox s secret -- to change the secret.\n" ..
+             "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
+             "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
              "/dbox dump global -- to dump a global.")
 end
 
@@ -364,6 +373,9 @@ function DB.Slash(arg)
     -- join
     DB.joinDone = false -- force rejoin code
     DB.Join()
+  elseif cmd == "i" then
+    -- re do initialization
+    DB:ChannelUI()
   elseif cmd == "m" then
     -- message again
     DB.maxIter = 1
@@ -405,5 +417,5 @@ for k, _ in pairs(DB.EventD) do
   DB:RegisterEvent(k)
 end
 
-DB:Debug("dbox file loaded")
+DB:Debug("dbox main file loaded")
 DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync)

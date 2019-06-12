@@ -12,3 +12,4 @@ MoLib/MoLib.lua
 DBoxInit.lua
 ISBoxerPatches.lua
 DynamicBoxer.lua
+DBoxUI.lua
