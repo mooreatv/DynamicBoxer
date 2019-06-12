@@ -6,7 +6,6 @@ local DB = DynBoxer
 
 function DB.OnChannelUIShow(widget, data)
   DB:Debug("ChannelUI Show widget=% ---- data=%", widget, data)
-  widget.editBox:SetPassword(false)
   widget.editBox:SetText(DB.Channel)
   widget.editBox:HighlightText()
 end
@@ -22,6 +21,13 @@ function DB.OnPasswordUIShow(widget, _data)
   DB:Debug("PasswordUI OnShow w=%", widget)
   widget.button1:Disable()
   widget.editBox:SetPassword(true)
+end
+
+function DB.OnPasswordUIHide(widget, _data)
+  DB:Debug("PasswordUI OnHide w=%", widget)
+  widget.button1:Enable()
+  widget.editBox:SetText("")
+  widget.editBox:SetPassword(false)
 end
 
 function DB.OnPasswordUIAccept(widget, data, data2)
@@ -65,6 +71,7 @@ StaticPopupDialogs["DYNBOXER_PASSWORD"] = {
   OnShow = DB.OnPasswordUIShow,
   OnAccept = DB.OnPasswordUIAccept,
   OnCancel = DB.OnUICancel,
+  OnHide = DB.OnPasswordUIHide,
   EditBoxOnEnterPressed = function(self, data)
     local widget = self:GetParent()
     if widget.button1:IsEnabled() then

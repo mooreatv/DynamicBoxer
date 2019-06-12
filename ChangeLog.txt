@@ -1,5 +1,7 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+1.0.1 June 12th 2019
+    - Dialog is global (!) and changes need to be reverted on OnHide (like clearing password field)
 1.0.0 June 11th 2019 - 1.0 After 6 alpha/beta releases
     - Added UI (2 step dialog boxes, ran only once per account) to set channel/secret pair
     - Also re runnable using `/dbox init` later
