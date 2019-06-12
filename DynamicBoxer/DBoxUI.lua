@@ -40,7 +40,7 @@ function DB.OnPasswordUIAccept(widget, data, data2)
   DB:Join()
 end
 
-function DB.OnUICancel(widget, data)
+function DB.OnUICancel(_widget, _data)
   DB.enabled = false -- avoids a loop where we keep trying to ask user
   DB.inUI = false
   DB:Error("User cancelled. Will not use DynamicBoxer until /reload or /dbox i")
