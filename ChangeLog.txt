@@ -5,7 +5,7 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
      need to be reverted on OnHide (like clearing password field)
 
 1.0.0 June 11th 2019 - 1.0 After 6 alpha/beta releases
-    - Added UI (2 step dialog boxes, ran only once per account) to set channel/secret pair
+    - Added UI (2 step dialog boxes, ran only once per account) to set channel/secret pair (Issue #2)
     - Also re runnable using `/dbox init` later
     - Limit maximum number of times we'll try sending/syncing (to 20 times/20s after channel join or /dbox m command)
     - DynBoxer.enabled boolean to turn off dynboxer even if loaded/running (used when user cancels out of the setup UI)
