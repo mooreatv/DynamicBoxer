@@ -367,9 +367,9 @@ end
 
 function DB.Help(msg)
   DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox init -- redo the one time channel/secret setup UI\n" ..
-             "/dbox c channel -- to change channel.\n" .. "/dbox s secret -- to change the secret.\n" ..
-             "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
-             "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
+             "/dbox r -- show random id generator.\n" .. "/dbox c channel -- to change channel.\n" ..
+             "/dbox s secret -- to change the secret.\n" .. "/dbox m -- send mapping again\n" ..
+             "/dbox join -- (re)join channel.\n" .. "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
              "/dbox dump global -- to dump a global.")
 end
 
@@ -398,6 +398,9 @@ function DB.Slash(arg)
   elseif cmd == "i" then
     -- re do initialization
     DB:ChannelUI()
+  elseif cmd == "r" then
+    -- random id generator (misc bonus util)
+    StaticPopup_Show("DYNBOXER_RANDOM")
   elseif cmd == "m" then
     -- message again
     DB.maxIter = 1
