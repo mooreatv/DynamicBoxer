@@ -98,7 +98,9 @@ function DB.OnRandomUIShow(widget, _data)
   e:SetMaxLetters(DB.randomIdLen)
   e:SetScript("OnTabPressed", function()
     DB:Debug("Tab pressed on random, switching!")
-    DB.currentMainEditBox:SetFocus()
+    if DB.currentMainEditBox then
+      DB.currentMainEditBox:SetFocus()
+    end
   end)
   e:SetScript("OnMouseUp",  function(self)
     DB:Debug("Clicked on random, rehighlighting")
