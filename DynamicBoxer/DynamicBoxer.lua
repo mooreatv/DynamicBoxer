@@ -1,12 +1,14 @@
 --[[
-   Dynamic Team by MooreaTV moorea@ymail.com (c) 2019 All rights reserved
+   DynamicBoxer: Dynamic Team Multiboxing by MooreaTV moorea@ymail.com (c) 2019 All rights reserved
    Licensed under LGPLv3 - No Warranty
+   (contact the author if you need a different license)
 
-   Evolving from prototype/proof of concept to usuable for "prod", here is how it currently works:
+   Evolved from prototype/proof of concept to usuable for "prod", here is how it currently works:
 
    Join secret protected channel
    Send our slot id and name and whether this is a reload which requires getting everyone else's data again
    Anytime someone joins the channel or we get a message we first flag, resend our info(*)
+   Rewrite all the macros with correct character names for slot
 
    *: the send is smart as it's not actually sending right away but just renabling a periodic send within the
   next interval, that way we don't send 4 times the same thing in short sequence when everyone first logs
