@@ -28,12 +28,22 @@ local addon, ns = ...
 -- Created by DBoxInit
 local DB = DynBoxer
 
+-- Battlenet default channel suffix (DynamicBoxer4 will be prefixed in all cases to final channel name)
+function DB.DefaultChannel()
+  local _, bnetId = BNGetInfo()
+  if bnetId and #bnetId > 0 then
+    return string.gsub(bnetId, "#", "")
+  end
+  DB:Warning("No battlenet unique id available, please pick a unique channel manually")
+  return ""
+end
+
 -- TODO: consider using bnet communication as a common case is all characters are from same bnet
 -- (also ideally innerspace or isboxer suite would generate a secure channel/password combo so we don't even
 -- need the UI/one time setup)
--- For now we use a regular (private) addon channel:
+-- For now we use a regular (private) addon channel (initialized based on battlenet id to be unique)
 -- This is just the default assuming a single bnet but can be changed by the user to match on all windows
-DB.Channel = string.gsub(select(2, BNGetInfo()), "#", "")
+DB.Channel = DB.DefaultChannel()
 DB.Secret = "" -- Empty will force UI/dialog setup (unless already saved in saved vars)
 
 -- to force all debugging on even before saved vars are loaded
@@ -49,9 +59,11 @@ DB.channelId = nil
 DB.enabled = true -- set to false if the users cancels out of the UI
 DB.minSecretLength = 5 -- at least 5 characters for channel password
 
+DB.manual = false -- testing manual mode
+
 -- Returns if we should be operating (basically if isboxer has a static team defined)
 function DB:IsActive()
-  return self.enabled and isboxer.Character_LoadBinds
+  return self.enabled and (isboxer.Character_LoadBinds or self.manual)
 end
 
 -- Replace team members in original macro text by the dynamic one.
@@ -143,6 +155,7 @@ function DB.ReconstructTeam()
   DB.ISBTeam = {}
   -- parse the text which looks like (note the ]xxx; delimiters for most but \n at the end)
   -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt...,mod:lctrl]LAST\n""
+  DB.ISBIndex = 0 -- not set but init for manual mode
   isboxer.SetMacro = function(macro, _key, text)
     if macro ~= "FTLAssist" then
       return
@@ -154,7 +167,11 @@ function DB.ReconstructTeam()
       end
     end
   end
-  isboxer.Character_LoadBinds()
+  if isboxer.Character_LoadBinds then
+    isboxer.Character_LoadBinds()
+  else
+    DB:Warning("Manual mode, no isboxer binding")
+  end
   isboxer.SetMacro = prev
   DB:Debug("Found team to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
            isboxer.CharacterSet.Members)
@@ -245,8 +262,8 @@ DB.EventD = {
   CHAT_MSG_ADDON = function(self, event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
     self:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%",
                self:GetName(), event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
-    if channel ~= "CHANNEL" or instanceID ~= DB.Channel then
-      self:Debug(9, "wrong channel % or instance % vs %, skipping!", channel, instanceID, DB.Channel)
+    if channel ~= "CHANNEL" or instanceID ~= DB.joinedChannel then
+      self:Debug(9, "wrong channel % or instance % vs %, skipping!", channel, instanceID, DB.joinedChannel)
       return -- not our message(s)
     end
     self:ProcessMessage(sender, data)
@@ -263,7 +280,7 @@ DB.EventD = {
 
   CHAT_MSG_CHANNEL_JOIN = function(self, _event, _text, playerName, _languageName, _channelName, _playerName2,
                        _specialFlags, _zoneChannelID, _channelIndex, channelBaseName)
-    if channelBaseName == self["Channel"] then
+    if channelBaseName == self.joinedChannel then
       self:Debug("Join on our channel by %", playerName)
       self["maxIter"] = 1
     end
@@ -335,9 +352,14 @@ function DB.Join()
   DB.ReconstructTeam()
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
   DB:Debug("Prefix register success % in dynamic setup", ret)
-  local t, n = JoinTemporaryChannel(DB.Channel, DB.Secret)
-  DB.channelId = GetChannelName(DB.Channel)
-  DB:Debug("Joined channel % / % type % name % id %", DB.Channel, DB.Secret, t, n, DB.channelId)
+  if not DB.Channel or #DB.Channel == 0 then
+    DB:Warning("Channel is empty, will use 'demo' instead")
+    DB.Channel = "demo"
+  end
+  DB.joinedChannel = "DynamicBoxer4" .. DB.Channel -- only alphanums seems legal, couldn't find better seperator than 4
+  local t, n = JoinTemporaryChannel(DB.joinedChannel, DB.Secret)
+  DB.channelId = GetChannelName(DB.joinedChannel)
+  DB:Debug("Joined channel % / % type % name % id %", DB.joinedChannel, DB.Secret, t, n, DB.channelId)
   DB:Print(DB.format("Joined DynBoxer secure channel. This is slot % and dynamically setting ISBoxer character to %",
                      DB.ISBIndex, DB.fullName), 0, 1, 1)
   return DB.channelId
