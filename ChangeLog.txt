@@ -1,7 +1,11 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+1.1.2 June XXth 2019
+    - 
+
 1.1.1 June 13th 2019
     - Avoid rejoining the same channel right away while doing /dbox init setup UI (needed to clear a few more state)
+
 1.1.0 June 13th 2019
     - Added optional id/password generator, you can tab between the 2 copy/paste etc (can be used for channel
     but mostly for the secret, it must be pasted on all windows, if copied, `/dbox random` to get just this utility)
@@ -13,7 +17,8 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
      need to be reverted on OnHide (like clearing password field)
     - make sure we leave previous channel when doing "/dbox init"
     - fix bug on macro rewrite when missing slots (lua ipairs stops at first hole)
-1.0.0 June 11th 2019 - 1.0 After 6 alpha/beta releases
+
+1.0.0 June 11th 2019 - ***1.0*** After 6 alpha/beta releases
     - Added UI (2 step dialog boxes, ran only once per account) to set channel/secret pair (Issue #2)
     - Also re runnable using `/dbox init` later
     - Limit maximum number of times we'll try sending/syncing (to 20 times/20s after channel join or /dbox m command)
