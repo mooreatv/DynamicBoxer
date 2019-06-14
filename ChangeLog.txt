@@ -3,6 +3,8 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 1.0.1 June 12th 2019
     - Added optional id/password generator, you can tab between the 2 copy/paste etc (can be used for channel
     but mostly for the secret, it must be pasted on all windows, if copied, `/dbox random` to get just this utility)
+    (Issue #8) with lots of work/learning to get a cool fixed width narrow display and handle tab, escape, click, select,
+    typing etc as one may expect.
     - Handle trial accounts where BattleNet info is nil (Issue #7)
         as part of fix prefix provided channel name with DynamicBoxer4, if left empty (but don't) uses "demo"
     - Static dialogs are reusing widgets without reinitializing them (!) so changes made in UI config

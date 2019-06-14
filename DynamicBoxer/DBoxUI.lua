@@ -3,7 +3,7 @@
   Covered by the GNU General Public License version 3 (GPLv3)
   NO WARRANTY
   (contact the author if you need a different license)
-]]
+]] --
 -- our name, our empty default (and unused) anonymous ns
 local addon, ns = ...
 
@@ -47,6 +47,7 @@ function DB.OnPasswordUIShow(widget, data)
       DB.randomEditBox:SetFocus()
     end
   end)
+  widget.editBox.Instructions:SetText(DB.format("min % char secret", DB.minSecretLength))
 end
 
 function DB.OnPasswordUIHide(widget, data)
@@ -70,37 +71,59 @@ function DB.OnPasswordUIAccept(widget, data, data2)
   DB:Join()
 end
 
-function DB.OnUICancel(_widget, _data)
+function DB.OnUICancel(widget, _data)
   DB.enabled = false -- avoids a loop where we keep trying to ask user
   DB.inUI = false
+  widget:Hide()
   StaticPopup_Hide("DYNBOXER_RANDOM")
   DB.currentMainEditBox = nil
   DB:Error("User cancelled. Will not use DynamicBoxer until /reload or /dbox i")
 end
 
 DB.randomIdLen = 8
+DB.fontPath = "Interface\\AddOns\\DynamicBoxer\\fixed-font.otf"
+
+function DB.SetupFont(height)
+  if DB.fixedFont then
+    return DB.fixedFont
+  end
+  DB.fixedFont = CreateFont("DynBoxerFixedFont")
+  DB:Debug("Set font custom height %, path %: %", height, DB.fontPath, DB.fixedFont:SetFont(DB.fontPath, height))
+  -- DB:Debug("Set font system: %", DB.fixedFont:SetFont(CombatTextFont:GetFont(), 10))
+  return DB.fixedFont
+end
 
 -- local x = 0
+
+DB.fontString = DB:CreateFontString()
 
 function DB.OnRandomUIShow(widget, _data)
   DB:Debug("Randomize UI Show/Regen")
   local e = widget.editBox
   DB.randomEditBox = e
-  e:SetText(DB.RandomId(DB.randomIdLen))
-  -- width test, alternate narrow and wide
-  -- if x % 2 == 0 then
-  --   e:SetText("12345678")
-  -- else
-  --   e:SetText("WWWWWWWW")
-  -- end
-  -- x = x + 1
+  local newText = DB.RandomId(DB.randomIdLen)
+  --[[ width test, alternate narrow and wide
+  if x % 2 == 0 then
+    newText = "12345678"
+    -- newText = "iiiiiiii"
+  else
+    newText = "WWWWWWWW"
+  end
+  x = x + 1
+  ]]
+  e:SetText(newText)
+  DB:Debug("Checking size on %", e)
+  local height = e.Instructions:GetHeight()
+  DB:Debug("Height from edit box is %", height)
   e:HighlightText()
   e:SetJustifyH("CENTER")
-  -- e:SetFontObject(CombatTextFont)
-  -- TODO: need to get real size, from FontString:GetStringWidth() - how to get the fontstr?
-  local width = 12 * DB.randomIdLen
-  -- width = e:GetStringWidth()
-  e:SetWidth(width)
+  local font = DB.SetupFont(height / 2)
+  e:SetFontObject(font)
+  DB.fontString:SetFontObject(font)
+  DB.fontString:SetText(newText)
+  local width = DB.fontString:GetStringWidth()
+  DB:Debug("Width with new font is %", width)
+  e:SetWidth(width + 4) -- + some or highlights hides most of it/it doesn't fit
   e:SetMaxLetters(DB.randomIdLen)
   e:SetScript("OnTabPressed", function()
     DB:Debug("Tab pressed on random, switching!")
@@ -108,7 +131,7 @@ function DB.OnRandomUIShow(widget, _data)
       DB.currentMainEditBox:SetFocus()
     end
   end)
-  e:SetScript("OnMouseUp",  function(self)
+  e:SetScript("OnMouseUp", function(self)
     DB:Debug("Clicked on random, rehighlighting")
     self:HighlightText()
     self:SetCursorPosition(DB.randomIdLen)
@@ -122,7 +145,14 @@ StaticPopupDialogs["DYNBOXER_RANDOM"] = {
   button2 = "Close",
   timeout = 0,
   whileDead = true,
-  hideOnEscape = true,
+  hideOnEscape = 1, -- doesn't help when there is an edit box, real stuff is:
+  EditBoxOnEscapePressed = function(self)
+    if DB.currentMainEditBox then
+      DB.OnUICancel(DB.currentMainEditBox:GetParent())
+    else
+      self:GetParent():Hide()
+    end
+  end,
   OnShow = DB.OnRandomUIShow,
   OnAccept = DB.OnRandomUIShow,
   EditBoxOnEnterPressed = function(self, data)
@@ -143,7 +173,10 @@ StaticPopupDialogs["DYNBOXER_CHANNEL"] = {
   button2 = CANCEL,
   timeout = 0,
   whileDead = true,
-  hideOnEscape = true,
+  hideOnEscape = 1, -- doesn't help when there is an edit box, real stuff is:
+  EditBoxOnEscapePressed = function(self)
+    DB.OnUICancel(self:GetParent())
+  end,
   OnShow = DB.OnChannelUIShow,
   OnAccept = DB.OnChannelUIAccept,
   OnCancel = DB.OnUICancel,
@@ -158,7 +191,10 @@ StaticPopupDialogs["DYNBOXER_PASSWORD"] = {
   button2 = CANCEL,
   timeout = 0,
   whileDead = true,
-  hideOnEscape = true,
+  hideOnEscape = 1, -- doesn't help when there is an edit box, real stuff is:
+  EditBoxOnEscapePressed = function(self)
+    DB.OnUICancel(self:GetParent())
+  end,
   OnShow = DB.OnPasswordUIShow,
   OnAccept = DB.OnPasswordUIAccept,
   OnCancel = DB.OnUICancel,
