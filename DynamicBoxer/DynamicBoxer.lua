@@ -72,7 +72,7 @@ end
 function DB:Replace(macro)
   self:Debug(8, "macro before : %", macro)
   local count = 0
-  for _, v in ipairs(self.Team) do
+  for k, v in pairs(self.Team) do -- ipairs stops at first hole!
     local o = v.orig
     local n = v.new
     -- TODO: probably should do this local/remote determination once when setting the value instead of each time
@@ -81,7 +81,7 @@ function DB:Replace(macro)
       n = s -- use the short name without realm when on same realm, using full name breaks (!)
     end
     local c
-    -- self:Debug("o=%, n=%", o, n)
+    self:Debug(9, "for #% o=%, n=%", k, o, n)
     macro, c = macro:gsub(o, n) -- TODO: will not work if one character is substring of another, eg foo and foobar
     count = count + c
   end
@@ -399,6 +399,10 @@ function DB.Slash(arg)
     DB.Join()
   elseif cmd == "i" then
     -- re do initialization
+    if DB.joinedChannel then
+      DB:Debug("Re-init requested, leaving %: %", DB.joinedChannel, LeaveChannelByName(DB.joinedChannel))
+      DB.joinedChannel = nil
+    end
     DB:ChannelUI()
   elseif cmd == "r" then
     -- random id generator (misc bonus util)
