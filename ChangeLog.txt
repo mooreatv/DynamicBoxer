@@ -1,5 +1,7 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+1.1.1 June 13th 2019
+    - Avoid rejoining the same channel right away while doing /dbox init setup UI (needed to clear a few more state)
 1.1.0 June 13th 2019
     - Added optional id/password generator, you can tab between the 2 copy/paste etc (can be used for channel
     but mostly for the secret, it must be pasted on all windows, if copied, `/dbox random` to get just this utility)

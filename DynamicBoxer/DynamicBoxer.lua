@@ -401,7 +401,10 @@ function DB.Slash(arg)
     -- re do initialization
     if DB.joinedChannel then
       DB:Debug("Re-init requested, leaving %: %", DB.joinedChannel, LeaveChannelByName(DB.joinedChannel))
+      DB.enabled = false
       DB.joinedChannel = nil
+      DB.channelId = nil
+      DB.joinDone = false
     end
     DB:ChannelUI()
   elseif cmd == "r" then
