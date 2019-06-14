@@ -1,6 +1,6 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
-1.1.0 June 12th 2019
+1.1.0 June 13th 2019
     - Added optional id/password generator, you can tab between the 2 copy/paste etc (can be used for channel
     but mostly for the secret, it must be pasted on all windows, if copied, `/dbox random` to get just this utility)
     (Issue #8) with lots of work/learning to get a cool fixed width narrow display and handle tab, escape, click, select,
