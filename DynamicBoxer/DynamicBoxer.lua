@@ -260,16 +260,20 @@ function DB:ProcessMessage(from, data)
   DB:Print(DB.format("New mapping for slot %, dynamically set ISBoxer character to %", idx, realname), 0, 1, 1)
 end
 
+function DB:ChatAddonMsg(event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
+  DB:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", self:GetName(),
+           event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
+  if channel ~= "CHANNEL" or instanceID ~= DB.joinedChannel then
+    DB:Debug(9, "wrong channel % or instance % vs %, skipping!", channel, instanceID, DB.joinedChannel)
+    return -- not our message(s)
+  end
+  DB:ProcessMessage(sender, data)
+end
+
 DB.EventD = {
-  CHAT_MSG_ADDON = function(self, event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
-    self:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%",
-               self:GetName(), event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
-    if channel ~= "CHANNEL" or instanceID ~= DB.joinedChannel then
-      self:Debug(9, "wrong channel % or instance % vs %, skipping!", channel, instanceID, DB.joinedChannel)
-      return -- not our message(s)
-    end
-    self:ProcessMessage(sender, data)
-  end,
+  CHAT_MSG_ADDON = DB.ChatAddonMsg,
+
+  BN_CHAT_MSG_ADDON = DB.ChatAddonMsg,
 
   PLAYER_ENTERING_WORLD = function(self, ...)
     self:Debug("OnPlayerEnteringWorld " .. DB.Dump(...))
@@ -281,16 +285,36 @@ DB.EventD = {
   end,
 
   CHAT_MSG_CHANNEL_JOIN = function(self, _event, _text, playerName, _languageName, _channelName, _playerName2,
-                       _specialFlags, _zoneChannelID, _channelIndex, channelBaseName)
+                                   _specialFlags, _zoneChannelID, _channelIndex, channelBaseName)
     if channelBaseName == self.joinedChannel then
       self:Debug("Join on our channel by %", playerName)
       self["maxIter"] = 1
     end
   end,
 
-  CHAT_MSG_CHANNEL_LEAVE = DB.DebugEvCall,
+  CHAT_MSG_CHANNEL_LEAVE = function(self, ...)
+    self:DebugEvCall(1, ...)
+  end,
 
-  UPDATE_BINDINGS = DB.DebugEvCall,
+  UPDATE_BINDINGS = function(self, ...)
+    self:DebugEvCall(1, ...)
+  end,
+
+  BN_CONNECTED = function(self, ...)
+    self:DebugEvCall(1, ...)
+  end,
+
+  BN_DISCONNECTED = function(self, ...)
+    self:DebugEvCall(1, ...)
+  end,
+
+  BN_FRIEND_INFO_CHANGED = function(self, ...)
+    self:DebugEvCall(3, ...)
+  end,
+
+  BN_INFO_CHANGED = function(self, ...)
+    self:DebugEvCall(3, ...)
+  end,
 
   ADDON_LOADED = function(self, _event, name)
     self:Debug(9, "Addon % loaded", name)
