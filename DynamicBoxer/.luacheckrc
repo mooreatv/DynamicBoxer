@@ -11,6 +11,7 @@ globals = {
     "EMAApi",
     "GetBindingAction",
     "GetUnitName",
+    "LeaveChannelByName",
     "SetOverrideBindingClick",
     "SlashCmdList",
     "SLASH_DynamicBoxer_Slash_Command1",

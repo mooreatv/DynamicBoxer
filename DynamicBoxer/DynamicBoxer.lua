@@ -5,6 +5,14 @@
 
    Evolved from prototype/proof of concept to usuable for "prod", here is how it currently works:
 
+   New (1.2) idea:
+   UI only shows what to copy from slot 1 into slot 2..N
+   Includes slot1's name and a secret
+   all 2..N msg slot1, 2 cases:
+   - everyone is on same realm: use channel
+   - cross realm boxing: slot1 can reply with team composition; we record slot1s and team affinity
+   UI to re copy paste credentials when logging a new team member cross realm
+
    Join secret protected channel
    Send our slot id and name and whether this is a reload which requires getting everyone else's data again
    Anytime someone joins the channel or we get a message we first flag, resend our info(*)
@@ -72,17 +80,25 @@ end
 function DB:Replace(macro)
   self:Debug(8, "macro before : %", macro)
   local count = 0
-  for k, v in pairs(self.Team) do -- ipairs stops at first hole!
+  -- Deal with issue#10 by doing 2 passes first longest origin to SLOTXX then SLOTXX to actual, to avoid
+  -- any possible source/destination overlap (step 2/2, step 1, the sorting is further below)
+  for k, v in ipairs(self.SortedTeam) do -- ipairs stops at first hole but we removed holes in SortTeam
     local o = v.orig
     local n = v.new
-    -- TODO: probably should do this local/remote determination once when setting the value instead of each time
-    local s, r = DB.SplitFullname(n)
-    if r == DB.myRealm then
-      n = s -- use the short name without realm when on same realm, using full name breaks (!)
-    end
+    local s = v.slot
+    v.slotStr = string.format("SLOT%02d", s) -- up to 99 slots, should be enough, mutates the original, it's ok
     local c
-    self:Debug(9, "for #% o=%, n=%", k, o, n)
-    macro, c = macro:gsub(o, n) -- TODO: will not work if one character is substring of another, eg foo and foobar
+    self:Debug(9, "#%: for s=% o=% -> i=% (n=%)", k, s, o, v.slotStr, n)
+    macro, c = macro:gsub(o, v.slotStr)
+    count = count + c
+  end
+  for k, v in ipairs(self.SortedTeam) do
+    local o = v.orig
+    local n = v.new
+    local s = v.slot
+    local c
+    self:Debug(9, "#%: for s=% i=% -> n=% (o=%)", k, s, v.slotStr, n, o)
+    macro, c = macro:gsub(v.slotStr, n)
     count = count + c
   end
   if count > 0 then
@@ -175,10 +191,11 @@ function DB.ReconstructTeam()
     DB:Warning("Manual mode, no isboxer binding")
   end
   isboxer.SetMacro = prev
-  DB:Debug("Found team to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
+  DB:Debug("Found isbteam to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
            isboxer.CharacterSet.Members)
-  DB.Team[DB.ISBIndex] = {orig = DB.ISBTeam[DB.ISBIndex], new = DB.fullName}
+  DB.Team[DB.ISBIndex] = {orig = DB.ISBTeam[DB.ISBIndex], new = DB.shortName, slot = DB.ISBIndex}
   DB:Debug("Team map initial value = %", DB.Team)
+  DB:SortTeam()
 end
 
 -- the first time, ie after /reload - we will force a resync
@@ -220,6 +237,22 @@ function DB.Sync()
   end
 end
 
+-- Deal with issue#10 by sorting by inverse of length, to replace most specific first (step 1/2)
+
+function DB:SortTeam()
+  self.SortedTeam = {}
+  -- remove holes before sorting (otherwise it doesn't work in a way that is usuable, big gotcha)
+  for _, v in pairs(self.Team) do
+    if v then
+      table.insert(self.SortedTeam, v)
+    end
+  end
+  table.sort(self.SortedTeam, function(a, b)
+    return #a.orig > #b.orig
+  end)
+  self:Debug(1, "Team map (sorted by longest orig name first) is now %", self.SortedTeam)
+end
+
 DB.Team = {}
 
 function DB:ProcessMessage(from, data)
@@ -245,15 +278,20 @@ function DB:ProcessMessage(from, data)
       DB.maxIter = 1 -- resend at next round
     end
   end
+  local s, r = DB.SplitFullname(realname)
+  if r == DB.myRealm then
+    DB:Debug(3, "% is on our realm so using %", realname, s)
+    realname = s -- use the short name without realm when on same realm, using full name breaks (!)
+  end
   if DB.Team[idx] and DB.Team[idx].new == realname then
     DB:Debug("Already known mapping, skipping % %", idx, realname)
     return
   end
-  DB.Team[idx] = {orig = internalname, new = realname}
-  DB:Debug("Team map is now %", DB.Team)
+  DB.Team[idx] = {orig = internalname, new = realname, slot = idx}
   if EMAApi then
     EMAApi.AddMember(realname)
   end
+  DB:SortTeam()
   isboxer.NextButton = 1 -- reset the buttons
   -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
   self.ISBO.LoadBinds()
@@ -280,7 +318,7 @@ DB.EventD = {
     DB.Sync()
   end,
 
-  CHANNEL_COUNT_UPDATE = function(self, _event, displayIndex, count) -- TODO: never seem to fire
+  CHANNEL_COUNT_UPDATE = function(self, _event, displayIndex, count) -- Note: never seem to fire
     self:Debug("OnChannelCountUpdate didx=%, count=%", displayIndex, count)
   end,
 
