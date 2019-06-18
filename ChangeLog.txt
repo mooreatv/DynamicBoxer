@@ -1,11 +1,16 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+1.2.0 June 17th 2019
+    - Revamped simpler yet better and safer setup UI. Ontime setup is now 3 broadcast keystrokes: Ctrl-C Ctrl-V Return
+    - Fixed potential issue (as previously cross realm wasn't working anyway) issue with name-realm search and replace
+        now using MoLib's ReplaceAll which properly escapes all lua gsub characters for literal search and replace.
+Coming next:
+    - Revamped communication/sync to allow for cross realm boxing (message the slot1/master).
+
 1.1.2 June 17th 2019
     - Fix issue #10 to allow original isboxer characters to be substring of one another, as well as new team characters
         (normalizes team in 2 passes)
     - Also address another TODO to remove unnecessary realm when same as self, earlier
-Coming next:
-    - Revamped simpler setup UI. Revamped also the communication/sync to allow for cross realm boxing.
 
 1.1.1 June 13th 2019
     - Avoid rejoining the same channel right away while doing /dbox init setup UI (needed to clear a few more state)

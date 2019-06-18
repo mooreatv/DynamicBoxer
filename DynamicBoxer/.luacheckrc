@@ -19,6 +19,7 @@ globals = {
     "StaticPopupDialogs",
     "StaticPopup_Hide",
     "StaticPopup_Show",
+    "strlenutf8",
     "UIParent",
     "OKAY",
     "CANCEL",

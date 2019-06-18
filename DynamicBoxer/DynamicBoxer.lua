@@ -89,7 +89,7 @@ function DB:Replace(macro)
     v.slotStr = string.format("SLOT%02d", s) -- up to 99 slots, should be enough, mutates the original, it's ok
     local c
     self:Debug(9, "#%: for s=% o=% -> i=% (n=%)", k, s, o, v.slotStr, n)
-    macro, c = macro:gsub(o, v.slotStr)
+    macro, c = DB.ReplaceAll(macro, o, v.slotStr)
     count = count + c
   end
   for k, v in ipairs(self.SortedTeam) do
@@ -98,7 +98,7 @@ function DB:Replace(macro)
     local s = v.slot
     local c
     self:Debug(9, "#%: for s=% i=% -> n=% (o=%)", k, s, v.slotStr, n, o)
-    macro, c = macro:gsub(v.slotStr, n)
+    macro, c = DB.ReplaceAll(macro, v.slotStr, n)
     count = count + c
   end
   if count > 0 then
@@ -381,13 +381,22 @@ end
 function DB.DynamicInit()
   DB:Debug("Delayed init called")
   DB:MoLibInit()
+  if DB.inUI then
+    DB:Debug(3, "Still in UI, skipping init/join...")
+    return
+  end
   if not DB:IsActive() then
     DB:Print("DynamicBoxer: No static team/not running under innerspace or user abort... skipping...")
     return
   end
   if #DB.Secret < DB.minSecretLength then
-    DB.ChannelUI()
+    DB.SetupUI()
     return -- Join will be called at the positive end of the 2 dialogs
+  end
+  if not DB.MasterToken then
+    DB:Warning("Older version detected, re-doing simpler setup...")
+    DB.ForceInit()
+    return
   end
   DB.Join()
 end
@@ -443,6 +452,18 @@ function DB:SetSaved(name, value)
   DB:Debug("(Saved) Setting % set to % - dynamicBoxerSaved=%", name, value, dynamicBoxerSaved)
 end
 
+function DB.ForceInit()
+    -- re do initialization
+    if DB.joinedChannel then
+      DB:Debug("Re-init requested, leaving %: %", DB.joinedChannel, LeaveChannelByName(DB.joinedChannel))
+      DB.enabled = false
+      DB.joinedChannel = nil
+      DB.channelId = nil
+      DB.joinDone = false
+    end
+    DB:SetupUI()
+end
+
 function DB.Slash(arg)
   if #arg == 0 then
     DB.Help("commands")
@@ -461,14 +482,7 @@ function DB.Slash(arg)
     DB.Join()
   elseif cmd == "i" then
     -- re do initialization
-    if DB.joinedChannel then
-      DB:Debug("Re-init requested, leaving %: %", DB.joinedChannel, LeaveChannelByName(DB.joinedChannel))
-      DB.enabled = false
-      DB.joinedChannel = nil
-      DB.channelId = nil
-      DB.joinDone = false
-    end
-    DB:ChannelUI()
+    DB:ForceInit()
   elseif cmd == "r" then
     -- random id generator (misc bonus util)
     StaticPopup_Show("DYNBOXER_RANDOM")
