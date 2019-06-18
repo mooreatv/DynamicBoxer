@@ -1,8 +1,9 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 1.1.2 June 17th 2019
-    - Fix issue #10 allow original isboxer characters to be substring of one another (normalize team in 2 passes)
-    - Also address another TODO to remove unecessary realm when same as self, earlier
+    - Fix issue #10 to allow original isboxer characters to be substring of one another, as well as new team characters
+        (normalizes team in 2 passes)
+    - Also address another TODO to remove unnecessary realm when same as self, earlier
 Coming next:
     - Revamped simpler setup UI. Revamped also the communication/sync to allow for cross realm boxing.
 
