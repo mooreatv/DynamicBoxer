@@ -1,7 +1,7 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 1.2.0 June 17th 2019
-    - Revamped simpler yet better and safer setup UI. One time setup is now 3 only broadcast keystrokes:
+    - Revamped simpler yet better and safer setup UI. One time setup is now only 3 broadcasted keystrokes:
          Ctrl-C , Ctrl-V , Return  (copy, paste, enter; that's it !)
     - Fixed potential issue (as previously cross realm wasn't working anyway) issue with name-realm search and replace
         now using MoLib's ReplaceAll which properly escapes all lua gsub characters for literal search and replace.
