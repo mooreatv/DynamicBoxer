@@ -8,6 +8,7 @@ ignore:
     - MoLib/MoLib.toc
     - MoLib/luaformat.cfg
     - MoLib/README.md
+    - MoLib/tests
 
 manual-changelog: ChangeLog.txt
 

@@ -44,6 +44,7 @@ function DB.OnSetupUIAccept(widget, data, data2)
   DB.Secret = tok2
   DB.MasterName = masterName
   DB:Debug("Current master is %", masterName) -- TODO: send it a message to dismiss its dialog and deal with cross realm
+  DB:AddMaster(masterName)
   widget:Hide()
   DB.enabled = true
   DB.inUI = false

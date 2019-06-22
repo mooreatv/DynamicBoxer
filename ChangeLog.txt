@@ -1,6 +1,12 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
-1.3.0 June 21st 2019
+1.4.0 MMM DD 2019 - WIP
+    - WIP. Integrated MoLib's LRU for keeping last N masters
+    - Cross realm support: Revamped communication/sync to allow for cross realm boxing (message the slot1/master).
+Coming next:
+    - Simple status UI
+
+1.3.0 June 22nd 2019
     - adding `/dbox show` to show the current master token (Issue #16)
     - adding `/dbox reset` to clear all saved variables (start from scratch) this has similar effect to prexisting /dbox init but
         allows to completely clear all state (follow with /reload for it to take effect)
@@ -12,8 +18,6 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
         (broadcast the existing since 1.0 `/dbox init` if you want to change tokens across windows instead of reuse the last one)
     - Fixed #18 (bug with extra GetParent():Hide() causing master cancel button to hide UI)
 
-Coming next:
-    - Cross realm support: Revamped communication/sync to allow for cross realm boxing (message the slot1/master).
 
 1.2.0 June 18th 2019
     - Revamped simpler yet better and safer setup UI. One time setup is now only 3 broadcasted keystrokes:
@@ -69,7 +73,7 @@ Coming next:
     - Auto resync on channel join
 
 0.1.2 June 7th 2019
-    - First working version !! (and loads correctly along ISBoxer as independant addon)
+    - First working version !! (and loads correctly along ISBoxer as independent addon)
     - Support for saved variables
     - Fix for ISBoxer loading bindings too early (when realm name isn't yet available), unregister its UPDATE_BINDINGS
     - updated /dbox help and commands

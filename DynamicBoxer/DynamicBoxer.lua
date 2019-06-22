@@ -49,6 +49,7 @@ DB.Secret = ""
 DB.MasterName = ""
 DB.MasterToken = nil -- Nil will force UI/dialog setup (unless already saved in saved vars)
 DB.teamHistory = {}
+DB.masterHistory = DB.LRU(48) -- how many to keep
 DB.currentCount = 0 -- how many characters from the team have been mapped (ie size of sorted team)
 DB.expectedCount = 0 -- how many slots we expect to see/map
 
@@ -166,6 +167,7 @@ function DB.ReconstructTeam()
     return
   end
   DB.fullName = DB:GetMyFQN()
+  DB.faction = UnitFactionGroup("player")
   DB.shortName, DB.myRealm = DB.SplitFullname(DB.fullName)
   local prev = isboxer.SetMacro
   DB.ISBTeam = {}
@@ -246,6 +248,15 @@ function DB.Sync()
   end
 end
 
+function DB:AddMaster(masterName)
+  DB.masterHistory:add(DB.faction .. " " .. masterName)
+  dynamicBoxerSaved.serializedMasterHistory = {}
+  for v in DB.masterHistory:iterateOldest() do
+    table.insert(dynamicBoxerSaved.serializedMasterHistory, v)
+  end
+  self:Debug(1, "New master % list newest at the end: %", masterName, dynamicBoxerSaved.serializedMasterHistory)
+end
+
 -- Deal with issue#10 by sorting by inverse of length, to replace most specific first (step 1/2)
 
 function DB:SortTeam()
@@ -319,8 +330,12 @@ function DB:ProcessMessage(from, data)
   -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
   self.ISBO.LoadBinds()
   DB:Print(DB.format("New mapping for slot %, dynamically set ISBoxer character to %", idx, realname), 0, 1, 1)
+  if idx == 1 then
+    DB:AddMaster(from) -- warning this is because we want the full name with realm
+  end
   if teamComplete then
-    DB:Print(DB.format("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!", DB.currentCount), 0, 1, 1)
+    DB:Print(DB.format("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!",
+                       DB.currentCount), 0, 1, 1)
   end
 end
 
@@ -407,6 +422,13 @@ DB.EventD = {
           DB.MasterName = masterName
           DB.Channel = tok1
           DB.Secret = tok2
+          -- restore LRU / reverse order/newest last
+          if not dynamicBoxerSaved.serializedMasterHistory then
+            dynamicBoxerSaved.serializedMasterHistory = {} -- initialize if needed
+          end
+          for _, v in ipairs(dynamicBoxerSaved.serializedMasterHistory) do
+            DB.masterHistory:add(v)
+          end
           self:Debug(3, "Loaded valid saved vars %", dynamicBoxerSaved)
           return
         end
@@ -416,6 +438,7 @@ DB.EventD = {
     self:Debug("Initialized empty saved vars")
     dynamicBoxerSaved = {}
     dynamicBoxerSaved.configVersion = DB.configVersion
+    dynamicBoxerSaved.serializedMasterHistory = {}
   end
 }
 
@@ -559,6 +582,7 @@ function DB.Slash(arg)
         DB.Channel = tok1
         DB.Secret = tok2
         DB.MasterName = masterName
+        DB:AddMaster(masterName)
         DB.SetupChange()
         DB.enabled = true
         DB:Join()
