@@ -8,8 +8,10 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
         set token string from the command line instead of the UI (but /dbox show/init is better)
     - Master automatically enables "show token" (/dbox show) when it detects a change in team, 
         so you can add members/copy existing token. Issue #17.
+        And it automatically closes it once the team is complete !
         (broadcast the existing since 1.0 `/dbox init` if you want to change tokens across windows instead of reuse the last one)
     - Fixed #18 (bug with extra GetParent():Hide() causing master cancel button to hide UI)
+
 Coming next:
     - Cross realm support: Revamped communication/sync to allow for cross realm boxing (message the slot1/master).
 
