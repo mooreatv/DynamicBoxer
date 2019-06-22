@@ -1,12 +1,23 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+1.3.0 June 21st 2019
+    - adding `/dbox show` to show the current master token (Issue #16)
+    - adding `/dbox reset` to clear all saved variables (start from scratch) this has similar effect to prexisting /dbox init but
+        allows to completely clear all state (follow with /reload for it to take effect)
+    - removed `/dbox channel` and `/dbox secret` as the token is now handled through ui; adding `/dbox set` to 
+        set token string from the command line instead of the UI (but /dbox show/init is better)
+    - Master automatically enables "show token" (/dbox show) when it detects a change in team, 
+        so you can add members/copy existing token. Issue #17.
+        (broadcast the existing since 1.0 `/dbox init` if you want to change tokens across windows instead of reuse the last one)
+    - Fixed #18 (bug with extra GetParent():Hide() causing master cancel button to hide UI)
+Coming next:
+    - Cross realm support: Revamped communication/sync to allow for cross realm boxing (message the slot1/master).
+
 1.2.0 June 18th 2019
     - Revamped simpler yet better and safer setup UI. One time setup is now only 3 broadcasted keystrokes:
          Ctrl-C , Ctrl-V , Return  (copy, paste, enter; that's it !)
     - Fixed potential issue (as previously cross realm wasn't working anyway) issue with name-realm search and replace
         now using MoLib's ReplaceAll which properly escapes all lua gsub characters for literal search and replace.
-Coming next:
-    - Revamped communication/sync to allow for cross realm boxing (message the slot1/master).
 
 1.1.2 June 17th 2019
     - Fix issue #10 to allow original isboxer characters to be substring of one another, as well as new team characters

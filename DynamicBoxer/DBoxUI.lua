@@ -33,15 +33,20 @@ function DB.OnSetupUIAccept(widget, data, data2)
   DB:Debug("SetupUI Accept")
   DB:Debug(9, "SetupUI Accept w=% d1=% d2=%", widget, data, data2)
   local token = widget.editBox:GetText()
+  -- returns isValid, master, tok1, tok2
+  local valid, masterName, tok1, tok2 = DB:ParseToken(token)
+  if not valid then
+    DB:Warning("Invalid token % !", token)
+    return true
+  end
   DB:SetSaved("MasterToken", token)
-  local masterName, channel, password = token:match("^([^ ]+) ([^ ]+) ([^ ]+)") -- or strplit(" ", token)
-  DB:SetSaved("Channel", channel)
-  DB:SetSaved("Secret", password)
+  DB.Channel = tok1
+  DB.Secret = tok2
+  DB.MasterName = masterName
   DB:Debug("Current master is %", masterName) -- TODO: send it a message to dismiss its dialog and deal with cross realm
   widget:Hide()
   DB.enabled = true
   DB.inUI = false
-  DB.joinDone = false -- force rejoin code
   DB:Join()
 end
 
@@ -52,7 +57,12 @@ function DB.OnUICancel(widget, _data)
   DB:Error("User cancelled. Will not use DynamicBoxer until /reload or /dbox i")
 end
 
-DB.randomIdLen = 8
+function DB.OnShowUICancel(widget, _data)
+  DB.inUI = false
+  widget:Hide()
+  DB:Warning("Escaped/cancelled from UI show (use <return> key to close normally when done copy pasting)")
+end
+
 DB.fontPath = "Interface\\AddOns\\DynamicBoxer\\fixed-font.otf"
 
 function DB.SetupFont(height)
@@ -73,7 +83,7 @@ function DB.OnRandomUIShow(widget, _data)
   DB:Debug("Randomize UI Show/Regen")
   local e = widget.editBox
   DB.randomEditBox = e
-  local newText = DB.RandomId(DB.randomIdLen)
+  local newText = DB:RandomId(DB.randomIdLen)
   --[[ width test, alternate narrow and wide
   if x % 2 == 0 then
     newText = "12345678"
@@ -111,14 +121,25 @@ function DB.OnRandomUIShow(widget, _data)
   return true -- stay shown
 end
 
-function DB.OnMasterUIShow(widget, _data)
-  DB:Debug("Master UI Show/Regen")
+function DB.OnMasterUIShow(widget, data)
+  DB:Debug("Master UI Show/Regen data is %", data)
   local e = widget.editBox
   DB.randomEditBox = e
-  local text = DB.fullName .. " " .. DB.RandomId(DB.randomIdLen) .. " " .. DB.RandomId(DB.randomIdLen) .. " "
-  local hashC = DB.ShortHash(text)
-  local newText = text .. hashC
-  DB.MasterToken = newText
+  local masterName, tok1, tok2
+  if data and data.masterName and data.token1 and data.token2 then
+    -- there is existing data to just show/reuse
+    masterName = data.masterName
+    tok1 = data.token1
+    tok2 = data.token2
+    widget.button2:Disable()
+  else
+    -- we are generating a new token, we are the master
+    masterName = DB.fullName
+    tok1 = DB:RandomId(DB.randomIdLen)
+    tok2 = DB:RandomId(DB.randomIdLen)
+    widget.button2:Enable()
+  end
+  local newText = DB:CreateToken(masterName, tok1, tok2)
   e:SetText(newText)
   e:HighlightText()
   DB.fontString:SetFontObject(e:GetFontObject())
@@ -161,34 +182,37 @@ StaticPopupDialogs["DYNBOXER_RANDOM"] = {
   hasEditBox = true
 }
 StaticPopupDialogs["DYNBOXER_MASTER"] = {
-  text = "DynamicBoxer one time setup: copy this and paste in the other windows",
+  text = "DynamicBoxer one time setup:\nCopy this and Paste in the other windows",
   button1 = OKAY,
   button2 = "Randomize",
   button3 = CANCEL,
   timeout = 0,
   whileDead = true,
   hideOnEscape = 1, -- doesn't help when there is an edit box, real stuff is:
-  EditBoxOnEscapePressed = function(self)
-    DB.OnUICancel(self:GetParent())
+  EditBoxOnEscapePressed = function(self, data)
+    local widget = self:GetParent()
+    data.OnUICancel(widget, data) -- rehooked by show only ui
   end,
   OnAccept = DB.OnSetupUIAccept,
-  OnAlt = DB.OnUICancel, -- this is the right side button, should be cancel to be consistent with 2 buttons
+  OnAlt = function(self, data) -- this is the right side button, should be cancel to be consistent with 2 buttons
+    data.OnUICancel(self, data) -- rehooked by show only ui
+  end,
   OnCancel = DB.OnMasterUIShow, -- this is the middle button really, so randomize
   EditBoxOnEnterPressed = function(self, data)
     DB.OnSetupUIAccept(self:GetParent(), data)
   end,
-  EditBoxOnTextChanged = function(self, _data)
+  EditBoxOnTextChanged = function(self, data)
     -- ignore input and regen instead
     -- but avoid infinite loop
     if strlenutf8(self:GetText()) ~= DB.uiTextLen then
       DB:Debug(4, "size mismatch % % %", #self:GetText(), strlenutf8(self:GetText()), DB.uiTextLen)
-      DB.OnMasterUIShow(self:GetParent())
+      DB.OnMasterUIShow(self:GetParent(), data)
     end
   end,
   hasEditBox = true
 }
 StaticPopupDialogs["DYNBOXER_SLAVE"] = {
-  text = "DynamicBoxer one time setup: Paste from Slot 1",
+  text = "DynamicBoxer one time setup:\nPaste from Slot 1\n(type /dbox show on master if needed)",
   button1 = OKAY,
   button2 = CANCEL,
   timeout = 0,
@@ -224,16 +248,40 @@ StaticPopupDialogs["DYNBOXER_SLAVE"] = {
   hasEditBox = true
 }
 
+function DB.RandomGeneratorUI()
+  -- TODO: cleanup/move to its own addon (Issue #11)
+  StaticPopup_Show("DYNBOXER_RANDOM")
+end
+
 function DB:IsValidToken(str)
+  if type(str) ~= 'string' then
+    DB:Warning("Passed non string to validate token: %", str)
+    return false
+  end
   DB:Debug("Validating % (% vs min %)", str, #str, DB.tokenMinLen)
   if #str < DB.tokenMinLen then
     return false
   end
-  local lastC = string.sub(str, #str) -- last character is ascii/alphanum so this works
-  local begin = string.sub(str, 1, #str - 1)
-  local sh, lh = DB.ShortHash(begin)
-  DB:Debug("Hash of % is % / %, expecting %", begin, sh, lh, lastC)
-  return lastC == sh
+  return self:UnHash(str)
+end
+
+-- returns isValid, master, tok1, tok2
+function DB:ParseToken(token)
+  -- consider allowing extra whitespace at end?
+  local valid, orig = DB:IsValidToken(token)
+  if not valid then
+    return false
+  end
+  local masterName, channel, password = orig:match("^([^ ]+) ([^ ]+) ([^ ]+) $")
+  if not masterName then
+    DB:Debug("Malformed token %", token)
+    return false
+  end
+  return true, masterName, channel, password
+end
+
+function DB:CreateToken(masterName, tok1, tok2)
+  return self:AddHashKey(masterName .. " " .. tok1 .. " " .. tok2 .. " ")
 end
 
 DB.inUI = false
@@ -248,12 +296,41 @@ function DB.SetupUI()
   -- DB.fullName= "aÁÁÁ" -- test with utf8 characters (2x bytes per accentuated char)
   -- "master-fullname token1 token2 h" (in glyphs, so need to use strlenutf8 on input/comparaison)
   DB.uiTextLen = DB.randomIdLen * 2 + strlenutf8(DB.fullName) + 4
-  DB.tokenMinLen = DB.randomIdLen * 2 + 2 + 4
   if DB.ISBIndex == 1 then
-    StaticPopup_Show("DYNBOXER_MASTER")
+    StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2", {OnUICancel = DB.OnUICancel})
   else
     StaticPopup_Show("DYNBOXER_SLAVE")
   end
+end
+
+function DB:ShowTokenUI()
+  if DB.inUI then
+    DB:Debug(1, "ShowTokenUI(): Already in UI, skipping")
+    return
+  end
+  DB:Debug("ShowTokenUI %", DB.MasterToken)
+  if not DB.MasterToken or #DB.MasterToken == 0 then
+    DB:Warning("No token to show")
+    return
+  end
+  DB.inUI = true
+  DB.uiTextLen = strlenutf8(DB.MasterToken)
+  local master = DB.MasterName
+  if DB.ISBIndex == 1 then
+    -- regen with us as actual master
+    master = DB.fullName
+  end
+  StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2",
+                   {masterName = master, token1 = DB.Channel, token2 = DB.Secret, OnUICancel = DB.OnShowUICancel})
+end
+
+function DB:HideTokenUI()
+  if not DB.inUI then
+    DB:Debug(1, "HideTokenUI(): Already in not UI, skipping")
+    return
+  end
+  StaticPopup_Hide("DYNBOXER_MASTER")
+  DB.inUI = false
 end
 
 DB:Debug("dbox ui file loaded")

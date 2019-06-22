@@ -38,23 +38,19 @@ local addon, ns = ...
 -- Created by DBoxInit
 local DB = DynBoxer
 
--- Battlenet default channel suffix (DynamicBoxer4 will be prefixed in all cases to final channel name)
-function DB.DefaultChannel()
-  local _, bnetId = BNGetInfo()
-  if bnetId and #bnetId > 0 then
-    return string.gsub(bnetId, "#", "")
-  end
-  DB:Warning("No battlenet unique id available, please pick a unique channel manually")
-  return ""
-end
-
--- TODO: consider using bnet communication as a common case is all characters are from same bnet
+-- We considered using bnet communication as a common case is all characters are from same bnet
+-- See Issue #5, unfortunately seems impossible to see self logged in characters (even though you can see all your friends)
 -- (also ideally innerspace or isboxer suite would generate a secure channel/password combo so we don't even
 -- need the UI/one time setup)
--- For now we use a regular (private) addon channel (initialized based on battlenet id to be unique)
--- This is just the default assuming a single bnet but can be changed by the user to match on all windows
-DB.Channel = DB.DefaultChannel()
-DB.Secret = "" -- Empty will force UI/dialog setup (unless already saved in saved vars)
+
+-- For now we use a regular (private) randomized addon channel with random password
+DB.Channel = ""
+DB.Secret = ""
+DB.MasterName = ""
+DB.MasterToken = nil -- Nil will force UI/dialog setup (unless already saved in saved vars)
+DB.teamHistory = {}
+DB.currentCount = 0 -- how many characters from the team have been mapped (ie size of sorted team)
+DB.expectedCount = 0 -- how many slots we expect to see/map
 
 -- to force all debugging on even before saved vars are loaded
 -- DB.debug = 9
@@ -67,13 +63,15 @@ DB.maxRetries = 20 -- after 20s we stop/give up
 DB.chatPrefix = "dbox0" -- protocol version in prefix
 DB.channelId = nil
 DB.enabled = true -- set to false if the users cancels out of the UI
-DB.minSecretLength = 5 -- at least 5 characters for channel password
+DB.randomIdLen = 8 -- we generate 8 characters long random ids
+DB.tokenMinLen = DB.randomIdLen * 2 + 2 + 4
+DB.configVersion = 1 -- bump up to support conversion (and update the ADDON_LOADED handler)
 
-DB.manual = false -- testing manual mode
+DB.manual = 0 -- testing manual mode, 0 is off, number is slot id
 
 -- Returns if we should be operating (basically if isboxer has a static team defined)
 function DB:IsActive()
-  return self.enabled and (isboxer.Character_LoadBinds or self.manual)
+  return self.enabled and (isboxer.Character_LoadBinds or self.manual > 0)
 end
 
 -- Replace team members in original macro text by the dynamic one.
@@ -173,7 +171,6 @@ function DB.ReconstructTeam()
   DB.ISBTeam = {}
   -- parse the text which looks like (note the ]xxx; delimiters for most but \n at the end)
   -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt...,mod:lctrl]LAST\n""
-  DB.ISBIndex = 0 -- not set but init for manual mode
   isboxer.SetMacro = function(macro, _key, text)
     if macro ~= "FTLAssist" then
       return
@@ -188,14 +185,26 @@ function DB.ReconstructTeam()
   if isboxer.Character_LoadBinds then
     isboxer.Character_LoadBinds()
   else
-    DB:Warning("Manual mode, no isboxer binding")
+    DB:Warning("Manual mode, no isboxer binding, simulating slot %", DB.manual)
+    DB.ISBIndex = DB.manual
+    DB.ISBTeam[DB.ISBIndex] = DB.format("Slot%", DB.ISBIndex)
   end
   isboxer.SetMacro = prev
   DB:Debug("Found isbteam to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
            isboxer.CharacterSet.Members)
   DB.Team[DB.ISBIndex] = {orig = DB.ISBTeam[DB.ISBIndex], new = DB.shortName, slot = DB.ISBIndex}
   DB:Debug("Team map initial value = %", DB.Team)
-  DB:SortTeam()
+  -- detect team changes, keep unique teams
+  local teamStr = table.concat(DB.ISBTeam, " ")
+  if not DB.teamHistory[teamStr] then
+    DB:Warning("New (isboxer) team detected, will show master token for copy paste until team is complete.")
+    DB.newTeam = true
+  end
+  DB.teamHistory[teamStr] = GetServerTime()
+  dynamicBoxerSaved.teamHistory = DB.teamHistory
+  DB.currentCount = DB:SortTeam() -- will be 1
+  DB.expectedCount = #DB.ISBTeam
+  DB:Debug("Unique team string key is %, updated in history, expecting a team of size #", teamStr, DB.expectedCount)
 end
 
 -- the first time, ie after /reload - we will force a resync
@@ -240,17 +249,20 @@ end
 -- Deal with issue#10 by sorting by inverse of length, to replace most specific first (step 1/2)
 
 function DB:SortTeam()
+  local presentCount = 0
   self.SortedTeam = {}
   -- remove holes before sorting (otherwise it doesn't work in a way that is usuable, big gotcha)
   for _, v in pairs(self.Team) do
     if v then
       table.insert(self.SortedTeam, v)
+      presentCount = presentCount + 1
     end
   end
   table.sort(self.SortedTeam, function(a, b)
     return #a.orig > #b.orig
   end)
-  self:Debug(1, "Team map (sorted by longest orig name first) is now %", self.SortedTeam)
+  self:Debug(1, "Team map (sorted by longest orig name first) is now % - size %", self.SortedTeam, presentCount)
+  return presentCount
 end
 
 DB.Team = {}
@@ -283,6 +295,10 @@ function DB:ProcessMessage(from, data)
     DB:Debug(3, "% is on our realm so using %", realname, s)
     realname = s -- use the short name without realm when on same realm, using full name breaks (!)
   end
+  if DB.newTeam and DB.ISBIndex == 1 and DB.currentCount < DB.expectedCount then
+    DB:Debug(1, "New team detected, on master, showing current token")
+    DB:ShowTokenUI()
+  end
   if DB.Team[idx] and DB.Team[idx].new == realname then
     DB:Debug("Already known mapping, skipping % %", idx, realname)
     return
@@ -291,11 +307,21 @@ function DB:ProcessMessage(from, data)
   if EMAApi then
     EMAApi.AddMember(realname)
   end
-  DB:SortTeam()
+  local oldCount = DB.currentCount
+  DB.currentCount = DB:SortTeam()
+  local teamComplete = (DB.currentCount >= DB.expectedCount and DB.currentCount ~= oldCount)
+  -- if team is complete, hide the show button
+  if DB.newTeam and DB.ISBIndex == 1 and teamComplete then
+    DB:Debug(1, "Team complete, hiding current token dialog")
+    DB:HideTokenUI()
+  end
   isboxer.NextButton = 1 -- reset the buttons
   -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
   self.ISBO.LoadBinds()
   DB:Print(DB.format("New mapping for slot %, dynamically set ISBoxer character to %", idx, realname), 0, 1, 1)
+  if teamComplete then
+    DB:Print(DB.format("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!", DB.currentCount), 0, 1, 1)
+  end
 end
 
 function DB:ChatAddonMsg(event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
@@ -359,13 +385,37 @@ DB.EventD = {
     if name ~= addon then
       return -- not us, return
     end
+    DB:Print("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv: type /dbox for command list/help.")
     if dynamicBoxerSaved then
-      DB.deepmerge(DB, nil, dynamicBoxerSaved)
-      self:Debug(3, "Loaded saved vars %", dynamicBoxerSaved)
-    else
-      self:Debug("Initialized empty saved vars")
-      dynamicBoxerSaved = {}
+      if not dynamicBoxerSaved.configVersion or dynamicBoxerSaved.configVersion ~= DB.configVersion then
+        -- Support conversion from 1 to 2 etc...
+        DB:Error(
+          "Invalid/unexpected config version (%, we expect %), sorry conversion not available, starting from scratch!",
+          dynamicBoxerSaved.configVersion, DB.configVersion)
+      else
+        local valid, masterName, tok1, tok2 -- start nil
+        if not dynamicBoxerSaved.MasterToken then
+          -- allow nil/unset master token
+          DB:Warning("Token isn't set yet...")
+        else
+          valid, masterName, tok1, tok2 = DB:ParseToken(dynamicBoxerSaved.MasterToken)
+        end
+        if dynamicBoxerSaved.MasterToken and not valid then
+          DB:Error("Master token % is invalid, resetting...", dynamicBoxerSaved.FooBar)
+        else
+          DB.deepmerge(DB, nil, dynamicBoxerSaved)
+          DB.MasterName = masterName
+          DB.Channel = tok1
+          DB.Secret = tok2
+          self:Debug(3, "Loaded valid saved vars %", dynamicBoxerSaved)
+          return
+        end
+      end
     end
+    -- (re)Init saved vars
+    self:Debug("Initialized empty saved vars")
+    dynamicBoxerSaved = {}
+    dynamicBoxerSaved.configVersion = DB.configVersion
   end
 }
 
@@ -389,14 +439,9 @@ function DB.DynamicInit()
     DB:Print("DynamicBoxer: No static team/not running under innerspace or user abort... skipping...")
     return
   end
-  if #DB.Secret < DB.minSecretLength then
-    DB.SetupUI()
-    return -- Join will be called at the positive end of the 2 dialogs
-  end
-  if not DB.MasterToken then
-    DB:Warning("Older version detected, re-doing simpler setup...")
+  if not DB.MasterToken or #DB.MasterToken == 0 then
     DB.ForceInit()
-    return
+    return -- Join will be called at the positive end of the dialog
   end
   DB.Join()
 end
@@ -425,9 +470,9 @@ function DB.Join()
   DB.ReconstructTeam()
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
   DB:Debug("Prefix register success % in dynamic setup", ret)
-  if not DB.Channel or #DB.Channel == 0 then
-    DB:Warning("Channel is empty, will use 'demo' instead")
-    DB.Channel = "demo"
+  if not DB.Channel or #DB.Channel == 0 or not DB.Secret or #DB.Secret == 0 then
+    DB:Error("Channel and or Password are empty - this should not be reached/happen")
+    return
   end
   DB.joinedChannel = "DynamicBoxer4" .. DB.Channel -- only alphanums seems legal, couldn't find better seperator than 4
   local t, n = JoinTemporaryChannel(DB.joinedChannel, DB.Secret)
@@ -440,10 +485,11 @@ end
 
 function DB.Help(msg)
   DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox init -- redo the one time channel/secret setup UI\n" ..
-             "/dbox r -- show random id generator.\n" .. "/dbox c channel -- to change channel.\n" ..
-             "/dbox s secret -- to change the secret.\n" .. "/dbox m -- send mapping again\n" ..
-             "/dbox join -- (re)join channel.\n" .. "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
-             "/dbox dump global -- to dump a global.")
+             "/dbox show -- shows the current token string.\n" ..
+             "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
+             "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
+             "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
+             "/dbox r -- show random id generator.\n" .. "/dbox dump global -- to dump a global.")
 end
 
 function DB:SetSaved(name, value)
@@ -452,16 +498,21 @@ function DB:SetSaved(name, value)
   DB:Debug("(Saved) Setting % set to % - dynamicBoxerSaved=%", name, value, dynamicBoxerSaved)
 end
 
+function DB.SetupChange()
+  -- re do initialization
+  if DB.joinedChannel then
+    DB:Debug("Re-init requested, leaving %: %", DB.joinedChannel, LeaveChannelByName(DB.joinedChannel))
+    DB.enabled = false
+    DB.joinedChannel = nil
+    DB.channelId = nil
+    DB.joinDone = false
+  end
+end
+
 function DB.ForceInit()
-    -- re do initialization
-    if DB.joinedChannel then
-      DB:Debug("Re-init requested, leaving %: %", DB.joinedChannel, LeaveChannelByName(DB.joinedChannel))
-      DB.enabled = false
-      DB.joinedChannel = nil
-      DB.channelId = nil
-      DB.joinDone = false
-    end
-    DB:SetupUI()
+  DB.SetupChange()
+  DB.fullName = DB:GetMyFQN() -- usually set in reconstruct team but we can call /dbox i for testing without isboxer on
+  DB:SetupUI()
 end
 
 function DB.Slash(arg)
@@ -483,20 +534,39 @@ function DB.Slash(arg)
   elseif cmd == "i" then
     -- re do initialization
     DB:ForceInit()
+  elseif arg == "reset" then
+    -- require reset to be spelled out (other r* are the random gen)
+    dynamicBoxerSaved = nil -- any subsequent DB:SetSaved will fail...
+    DB:Warning("State reset per request, please /reload !")
+    -- C_UI.Reload() -- in theory we could reload for them but that seems bad form
   elseif cmd == "r" then
     -- random id generator (misc bonus util)
-    StaticPopup_Show("DYNBOXER_RANDOM")
+    DB.RandomGeneratorUI()
   elseif cmd == "m" then
     -- message again
     DB.maxIter = 1
     DB.totalRetries = 0
     DB.Sync()
-  elseif cmd == "c" then
-    -- change channel
-    DB.SetSaved("Channel", rest)
   elseif cmd == "s" then
-    -- change secret
-    DB:SetSaved("Secret", rest)
+    -- show ui or set token depending on argument
+    if #rest >= DB.tokenMinLen then
+      local valid, masterName, tok1, tok2 = DB:ParseToken(rest)
+      if not valid then
+        DB:Warning("Invalid token set attempt for % !", rest)
+      else
+        DB:Warning("Valid token, change accepted")
+        DB:SetSaved("MasterToken", rest)
+        DB.Channel = tok1
+        DB.Secret = tok2
+        DB.MasterName = masterName
+        DB.SetupChange()
+        DB.enabled = true
+        DB:Join()
+        return
+      end
+    end
+    -- if above didn't match, failed/didn't return, then fall back to showing UI
+    DB:ShowTokenUI()
     -- for debug, needs exact match (of start of "debug ..."):
   elseif arg:sub(1, #debugPrefix) == debugPrefix then
     -- debug
