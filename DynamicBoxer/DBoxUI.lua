@@ -202,6 +202,7 @@ StaticPopupDialogs["DYNBOXER_MASTER"] = {
   EditBoxOnEnterPressed = function(self, data)
     DB.OnSetupUIAccept(self:GetParent(), data)
   end,
+  OnShow = DB.OnMasterUIShow,
   EditBoxOnTextChanged = function(self, data)
     -- ignore input and regen instead
     -- but avoid infinite loop
@@ -287,6 +288,15 @@ end
 
 DB.inUI = false
 
+function DB.CalcUITextLen(masterName)
+  if not masterName or masterName == "" then
+    DB:Debug(2, "CalcUITextLen: No master name, using placeholder for now")
+    -- placeholder
+    masterName = "Foobar-SomeRealm"
+  end
+  return DB.randomIdLen * 2 + strlenutf8(masterName) + 4
+end
+
 function DB.SetupUI()
   DB:Debug(8, "SetupUI % % %", DB.inUI, DB.Channel, StaticPopupDialogs["DYNBOXER_CHANNEL"])
   if DB.inUI then
@@ -296,7 +306,7 @@ function DB.SetupUI()
   DB.inUI = true
   -- DB.fullName= "aÁÁÁ" -- test with utf8 characters (2x bytes per accentuated char)
   -- "master-fullname token1 token2 h" (in glyphs, so need to use strlenutf8 on input/comparaison)
-  DB.uiTextLen = DB.randomIdLen * 2 + strlenutf8(DB.fullName) + 4
+  DB.uiTextLen = DB.CalcUITextLen(DB.fullName)
   if DB.ISBIndex == 1 then
     StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2", {OnUICancel = DB.OnUICancel})
   else
@@ -315,12 +325,12 @@ function DB:ShowTokenUI()
     return
   end
   DB.inUI = true
-  DB.uiTextLen = strlenutf8(DB.MasterToken)
   local master = DB.MasterName
   if DB.ISBIndex == 1 then
     -- regen with us as actual master
     master = DB.fullName
   end
+  DB.uiTextLen = DB.CalcUITextLen(master)
   StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2",
                    {masterName = master, token1 = DB.Channel, token2 = DB.Secret, OnUICancel = DB.OnShowUICancel})
 end

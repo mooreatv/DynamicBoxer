@@ -7,6 +7,7 @@ globals = {
     "C_ChatInfo",
     "C_Timer",
     "GetChannelName",
+    "GetServerTime",
     "JoinTemporaryChannel",
     "EMAApi",
     "GetBindingAction",

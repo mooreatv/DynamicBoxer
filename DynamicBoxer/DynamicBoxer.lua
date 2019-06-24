@@ -151,6 +151,10 @@ for k, v in pairs(DB.ISBH) do
 end
 
 function DB.SplitFullname(fullname)
+  if type(fullname) ~= 'string' then
+    DB:Debug(1, "trying to split non string %", fullname)
+    return
+  end
   return fullname:match("(.+)-(.+)")
 end
 
@@ -209,6 +213,11 @@ function DB.ReconstructTeam()
   DB:Debug("Unique team string key is %, updated in history, expecting a team of size #", teamStr, DB.expectedCount)
 end
 
+function DB.SameRealmAsMaster()
+  local _, r = DB.SplitFullname(DB.MasterName)
+  return DB.myRealm == r
+end
+
 -- the first time, ie after /reload - we will force a resync
 DB.firstMsg = 1
 
@@ -224,15 +233,21 @@ function DB.Sync()
     return -- for now keep trying until we get a channel
   end
   DB.maxIter = DB.maxIter - 1
-  DB:Debug("Sync CB called for slot % our fullname is %, maxIter is now %", DB.ISBIndex, DB.fullName, DB.maxIter)
+  DB:Debug("Sync called for slot % our fullname is %, maxIter is now %", DB.ISBIndex, DB.fullName, DB.maxIter)
   if not DB.ISBIndex then
     DB:Debug("We don't know our slot/actual yet")
     return
   end
   local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. DB.firstMsg ..
                     " msg " .. tostring(DB.maxIter)
+  if not DB.SameRealmAsMaster() then
+    local secureMessage = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
+    DB:Debug("About to send message to % msg=%", DB.MasterName, secureMessage)
+    local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", DB.MasterName)
+    DB:Debug("Whisper Message send retcode is % (to %)", ret, DB.MasterName)
+  end
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
-  DB:Debug("Message success % on chanId %", ret, DB.channelId)
+  DB:Debug("Channel Message send retcode is % on chanId %", ret, DB.channelId)
   if ret then
     DB.firstMsg = 0
   else
@@ -277,13 +292,26 @@ function DB:SortTeam()
 end
 
 DB.Team = {}
-
-function DB:ProcessMessage(from, data)
+-- Too bad addon message don't work cross realm even through whisper
+-- (and yet they work with BN friends BUT they don't work with yourself!)
+function DB:ProcessMessage(source, from, data)
+  if source ~= "CHANNEL" then
+    -- check authenticity (channel sends unsigned messages)
+    local msg = DB:VerifySecureMessage(data, DB.Channel, DB.Secret)
+    if msg then
+      DB:Debug(2, "Received valid secure message from %: %", from, data)
+    else
+      DB:Warning("Received invalid message from %: %", from, data)
+      return
+    end
+    data = msg
+  end
   local idxStr, realname, internalname, forceStr = data:match("^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)") -- or strplit(" ", data)
-  DB:Debug("from %, got idx=% realname=% internal name=% first/force=%", from, idxStr, realname, internalname, forceStr)
+  DB:Debug("on % from %, got idx=% realname=% internal name=% first/force=%", source, from, idxStr, realname,
+           internalname, forceStr)
   if from ~= realname then
-    DB:Error("skipping unexpected mismatching name % != %", from, realname)
-    return
+    -- we actually since 1.4 and secure message support allow relay/another toon to set other slots it knows
+    DB:Debug("Possible issue with mismatching name % != % (source is %)", from, realname, source)
   end
   local idx = tonumber(idxStr)
   if not idx then
@@ -301,20 +329,21 @@ function DB:ProcessMessage(from, data)
       DB.maxIter = 1 -- resend at next round
     end
   end
+  local shortName = realname
   local s, r = DB.SplitFullname(realname)
   if r == DB.myRealm then
     DB:Debug(3, "% is on our realm so using %", realname, s)
-    realname = s -- use the short name without realm when on same realm, using full name breaks (!)
+    shortName = s -- use the short name without realm when on same realm, using full name breaks (!)
   end
   if DB.newTeam and DB.ISBIndex == 1 and DB.currentCount < DB.expectedCount then
     DB:Debug(1, "New team detected, on master, showing current token")
     DB:ShowTokenUI()
   end
-  if DB.Team[idx] and DB.Team[idx].new == realname then
-    DB:Debug("Already known mapping, skipping % %", idx, realname)
+  if DB.Team[idx] and DB.Team[idx].new == shortName then
+    DB:Debug("Already known mapping, skipping % % (%)", idx, shortName, realname)
     return
   end
-  DB.Team[idx] = {orig = internalname, new = realname, slot = idx}
+  DB.Team[idx] = {orig = internalname, new = shortName, slot = idx}
   if EMAApi then
     EMAApi.AddMember(realname)
   end
@@ -329,9 +358,10 @@ function DB:ProcessMessage(from, data)
   isboxer.NextButton = 1 -- reset the buttons
   -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
   self.ISBO.LoadBinds()
-  DB:Print(DB.format("New mapping for slot %, dynamically set ISBoxer character to %", idx, realname), 0, 1, 1)
+  DB:Print(DB.format("New mapping for slot %, dynamically set ISBoxer character to % (%)", idx, shortName, realname), 0,
+           1, 1)
   if idx == 1 then
-    DB:AddMaster(from) -- warning this is because we want the full name with realm
+    DB:AddMaster(realname)
   end
   if teamComplete then
     DB:Print(DB.format("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!",
@@ -342,11 +372,12 @@ end
 function DB:ChatAddonMsg(event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
   DB:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", self:GetName(),
            event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
-  if channel ~= "CHANNEL" or instanceID ~= DB.joinedChannel then
-    DB:Debug(9, "wrong channel % or instance % vs %, skipping!", channel, instanceID, DB.joinedChannel)
-    return -- not our message(s)
+  if prefix == DB.chatPrefix and ((channel == "CHANNEL" and instanceID == DB.joinedChannel) or channel == "WHISPER") then
+    DB:ProcessMessage(channel, sender, data)
+    return
   end
-  DB:ProcessMessage(sender, data)
+  DB:Debug(9, "wrong prefix % or channel % or instance % vs %, skipping!", prefix, channel, instanceID, DB.joinedChannel)
+  return -- not our message(s)
 end
 
 DB.EventD = {
@@ -393,6 +424,26 @@ DB.EventD = {
 
   BN_INFO_CHANGED = function(self, ...)
     self:DebugEvCall(3, ...)
+  end,
+
+  EXECUTE_CHAT_LINE = function(self, ...)
+    self:DebugEvCall(2, ...)
+  end,
+
+  CLUB_MESSAGE_ADDED = function(self, ...)
+    self:DebugEvCall(2, ...)
+  end,
+
+  CHAT_MSG_WHISPER = function(self, ...)
+    self:DebugEvCall(2, ...)
+  end,
+
+  CHAT_MSG_COMMUNITIES_CHANNEL = function(self, ...)
+    self:DebugEvCall(2, ...)
+  end,
+
+  CLUB_MESSAGE_HISTORY_RECEIVED = function(self, ...)
+    self:DebugEvCall(2, ...)
   end,
 
   ADDON_LOADED = function(self, _event, name)
@@ -549,7 +600,6 @@ function DB.Slash(arg)
   if not (posRest == nil) then
     rest = string.sub(arg, posRest + 1)
   end
-  local debugPrefix = "debug "
   if cmd == "j" then
     -- join
     DB.joinDone = false -- force rejoin code
@@ -557,11 +607,21 @@ function DB.Slash(arg)
   elseif cmd == "i" then
     -- re do initialization
     DB:ForceInit()
-  elseif arg == "reset" then
+  elseif DB.StartsWith(arg, "reset") then
     -- require reset to be spelled out (other r* are the random gen)
-    dynamicBoxerSaved = nil -- any subsequent DB:SetSaved will fail...
-    DB:Warning("State reset per request, please /reload !")
-    -- C_UI.Reload() -- in theory we could reload for them but that seems bad form
+    if rest == "team" then
+      dynamicBoxerSaved.teamHistory = {}
+      DB:Warning("Team history reset per request (next login will popup the token window until team is complete)")
+    elseif rest == "token" then
+      dynamicBoxerSaved.MasterToken = ""
+      DB:Warning("Token cleared per request, will prompt for it at next login")
+    elseif rest == "all" then
+      dynamicBoxerSaved = nil -- any subsequent DB:SetSaved will fail...
+      DB:Warning("State all reset per request, please /reload !")
+      -- C_UI.Reload() -- in theory we could reload for them but that seems bad form
+    else
+      DB:Error("Use /dbox reset x -- where x is one of team, token, all")
+    end
   elseif cmd == "r" then
     -- random id generator (misc bonus util)
     DB.RandomGeneratorUI()
@@ -592,15 +652,14 @@ function DB.Slash(arg)
     -- if above didn't match, failed/didn't return, then fall back to showing UI
     DB:ShowTokenUI()
     -- for debug, needs exact match (of start of "debug ..."):
-  elseif arg:sub(1, #debugPrefix) == debugPrefix then
+  elseif DB.StartsWith(arg, "debug") then
     -- debug
-    local debugArg = arg:sub(#debugPrefix + 1)
-    if debugArg == "on" then
+    if rest == "on" then
       DB:SetSaved("debug", 1)
-    elseif debugArg == "off" then
+    elseif rest == "off" then
       DB:SetSaved("debug", nil)
     else
-      DB:SetSaved("debug", tonumber(debugArg))
+      DB:SetSaved("debug", tonumber(rest))
     end
     DB:Print(DB.format("DynBoxer debug now %", DB.debug))
   elseif cmd == "d" then
