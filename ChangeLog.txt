@@ -4,8 +4,9 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
     - WIP Cross realm support: Revamped communication/sync to allow for cross realm boxing (message the slot1/master).
         - Check if we are on the same realm and use alternate messaging
         - Use the new MoLib CreateSecureMessage() and VerifySecureMessage() to create signed secured messages
+        - We use regular chat whispers as the addon whispers do not work cross realm (!), with a `whisperPrefix`)
     - `/dbox reset` now takes a mandatory extra argument: `/dbox reset all` for previous all reset behavior and
-        new `team` and `token` options to clear the team history and the token, respectively
+        new `team` and `token` options to clear the team history and the token, respectively.
     - Integrated MoLib's LRU for keeping last N masters
     - Fixed bug when changing master to longer one, the dbox show would be truncated to old length
 

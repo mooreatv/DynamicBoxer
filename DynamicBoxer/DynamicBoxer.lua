@@ -62,7 +62,8 @@ DB.refresh = 1
 DB.totalRetries = 0
 DB.maxRetries = 20 -- after 20s we stop/give up
 
-DB.chatPrefix = "dbox0" -- protocol version in prefix
+DB.chatPrefix = "dbox0" -- protocol version in prefix for the addon messages
+DB.whisperPrefix = "DynamicBoxer:" -- chat prefix in case it goes to wrong toon, to make it clearer what it may be
 DB.channelId = nil
 DB.enabled = true -- set to false if the users cancels out of the UI
 DB.randomIdLen = 8 -- we generate 8 characters long random ids
@@ -242,8 +243,10 @@ function DB.Sync()
   local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. DB.firstMsg ..
                     " msg " .. tostring(DB.maxIter)
   if not DB.SameRealmAsMaster() then
-    local secureMessage = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
-    DB:Debug("About to send message to % msg=%", DB.MasterName, secureMessage)
+    -- must stay under 255 bytes, we are around 90 bytes atm (depends on character name (accentuated characters count double)
+    -- and realm length)
+    local secureMessage = DB.whisperPrefix .. DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
+    DB:Debug("About to send message to % len % msg=%", DB.MasterName, #secureMessage, secureMessage)
     -- local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", DB.MasterName) -- doesn't work cross realm
     local ret = SendChatMessage(secureMessage, "WHISPER", nil, DB.MasterName)
     DB:Debug("Whisper Message send retcode is % (to %)", ret, DB.MasterName)

@@ -13,14 +13,20 @@ local DB = DynBoxer
 function DB.ChatFilter(self, event, msg, author, ...)
   DB:Debug(2, "Chat Filter cb for s=% e=% msg=% author=% rest=%", self and self:GetName() or "<no name>", event, msg,
            author, {...})
-  if DB.Channel and #DB.Channel > 0 and DB.StartsWith(msg, DB.Channel) then
+  local data -- set by callback to what's after the prefix
+  if DB.StartsWith(msg, DB.whisperPrefix, function(rest)
+    data = rest
+  end) then
     -- DB:ProcessMessage(source, from, data)
-    DB:ProcessMessage("CHAT_FILTER", author, msg)
+    if event ~= "CHAT_MSG_WHISPER_INFORM" then -- don't process our own messages
+      DB:ProcessMessage("CHAT_FILTER", author, data)
+    end
     return true
   end
   return false
 end
 
 ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", DB.ChatFilter)
+ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", DB.ChatFilter)
 
 DB:Debug("dbox chat file loaded")
