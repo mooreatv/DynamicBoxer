@@ -16,4 +16,4 @@ CreateFrame("frame", shortName, UIParent)
 
 local DB = DynBoxer
 
-_G[addon].MoLibInstallInto(DB, shortName)
+_G[addon]:MoLibInstallInto(DB, shortName)

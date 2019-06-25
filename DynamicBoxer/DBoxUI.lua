@@ -10,6 +10,9 @@ local addon, ns = ...
 -- Created by DBoxInit
 local DB = DynBoxer
 
+-- this file already has widget as "self" so we still use . in the definitions here
+-- for all the On*(widget...)
+
 function DB.OnSlaveUIShow(widget, _data)
   DB:Debug("Slave UI Show")
   local e = widget.editBox
@@ -66,7 +69,7 @@ end
 
 DB.fontPath = "Interface\\AddOns\\DynamicBoxer\\fixed-font.otf"
 
-function DB.SetupFont(height)
+function DB:SetupFont(height)
   if DB.fixedFont then
     return DB.fixedFont
   end
@@ -100,7 +103,7 @@ function DB.OnRandomUIShow(widget, _data)
   DB:Debug("Height from edit box is %", height)
   e:HighlightText()
   e:SetJustifyH("CENTER")
-  local font = DB.SetupFont(height / 2)
+  local font = DB:SetupFont(height / 2)
   e:SetFontObject(font)
   DB.fontString:SetFontObject(font)
   DB.fontString:SetText(newText)
@@ -114,10 +117,10 @@ function DB.OnRandomUIShow(widget, _data)
       DB.currentMainEditBox:SetFocus()
     end
   end)
-  e:SetScript("OnMouseUp", function(self)
-    DB:Debug("Clicked on random, rehighlighting")
-    self:HighlightText()
-    self:SetCursorPosition(DB.randomIdLen)
+  e:SetScript("OnMouseUp", function(w)
+    DB:Debug("Clicked on random, re-highlighting")
+    w:HighlightText()
+    w:SetCursorPosition(DB.randomIdLen)
   end)
   return true -- stay shown
 end
@@ -150,10 +153,10 @@ function DB.OnMasterUIShow(widget, data)
   e:SetWidth(width + 4) -- + some or highlights hides most of it/it doesn't fit
   local strLen = strlenutf8(newText) -- in glyphs
   e:SetMaxLetters(strLen)
-  e:SetScript("OnMouseUp", function(self)
-    DB:Debug("Clicked on random, rehighlighting")
-    self:HighlightText()
-    self:SetCursorPosition(#newText) -- this one is in bytes, not in chars (!)
+  e:SetScript("OnMouseUp", function(w)
+    DB:Debug("Clicked on random, re-highlighting")
+    w:HighlightText()
+    w:SetCursorPosition(#newText) -- this one is in bytes, not in chars (!)
   end)
   return true -- stay shown
 end
@@ -250,7 +253,7 @@ StaticPopupDialogs["DYNBOXER_SLAVE"] = {
   hasEditBox = true
 }
 
-function DB.RandomGeneratorUI()
+function DB:RandomGeneratorUI()
   -- TODO: cleanup/move to its own addon (Issue #11)
   StaticPopup_Show("DYNBOXER_RANDOM")
 end
@@ -288,7 +291,7 @@ end
 
 DB.inUI = false
 
-function DB.CalcUITextLen(masterName)
+function DB:CalcUITextLen(masterName)
   if not masterName or masterName == "" then
     DB:Debug(2, "CalcUITextLen: No master name, using placeholder for now")
     -- placeholder
@@ -297,7 +300,7 @@ function DB.CalcUITextLen(masterName)
   return DB.randomIdLen * 2 + strlenutf8(masterName) + 4
 end
 
-function DB.SetupUI()
+function DB:SetupUI()
   DB:Debug(8, "SetupUI % % %", DB.inUI, DB.Channel, StaticPopupDialogs["DYNBOXER_CHANNEL"])
   if DB.inUI then
     DB:Debug(7, "Already in UI, skipping")
@@ -306,7 +309,7 @@ function DB.SetupUI()
   DB.inUI = true
   -- DB.fullName= "aÁÁÁ" -- test with utf8 characters (2x bytes per accentuated char)
   -- "master-fullname token1 token2 h" (in glyphs, so need to use strlenutf8 on input/comparaison)
-  DB.uiTextLen = DB.CalcUITextLen(DB.fullName)
+  DB.uiTextLen = DB:CalcUITextLen(DB.fullName)
   if DB.ISBIndex == 1 then
     StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2", {OnUICancel = DB.OnUICancel})
   else
@@ -330,7 +333,7 @@ function DB:ShowTokenUI()
     -- regen with us as actual master
     master = DB.fullName
   end
-  DB.uiTextLen = DB.CalcUITextLen(master)
+  DB.uiTextLen = DB:CalcUITextLen(master)
   StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2",
                    {masterName = master, token1 = DB.Channel, token2 = DB.Secret, OnUICancel = DB.OnShowUICancel})
 end

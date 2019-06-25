@@ -31,3 +31,4 @@ max_line_length = 132
 ignore = {
     "212/_.*"
 }
+self=false

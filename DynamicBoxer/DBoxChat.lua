@@ -10,11 +10,11 @@ local addon, ns = ...
 -- Created by DBoxInit
 local DB = DynBoxer
 
-function DB.ChatFilter(self, event, msg, author, ...)
+function DB:ChatFilter(event, msg, author, ...)
   DB:Debug(2, "Chat Filter cb for s=% e=% msg=% author=% rest=%", self and self:GetName() or "<no name>", event, msg,
            author, {...})
   local data -- set by callback to what's after the prefix
-  if DB.StartsWith(msg, DB.whisperPrefix, function(rest)
+  if DB:StartsWith(msg, DB.whisperPrefix, function(rest)
     data = rest
   end) then
     -- DB:ProcessMessage(source, from, data)
