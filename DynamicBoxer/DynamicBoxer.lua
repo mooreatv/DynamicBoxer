@@ -245,11 +245,14 @@ function DB.Sync()
   if not DB.SameRealmAsMaster() then
     -- must stay under 255 bytes, we are around 90 bytes atm (depends on character name (accentuated characters count double)
     -- and realm length)
-    local secureMessage = DB.whisperPrefix .. DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
-    DB:Debug("About to send message to % len % msg=%", DB.MasterName, #secureMessage, secureMessage)
+    local secureMessage, messageId = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
+    local payload = DB.whisperPrefix .. secureMessage
+    DB:Debug("About to send message id % to % len % msg=%", messageId, DB.MasterName, #payload, payload)
     -- local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", DB.MasterName) -- doesn't work cross realm
-    local ret = SendChatMessage(secureMessage, "WHISPER", nil, DB.MasterName)
-    DB:Debug("Whisper Message send retcode is % (to %)", ret, DB.MasterName)
+    SendChatMessage(payload, "WHISPER", nil, DB.MasterName) -- returns nothing even if successful (!)
+    -- We would need to watch (asynchronously, for how long ?) for CHAT_MSG_WHISPER_INFORM for success or CHAT_MSG_SYSTEM for errors
+    -- instead we'll expect to get a reply from the master and if we don't then we'll try another/not have mapping
+    -- use the signature as message id, put it in our LRU for queue of msg waiting ack
   end
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Channel Message send retcode is % on chanId %", ret, DB.channelId)
