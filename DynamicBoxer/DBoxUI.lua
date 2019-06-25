@@ -19,13 +19,16 @@ function DB.OnSlaveUIShow(widget, _data)
   local newText = e:GetText()
   DB.fontString:SetFontObject(e:GetFontObject())
   -- just to get a starting length
-  if strlenutf8(newText) < DB.uiTextLen then
+  local len = strlenutf8(newText)
+  local minLen =  DB:CalcUITextLen("Aa")
+  DB:Debug("Len field is % vs expected min % (%)", len, minLen, DB.uiTextLen)
+  if len < minLen then
     -- width calc placeholder
-    newText = "Justtesting-Kil'jaeden 3ljevJet TL21f8YB W"
+    newText = "Placeholder-Kil'Jaeden DV4eNcgp DV4eNcgp W"
   end
-  DB.fontString:SetText(newText .. "W") -- add 1 extra character to avoid scrolling (!)
+  DB.fontString:SetText(newText .. " W") -- add 1 extra character to avoid scrolling (!)
   local width = DB.fontString:GetStringWidth()
-  DB:Debug("Width is %", width)
+  DB:Debug("Width is % for %", width, newText)
   e:SetWidth(width)
   e.Instructions:SetText("  Paste here from Slot 1")
   e:HighlightText()
