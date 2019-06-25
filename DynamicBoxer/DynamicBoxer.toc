@@ -13,3 +13,4 @@ DBoxInit.lua
 ISBoxerPatches.lua
 DynamicBoxer.lua
 DBoxUI.lua
+DBoxChat.lua

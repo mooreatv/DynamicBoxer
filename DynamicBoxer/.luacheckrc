@@ -3,6 +3,8 @@ globals = {
     "DynBoxer",
     "dynamicBoxerSaved",
     "BNGetInfo",
+    "ChatFrame_AddMessageEventFilter",
+    "SendChatMessage",
     "CreateFrame",
     "C_ChatInfo",
     "C_Timer",

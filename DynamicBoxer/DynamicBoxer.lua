@@ -27,9 +27,10 @@
      Read from slot1 the team list
      Slot1 (master) reading the other slots
 
-   [todo have isboxer just save the team list and slot # more directly
+   Todo: have isboxer just save the team list and slot # more directly
    so we don't have to hook and ideally isboxer would use variables/that team structure in macros
    instead of generating the same hardcoded stuff we end up search/replacing into.
+
    ]] --
 --
 -- our name, our empty default (and unused) anonymous ns
@@ -243,7 +244,8 @@ function DB.Sync()
   if not DB.SameRealmAsMaster() then
     local secureMessage = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
     DB:Debug("About to send message to % msg=%", DB.MasterName, secureMessage)
-    local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", DB.MasterName)
+    -- local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", DB.MasterName) -- doesn't work cross realm
+    local ret = SendChatMessage(secureMessage, "WHISPER", nil, DB.MasterName)
     DB:Debug("Whisper Message send retcode is % (to %)", ret, DB.MasterName)
   end
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
@@ -446,6 +448,14 @@ DB.EventD = {
     self:DebugEvCall(2, ...)
   end,
 
+  CHAT_MSG_BN_WHISPER_INFORM = function(self, ...)
+    self:DebugEvCall(2, ...)
+  end,
+
+  CHAT_MSG_BN_WHISPER = function(self, ...)
+    self:DebugEvCall(2, ...)
+  end,
+
   ADDON_LOADED = function(self, _event, name)
     self:Debug(9, "Addon % loaded", name)
     if name ~= addon then
@@ -460,9 +470,10 @@ DB.EventD = {
           dynamicBoxerSaved.configVersion, DB.configVersion)
       else
         local valid, masterName, tok1, tok2 -- start nil
-        if not dynamicBoxerSaved.MasterToken then
+        if not dynamicBoxerSaved.MasterToken or #dynamicBoxerSaved.MasterToken == 0 then
           -- allow nil/unset master token
           DB:Warning("Token isn't set yet...")
+          dynamicBoxerSaved.MasterToken = nil -- normalize to nil for next if
         else
           valid, masterName, tok1, tok2 = DB:ParseToken(dynamicBoxerSaved.MasterToken)
         end
@@ -563,6 +574,7 @@ function DB.Help(msg)
              "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
              "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
              "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
+             "/dbox reset team|token|all -- resets team or token or all, respectively\n" ..
              "/dbox r -- show random id generator.\n" .. "/dbox dump global -- to dump a global.")
 end
 
@@ -613,7 +625,7 @@ function DB.Slash(arg)
       dynamicBoxerSaved.teamHistory = {}
       DB:Warning("Team history reset per request (next login will popup the token window until team is complete)")
     elseif rest == "token" then
-      dynamicBoxerSaved.MasterToken = ""
+      dynamicBoxerSaved.MasterToken = nil
       DB:Warning("Token cleared per request, will prompt for it at next login")
     elseif rest == "all" then
       dynamicBoxerSaved = nil -- any subsequent DB:SetSaved will fail...
