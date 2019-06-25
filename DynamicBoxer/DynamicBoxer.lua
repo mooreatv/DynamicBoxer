@@ -168,13 +168,13 @@ function DB:ReconstructTeam()
              isboxer.CharacterSet.Members)
     return
   end
+  DB.fullName = DB:GetMyFQN()
+  DB.faction = UnitFactionGroup("player")
+  DB.shortName, DB.myRealm = DB:SplitFullname(DB.fullName)
   if not DB:IsActive() then
     DB:Print("DynamicBoxer skipping team reconstruction as there is no isboxer team (not running under innerspace).")
     return
   end
-  DB.fullName = DB:GetMyFQN()
-  DB.faction = UnitFactionGroup("player")
-  DB.shortName, DB.myRealm = DB:SplitFullname(DB.fullName)
   local prev = isboxer.SetMacro
   DB.ISBTeam = {}
   -- parse the text which looks like (note the ]xxx; delimiters for most but \n at the end)
@@ -243,8 +243,8 @@ function DB:Sync()
   local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. DB.firstMsg ..
                     " msg " .. tostring(DB.maxIter)
   if not DB:SameRealmAsMaster() then
-    -- must stay under 255 bytes, we are around 90 bytes atm (depends on character name (accentuated characters count double)
-    -- and realm length)
+    -- must stay under 255 bytes, we are around 96 bytes atm (depends on character name (accentuated characters count double)
+    -- and realm length, the hash alone is 16 bytes)
     local secureMessage, messageId = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
     local toSend = DB.whisperPrefix .. secureMessage
     DB:Debug("About to send message id % to % len % msg=%", messageId, DB.MasterName, #toSend, toSend)
@@ -305,9 +305,9 @@ DB.Team = {}
 function DB:ProcessMessage(source, from, data)
   if source ~= "CHANNEL" then
     -- check authenticity (channel sends unsigned messages)
-    local msg = DB:VerifySecureMessage(data, DB.Channel, DB.Secret)
+    local msg, lag, msgId = DB:VerifySecureMessage(data, DB.Channel, DB.Secret)
     if msg then
-      DB:Debug(2, "Received valid secure message from %: %", from, data)
+      DB:Debug(2, "Received valid secure message from % lag is %s, msg id is % part of full message %", from, lag, msgId, data)
     else
       DB:Warning("Received invalid message from %: %", from, data)
       return
@@ -484,7 +484,7 @@ DB.EventD = {
           valid, masterName, tok1, tok2 = DB:ParseToken(dynamicBoxerSaved.MasterToken)
         end
         if dynamicBoxerSaved.MasterToken and not valid then
-          DB:Error("Master token % is invalid, resetting...", dynamicBoxerSaved.FooBar)
+          DB:Error("Master token % is invalid, resetting...", dynamicBoxerSaved.MasterToken)
         else
           DB:deepmerge(DB, nil, dynamicBoxerSaved)
           DB.MasterName = masterName

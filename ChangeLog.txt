@@ -2,6 +2,7 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 1.4.0 MMM DD 2019 - WIP
     - Changed all functions to use : so I spent less time chasing silly error where I called with . instead of : or vice versa
+    - Changed hashing to be 64 bits (2 32 bits hashes to be precise). It means your previous token will be invalidated (sorry!)
     - WIP Cross realm support: Revamped communication/sync to allow for cross realm boxing (message the slot1/master).
         - Check if we are on the same realm and use alternate messaging
         - Use the new MoLib CreateSecureMessage() and VerifySecureMessage() to create signed secured messages
