@@ -200,7 +200,12 @@ function DB:ReconstructTeam()
   isboxer.SetMacro = prev
   DB:Debug("Found isbteam to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
            isboxer.CharacterSet.Members)
-  DB.Team[DB.ISBIndex] = {orig = DB.ISBTeam[DB.ISBIndex], new = DB.shortName, slot = DB.ISBIndex}
+  DB.Team[DB.ISBIndex] = {
+    orig = DB.ISBTeam[DB.ISBIndex],
+    new = DB.shortName,
+    fullName = DB.fullName,
+    slot = DB.ISBIndex
+  }
   DB:Debug("Team map initial value = %", DB.Team)
   -- detect team changes, keep unique teams
   local teamStr = table.concat(DB.ISBTeam, " ")
@@ -218,6 +223,28 @@ end
 function DB:SameRealmAsMaster()
   local _, r = DB:SplitFullname(DB.MasterName)
   return DB.myRealm == r
+end
+
+function DB:SendDirectMessage(to, payload)
+  local secureMessage, messageId = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
+  local toSend = DB.whisperPrefix .. secureMessage
+  -- must stay under 255 bytes, we are around 96 bytes atm (depends on character name (accentuated characters count double)
+  -- and realm length, the hash alone is 16 bytes)
+  DB:Debug("About to send message id % to % len % msg=%", messageId, to, #toSend, toSend)
+  -- local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", DB.MasterName) -- doesn't work cross realm
+  SendChatMessage(toSend, "WHISPER", nil, to) -- returns nothing even if successful (!)
+  -- We would need to watch (asynchronously, for how long ?) for CHAT_MSG_WHISPER_INFORM for success or CHAT_MSG_SYSTEM for errors
+  -- instead we'll expect to get a reply from the master and if we don't then we'll try another/not have mapping
+  -- use the signature as message id, put it in our LRU for queue of msg waiting ack
+  return messageId
+end
+
+function DB:InfoPayload(slot, firstFlag, msgIter)
+  local toonInfo = DB.Team[slot]
+  local payload = tostring(slot) .. " " .. toonInfo.fullName .. " " .. toonInfo.orig .. " " .. firstFlag .. " msg " ..
+                    msgIter
+  DB:Debug("Created payload for slot %: %", slot, payload)
+  return payload
 end
 
 -- the first time, ie after /reload - we will force a resync
@@ -240,19 +267,9 @@ function DB:Sync()
     DB:Debug("We don't know our slot/actual yet")
     return
   end
-  local payload = tostring(DB.ISBIndex) .. " " .. DB.fullName .. " " .. DB.ISBTeam[DB.ISBIndex] .. " " .. DB.firstMsg ..
-                    " msg " .. tostring(DB.maxIter)
+  local payload = DB:InfoPayload(DB.ISBIndex, DB.firstMsg, DB.maxIter)
   if not DB:SameRealmAsMaster() then
-    -- must stay under 255 bytes, we are around 96 bytes atm (depends on character name (accentuated characters count double)
-    -- and realm length, the hash alone is 16 bytes)
-    local secureMessage, messageId = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
-    local toSend = DB.whisperPrefix .. secureMessage
-    DB:Debug("About to send message id % to % len % msg=%", messageId, DB.MasterName, #toSend, toSend)
-    -- local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", DB.MasterName) -- doesn't work cross realm
-    SendChatMessage(toSend, "WHISPER", nil, DB.MasterName) -- returns nothing even if successful (!)
-    -- We would need to watch (asynchronously, for how long ?) for CHAT_MSG_WHISPER_INFORM for success or CHAT_MSG_SYSTEM for errors
-    -- instead we'll expect to get a reply from the master and if we don't then we'll try another/not have mapping
-    -- use the signature as message id, put it in our LRU for queue of msg waiting ack
+    DB:SendDirectMessage(DB.MasterName, payload)
   end
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Channel Message send retcode is % on chanId %", ret, DB.channelId)
@@ -303,11 +320,14 @@ DB.Team = {}
 -- Too bad addon message don't work cross realm even through whisper
 -- (and yet they work with BN friends BUT they don't work with yourself!)
 function DB:ProcessMessage(source, from, data)
+  local doForward = nil
   if source ~= "CHANNEL" then
     -- check authenticity (channel sends unsigned messages)
     local msg, lag, msgId = DB:VerifySecureMessage(data, DB.Channel, DB.Secret)
     if msg then
-      DB:Debug(2, "Received valid secure message from % lag is %s, msg id is % part of full message %", from, lag, msgId, data)
+      DB:Debug(2, "Received valid secure message from % lag is %s, msg id is % part of full message %", from, lag,
+               msgId, data)
+      doForward = msg -- will forward, if it's new information (helps avoid loops but more could be done)
     else
       DB:Warning("Received invalid message from %: %", from, data)
       return
@@ -347,11 +367,11 @@ function DB:ProcessMessage(source, from, data)
     DB:Debug(1, "New team detected, on master, showing current token")
     DB:ShowTokenUI()
   end
-  if DB.Team[idx] and DB.Team[idx].new == shortName then
+  if DB.Team[idx] and DB.Team[idx].fullName == realname then
     DB:Debug("Already known mapping, skipping % % (%)", idx, shortName, realname)
     return
   end
-  DB.Team[idx] = {orig = internalname, new = shortName, slot = idx}
+  DB.Team[idx] = {orig = internalname, new = shortName, fullName = realname, slot = idx}
   if EMAApi then
     EMAApi.AddMember(realname)
   end
@@ -374,6 +394,14 @@ function DB:ProcessMessage(source, from, data)
   if teamComplete then
     DB:Print(DB:format("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!",
                        DB.currentCount), 0, 1, 1)
+  end
+  if doForward then
+    -- We need to forward that info to our channel
+    local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, doForward, "CHANNEL", DB.channelId)
+    DB:Debug("Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
+    -- We need to reply with our info (todo: ack the actual token/message id)
+    local payload = DB:InfoPayload(DB.ISBIndex, 0, DB.maxIter)
+    DB:SendDirectMessage(from, payload)
   end
 end
 
