@@ -225,6 +225,10 @@ function DB:SameRealmAsMaster()
   return DB.myRealm == r
 end
 
+function DB:WeAreMaster()
+  return DB.ISBIndex == 1
+end
+
 function DB:SendDirectMessage(to, payload)
   local secureMessage, messageId = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
   local toSend = DB.whisperPrefix .. secureMessage
@@ -327,7 +331,20 @@ function DB:ProcessMessage(source, from, data)
     if msg then
       DB:Debug(2, "Received valid secure message from % lag is %s, msg id is % part of full message %", from, lag,
                msgId, data)
-      doForward = msg -- will forward, if it's new information (helps avoid loops but more could be done)
+      if DB:WeAreMaster() then
+        -- TODO: count how many msg we sent to who, in case the otherside also think they are master, it'd create a loop
+        -- We need to forward that info to our channel
+        local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, msg, "CHANNEL", DB.channelId)
+        DB:Debug("Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
+        -- We need to reply with our info (todo: ack the actual token/message id)
+        local count = 0
+        for k, _ in pairs(DB.Team) do
+          local payload = DB:InfoPayload(k, 0, DB.maxIter)
+          DB:SendDirectMessage(from, payload)
+          count = count + 1
+        end
+        DB:Debug("P2P Send % / % slots back to %", count, DB.expectedCount, from)
+      end
     else
       DB:Warning("Received invalid message from %: %", from, data)
       return
@@ -363,7 +380,7 @@ function DB:ProcessMessage(source, from, data)
     DB:Debug(3, "% is on our realm so using %", realname, s)
     shortName = s -- use the short name without realm when on same realm, using full name breaks (!)
   end
-  if DB.newTeam and DB.ISBIndex == 1 and DB.currentCount < DB.expectedCount then
+  if DB.newTeam and DB:WeAreMaster() and DB.currentCount < DB.expectedCount then
     DB:Debug(1, "New team detected, on master, showing current token")
     DB:ShowTokenUI()
   end
@@ -379,7 +396,7 @@ function DB:ProcessMessage(source, from, data)
   DB.currentCount = DB:SortTeam()
   local teamComplete = (DB.currentCount >= DB.expectedCount and DB.currentCount ~= oldCount)
   -- if team is complete, hide the show button
-  if DB.newTeam and DB.ISBIndex == 1 and teamComplete then
+  if DB.newTeam and DB:WeAreMaster() and teamComplete then
     DB:Debug(1, "Team complete, hiding current token dialog")
     DB:HideTokenUI()
   end
@@ -394,14 +411,6 @@ function DB:ProcessMessage(source, from, data)
   if teamComplete then
     DB:Print(DB:format("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!",
                        DB.currentCount), 0, 1, 1)
-  end
-  if doForward then
-    -- We need to forward that info to our channel
-    local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, doForward, "CHANNEL", DB.channelId)
-    DB:Debug("Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
-    -- We need to reply with our info (todo: ack the actual token/message id)
-    local payload = DB:InfoPayload(DB.ISBIndex, 0, DB.maxIter)
-    DB:SendDirectMessage(from, payload)
   end
 end
 

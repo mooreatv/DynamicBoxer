@@ -20,7 +20,7 @@ function DB.OnSlaveUIShow(widget, _data)
   DB.fontString:SetFontObject(e:GetFontObject())
   -- just to get a starting length
   local len = strlenutf8(newText)
-  local minLen =  DB:CalcUITextLen("Aa")
+  local minLen = DB:CalcUITextLen("Aa")
   DB:Debug("Len field is % vs expected min % (%)", len, minLen, DB.uiTextLen)
   if len < minLen then
     -- width calc placeholder
@@ -313,7 +313,7 @@ function DB:SetupUI()
   -- DB.fullName= "aÁÁÁ" -- test with utf8 characters (2x bytes per accentuated char)
   -- "master-fullname token1 token2 h" (in glyphs, so need to use strlenutf8 on input/comparaison)
   DB.uiTextLen = DB:CalcUITextLen(DB.fullName)
-  if DB.ISBIndex == 1 then
+  if DB:WeAreMaster() then
     StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2", {OnUICancel = DB.OnUICancel})
   else
     StaticPopup_Show("DYNBOXER_SLAVE")
@@ -332,7 +332,7 @@ function DB:ShowTokenUI()
   end
   DB.inUI = true
   local master = DB.MasterName
-  if DB.ISBIndex == 1 then
+  if DB:WeAreMaster() then
     -- regen with us as actual master
     master = DB.fullName
   end
