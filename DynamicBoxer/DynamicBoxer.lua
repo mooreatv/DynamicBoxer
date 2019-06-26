@@ -306,17 +306,22 @@ end
 function DB:SortTeam()
   local presentCount = 0
   self.SortedTeam = {}
+  self.TeamIdxByName = {}
   -- remove holes before sorting (otherwise it doesn't work in a way that is usuable, big gotcha)
   for _, v in pairs(self.Team) do
     if v then
       table.insert(self.SortedTeam, v)
       presentCount = presentCount + 1
+      -- while at it create/maintains the reverse mapping name->index
+      DB:Debug("v is %, v.fullName %", v, v.fullName)
+      self.TeamIdxByName[v.fullName] = v.slot
     end
   end
   table.sort(self.SortedTeam, function(a, b)
     return #a.orig > #b.orig
   end)
-  self:Debug(1, "Team map (sorted by longest orig name first) is now % - size %", self.SortedTeam, presentCount)
+  self:Debug(1, "Team map (sorted by longest orig name first) is now % - size %; reverse index is %", self.SortedTeam,
+             presentCount, self.TeamIdxByName)
   return presentCount
 end
 
@@ -432,6 +437,29 @@ function DB:ProcessMessage(source, from, data)
   if teamComplete then
     DB:Print(DB:format("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!",
                        DB.currentCount), 0, 1, 1)
+  end
+  -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
+  if DB.currentCount == DB.expectedCount and EMAApi.FullTeamList then
+    local EMAteam = _G.LibStub and _G.LibStub:GetLibrary("AceAddon-3.0", true)
+    EMAteam = EMAteam and EMAteam:GetAddon("Team", true)
+    if EMAteam then
+      -- why is there 2 levels ?? - adapted from FullTeamList in Core/Team.lua of EMA
+      for name, info in pairs(EMAteam.db.newTeamList) do
+        local idx = DB.TeamIdxByName[name]
+        if idx then
+          -- set correct order
+          info[1].order = idx
+        else
+          -- remove toons not in our list
+          DB:Debug("Removing % (%) from EMA team", name, info)
+          EMAteam.db.newTeamList[name] = nil
+        end
+      end
+    else
+      DB:Warning("Unable to get EMA team!")
+    end
+    -- need to make ema notice ordering change
+    DB:Debug(1, "Ema team fully set.")
   end
 end
 
