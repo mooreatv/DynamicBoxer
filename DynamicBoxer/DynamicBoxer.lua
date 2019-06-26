@@ -332,18 +332,7 @@ function DB:ProcessMessage(source, from, data)
       DB:Debug(2, "Received valid secure message from % lag is %s, msg id is % part of full message %", from, lag,
                msgId, data)
       if DB:WeAreMaster() then
-        -- TODO: count how many msg we sent to who, in case the otherside also think they are master, it'd create a loop
-        -- We need to forward that info to our channel
-        local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, msg, "CHANNEL", DB.channelId)
-        DB:Debug("Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
-        -- We need to reply with our info (todo: ack the actual token/message id)
-        local count = 0
-        for k, _ in pairs(DB.Team) do
-          local payload = DB:InfoPayload(k, 0, DB.maxIter)
-          DB:SendDirectMessage(from, payload)
-          count = count + 1
-        end
-        DB:Debug("P2P Send % / % slots back to %", count, DB.expectedCount, from)
+        doForward = msg
       end
     else
       DB:Warning("Received invalid message from %: %", from, data)
@@ -354,10 +343,6 @@ function DB:ProcessMessage(source, from, data)
   local idxStr, realname, internalname, forceStr = data:match("^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)") -- or strplit(" ", data)
   DB:Debug("on % from %, got idx=% realname=% internal name=% first/force=%", source, from, idxStr, realname,
            internalname, forceStr)
-  if from ~= realname then
-    -- we actually since 1.4 and secure message support allow relay/another toon to set other slots it knows
-    DB:Debug("Possible issue with mismatching name % != % (source is %)", from, realname, source)
-  end
   local idx = tonumber(idxStr)
   if not idx then
     DB:Error("invalid non numerical idx %", idxStr)
@@ -368,11 +353,32 @@ function DB:ProcessMessage(source, from, data)
     DB:Error("invalid non numerical first/force flag %", forceStr)
     return
   end
-  if force == 1 then
-    DB:Debug("Got a reload/first from peer while our maxIter is %", DB.maxIter)
-    if DB.maxIter <= 0 then
-      DB.maxIter = 1 -- resend at next round
+  if from ~= realname then
+    -- Since 1.4 and secure message support allow relay/another toon to set other slots it knows
+    DB:Debug("Fwded message from % about % (source is %)", from, realname, source)
+  end
+  if doForward then -- we are master when we are forwarding
+    -- check for loops/sanity; that the data is really only about their slot
+    if idx == 1 then
+      if realname == DB.fullName then
+        DB:Warning("Forwarding loop detected, dropping message from % about ourselves", from)
+        return
+      end
+      DB:Error("Mis configuration, % sent a message that this % and % are master/have slot1!", from, DB.fullName,
+               realname)
+      return
     end
+    -- TODO: count how many msg we sent to who so we don't get tricked (or bugged) into flood
+    local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, doForward, "CHANNEL", DB.channelId)
+    DB:Debug("Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
+    -- We need to reply with our info (todo: ack the actual token/message id)
+    local count = 0
+    for k, _ in pairs(DB.Team) do
+      local payload = DB:InfoPayload(k, 0, DB.maxIter)
+      DB:SendDirectMessage(from, payload)
+      count = count + 1
+    end
+    DB:Debug("P2P Send % / % slots back to %", count, DB.expectedCount, from)
   end
   local shortName = realname
   local s, r = DB:SplitFullname(realname)
@@ -383,6 +389,21 @@ function DB:ProcessMessage(source, from, data)
   if DB.newTeam and DB:WeAreMaster() and DB.currentCount < DB.expectedCount then
     DB:Debug(1, "New team detected, on master, showing current token")
     DB:ShowTokenUI()
+  end
+  if idx == DB.ISBIndex then
+    DB:Debug("This (a/our own) % message, about us, from % (real name claim is %)", source, from, realname)
+    if realname ~= DB.fullName then
+      DB:Warning("Bug? misconfig ? got a % message from % for our slot % with name % instead of ours (%)", source, from,
+                 idx, realname, DB.fullName)
+    end
+    return
+  end
+  -- we returned already/ignoring self forwarded message with force=1
+  if force == 1 then
+    DB:Debug("Got a reload/first from peer % while our maxIter is %", idx, DB.maxIter)
+    if DB.maxIter <= 0 then
+      DB.maxIter = 1 -- resend at next round
+    end
   end
   if DB.Team[idx] and DB.Team[idx].fullName == realname then
     DB:Debug("Already known mapping, skipping % % (%)", idx, shortName, realname)
