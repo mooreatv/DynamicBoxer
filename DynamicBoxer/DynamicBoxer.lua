@@ -330,7 +330,8 @@ DB.Team = {}
 -- (and yet they work with BN friends BUT they don't work with yourself!)
 function DB:ProcessMessage(source, from, data)
   local doForward = nil
-  if source ~= "CHANNEL" then
+  local channelMessage = (source == "CHANNEL")
+  if not channelMessage then
     -- check authenticity (channel sends unsigned messages)
     local msg, lag, msgId = DB:VerifySecureMessage(data, DB.Channel, DB.Secret)
     if msg then
@@ -391,7 +392,8 @@ function DB:ProcessMessage(source, from, data)
     DB:Debug(3, "% is on our realm so using %", realname, s)
     shortName = s -- use the short name without realm when on same realm, using full name breaks (!)
   end
-  if DB.newTeam and DB:WeAreMaster() and DB.currentCount < DB.expectedCount then
+  -- we should do that after we joined our channel to get a chance to get completion
+  if channelMessage and DB.newTeam and DB:WeAreMaster() and (DB.currentCount < DB.expectedCount) then
     DB:Debug(1, "New team detected, on master, showing current token")
     DB:ShowTokenUI()
   end
