@@ -206,6 +206,9 @@ function DB:ReconstructTeam()
     fullName = DB.fullName,
     slot = DB.ISBIndex
   }
+  if DB.ISBIndex == 1 then
+    DB.MasterName = DB.fullName
+  end
   DB:Debug("Team map initial value = %", DB.Team)
   -- detect team changes, keep unique teams
   local teamStr = table.concat(DB.ISBTeam, " ")
@@ -272,8 +275,20 @@ function DB:Sync()
     return
   end
   local payload = DB:InfoPayload(DB.ISBIndex, DB.firstMsg, DB.maxIter)
-  if not DB:SameRealmAsMaster() then
+  -- no point in resending if we are team complete (and not asked to resync)
+  if (DB.currentCount >= DB.expectedCount) and DB.firstMsg ~= 1 then
+    DB:Debug("Team is complete (and not asked for sync), aborting sync")
+    return
+  end
+  -- redundant check but we can (and used to) have WeAreMaster true because of slot1/index
+  -- and SameRealmAsMaster false because the master realm came from a previous token
+  if not (DB:WeAreMaster() or DB:SameRealmAsMaster()) then
     DB:SendDirectMessage(DB.MasterName, payload)
+    if DB.firstMsg == 1 and DB.maxIter <= 0 then
+      DB:Debug("Cross realm sync, first time, increasing msg sync to 2 more")
+      -- we have to sync twice to complete the team (if all goes well)
+      DB.maxIter = 2 -- give it an extra attempt in case 1 slave is slow
+    end
   end
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
   DB:Debug("Channel Message send retcode is % on chanId %", ret, DB.channelId)
@@ -328,6 +343,7 @@ end
 DB.Team = {}
 -- Too bad addon message don't work cross realm even through whisper
 -- (and yet they work with BN friends BUT they don't work with yourself!)
+-- TODO: refactor, this is too long / complicated for 1 function
 function DB:ProcessMessage(source, from, data)
   local doForward = nil
   local channelMessage = (source == "CHANNEL")
@@ -378,6 +394,7 @@ function DB:ProcessMessage(source, from, data)
     local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, doForward, "CHANNEL", DB.channelId)
     DB:Debug("Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
     -- We need to reply with our info (todo: ack the actual token/message id)
+    -- TODO: schedule a sync when we have the full team
     local count = 0
     for k, _ in pairs(DB.Team) do
       local payload = DB:InfoPayload(k, 0, DB.maxIter)
@@ -457,10 +474,10 @@ function DB:ProcessMessage(source, from, data)
     if EMAteam then
       -- why is there 2 levels ?? - adapted from FullTeamList in Core/Team.lua of EMA
       for name, info in pairs(EMAteam.db.newTeamList) do
-        local idx = DB.TeamIdxByName[name]
-        if idx then
+        local i = DB.TeamIdxByName[name]
+        if i then
           -- set correct order
-          info[1].order = idx
+          info[1].order = i
         else
           -- remove toons not in our list
           DB:Debug("Removing % (%) from EMA team", name, info)

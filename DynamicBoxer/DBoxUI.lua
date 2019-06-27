@@ -13,7 +13,7 @@ local DB = DynBoxer
 -- this file already has widget as "self" so we still use . in the definitions here
 -- for all the On*(widget...)
 
-function DB.OnSlaveUIShow(widget, _data)
+function DB.OnSlaveUIShow(widget, data)
   DB:Debug("Slave UI Show")
   local e = widget.editBox
   local newText = e:GetText()
@@ -23,8 +23,14 @@ function DB.OnSlaveUIShow(widget, _data)
   local minLen = DB:CalcUITextLen("Aa")
   DB:Debug("Len field is % vs expected min % (%)", len, minLen, DB.uiTextLen)
   if len < minLen then
-    -- width calc placeholder
-    newText = "Placeholder-Kil'Jaeden DV4eNcgp DV4eNcgp W"
+    -- do we have a master token (ie is this /dbox show and not /dbox init)
+    if data.token and #data.token > 0 then
+      newText = data.token
+      e:SetText(newText)
+    else
+      -- width calc placeholder
+      newText = "Placeholder-Kil'Jaeden DV4eNcgp DV4eNcgp W"
+    end
   end
   DB.fontString:SetText(newText .. " W") -- add 1 extra character to avoid scrolling (!)
   local width = DB.fontString:GetStringWidth()
@@ -56,6 +62,9 @@ function DB.OnSetupUIAccept(widget, data, data2)
   widget:Hide()
   DB.enabled = true
   DB.inUI = false
+  if DB.maxIter <= 0 then
+    DB.maxIter = 1
+  end
   DB:Join()
 end
 
@@ -251,11 +260,11 @@ StaticPopupDialogs["DYNBOXER_SLAVE"] = {
   EditBoxOnTextChanged = function(self, data)
     -- enable accept only after they paste a valid checksumed entry
     DB:Debug(4, "Slave EditBoxOnTextChanged called")
-    if self:GetText() == data then
+    if data.previous and self:GetText() == data then
       return -- no changes since last time, done
     end
-    self:GetParent().data = self:GetText()
-    DB.OnSlaveUIShow(self:GetParent())
+    self:GetParent().data.previous = self:GetText()
+    DB.OnSlaveUIShow(self:GetParent(), data)
     if DB:IsValidToken(self:GetText()) then
       self:GetParent().button1:Enable()
     else
@@ -343,11 +352,14 @@ function DB:ShowTokenUI()
   local master = DB.MasterName
   if DB:WeAreMaster() then
     -- regen with us as actual master
-    master = DB.fullName
-  end -- use the dbox init slave UI for slaves instead, just seeded with current token
-  DB.uiTextLen = DB:CalcUITextLen(master)
-  StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2",
-                   {masterName = master, token1 = DB.Channel, token2 = DB.Secret, OnUICancel = DB.OnShowUICancel})
+    master = DB.fullName  -- already done now in base file/all case so we don't msg old master
+    DB.uiTextLen = DB:CalcUITextLen(master)
+    StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2",
+                     {masterName = master, token1 = DB.Channel, token2 = DB.Secret, OnUICancel = DB.OnShowUICancel})
+  else
+    DB.uiTextLen = DB:CalcUITextLen(master)
+    StaticPopup_Show("DYNBOXER_SLAVE", "txt1", "txt2", {token = DB.MasterToken})
+  end
 end
 
 function DB:HideTokenUI()
