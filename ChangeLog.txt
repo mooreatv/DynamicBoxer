@@ -1,158 +1,159 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
-1.4.1 June 26th 2019
-    - Fixes for Issue #22 (Thanks Darknight for the debugging session)
-    - Use (broadcast) `/dbox show` when logging in new cross realm characters, copy from slot 1,
-    paste and hit enter everywhere (broadcast Ctrl-V and return key)
-    - Use new MoLib with 35s default (changeable) threshold for invalidating messages (from 15s before)
-    - Better printing of new vs changing team slot assignment
-    - Fixed unable to paste (longer) token after using a shorter one in /dbox init or show
-    - adding `/dbox version` to confirm/echo the version. pruned the list of commands shown from help ("/dbox")
-    - fix background lua error and failure to detect EMA isn't present
-    - fix case where popup on master wouldn't auto close (cross message trigger instead of channel)
-    - fix bug where new master would try to message the old master (if token points to old master)
-    - when cross realm try to sync up to 3 times to get full team, this fixes the most common cases of sync
-1.4.0 June 26th 2019
-    - Cross realm support: Added new communication/sync direct channel to allow for cross realm boxing (message the slot1/master).
-        - Check if we are on the same realm and use alternate direct messaging when we're not.
-        - Use the new MoLib CreateSecureMessage() and VerifySecureMessage() to create signed secured messages
-        - We use regular chat whispers as the addon whispers do not work cross realm (!), with a `whisperPrefix`)
-          We forward authenticated, new messages to the channel and we reply with our own known set.
-        - Loop/misconfiguration(bug) detection
-        - Limitations in this version (to be improved soon but it's already very usable/big step from 1.3):
-            - You may need to issue "/dbox m" on the slaves that aren't in master realm if you reload the master
-            - You may need to type "/dbox show" on the master to copy paste to the out of realm slaves "/dbox init" when changing master
-    - Implemented issue #15: Reset the EMA team to be exactly the dynamic team, in slot order
-    - Updated toc for BfA patch 8.2 (still works on classic too!)
-    - Changed all functions to use : so I spent less time chasing silly error where I called with . instead of : or vice versa
-    - Changed hashing to be 64 bits (2 32 bits hashes to be precise). It means your previous token will be invalidated (sorry!)
-    - `/dbox reset` now takes a mandatory extra argument: `/dbox reset all` for previous all reset behavior and
-        new `team` and `token` options to clear the team history and the token, respectively.
-    - Integrated MoLib's LRU for keeping last N masters
-    - Fixed bug when changing master to longer one, the dbox show would be truncated to old length
-    - Fixed bug where even on channel comm the data was sent twice
+1.4.1 June 27th 2019
+- Fixes for Issue #22 (Thanks Darknight for the debugging session)
+- Use (broadcast) `/dbox show` when logging in new cross realm characters, copy from slot 1,
+  paste and hit enter everywhere (broadcast Ctrl-V and return key)
+- Use new MoLib with 35s default (changeable) threshold for invalidating messages (from 15s before)
+- Better printing of new vs changing team slot assignment
+- Fixed unable to paste (longer) token after using a shorter one in /dbox init or show
+- adding `/dbox version` to confirm/echo the version. pruned the list of commands shown from help ("/dbox")
+- fix background lua error and failure to detect EMA isn't present
+- fix case where popup on master wouldn't auto close (cross message trigger instead of channel)
+- fix bug where new master would try to message the old master (if token points to old master)
+- when cross realm try to sync up to 3 times to get full team, this fixes the most common cases of sync
 
 Coming next:
-    - Improvements on the above
-    - Your input/suggestions welcome !
-    - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
+- More refinements on the above
+- Your input/suggestions welcome !
+- Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
+
+1.4.0 June 26th 2019
+- Cross realm support: Added new communication/sync direct channel to allow for cross realm boxing (message the slot1/master).
+  - Check if we are on the same realm and use alternate direct messaging when we're not.
+  - Use the new MoLib CreateSecureMessage() and VerifySecureMessage() to create signed secured messages
+  - We use regular chat whispers as the addon whispers do not work cross realm (!), with a `whisperPrefix`)
+    We forward authenticated, new messages to the channel and we reply with our own known set.
+  - Loop/misconfiguration(bug) detection
+  - Limitations in this version (to be improved soon but it's already very usable/big step from 1.3):
+    - You may need to issue "/dbox m" on the slaves that aren't in master realm if you reload the master
+    - You may need to type "/dbox show" on the master to copy paste to the out of realm slaves "/dbox init" when changing master
+- Implemented issue #15: Reset the EMA team to be exactly the dynamic team, in slot order
+- Updated toc for BfA patch 8.2 (still works on classic too!)
+- Changed all functions to use : so I spent less time chasing silly error where I called with . instead of : or vice versa
+- Changed hashing to be 64 bits (2 32 bits hashes to be precise). It means your previous token will be invalidated (sorry!)
+- `/dbox reset` now takes a mandatory extra argument: `/dbox reset all` for previous all reset behavior and
+  new `team` and `token` options to clear the team history and the token, respectively.
+- Integrated MoLib's LRU for keeping last N masters
+- Fixed bug when changing master to longer one, the dbox show would be truncated to old length
+- Fixed bug where even on channel comm the data was sent twice
 
 1.3.0 June 22nd 2019
-    - adding `/dbox show` to show the current master token (Issue #16)
-    - adding `/dbox reset` to clear all saved variables (start from scratch) this has similar effect to prexisting /dbox init but
-        allows to completely clear all state (follow with /reload for it to take effect)
-    - removed `/dbox channel` and `/dbox secret` as the token is now handled through ui; adding `/dbox set` to 
-        set token string from the command line instead of the UI (but /dbox show/init is better)
-    - Master automatically enables "show token" (/dbox show) when it detects a change in team, 
-        so you can add members/copy existing token. Issue #17.
-        And it automatically closes it once the team is complete !
-        (broadcast the existing since 1.0 `/dbox init` if you want to change tokens across windows instead of reuse the last one)
-    - Fixed #18 (bug with extra GetParent():Hide() causing master cancel button to hide UI)
+- adding `/dbox show` to show the current master token (Issue #16)
+- adding `/dbox reset` to clear all saved variables (start from scratch) this has similar effect to prexisting /dbox init but
+  allows to completely clear all state (follow with /reload for it to take effect)
+- removed `/dbox channel` and `/dbox secret` as the token is now handled through ui; adding `/dbox set` to 
+  set token string from the command line instead of the UI (but /dbox show/init is better)
+- Master automatically enables "show token" (/dbox show) when it detects a change in team, 
+  so you can add members/copy existing token. Issue #17.
+  And it automatically closes it once the team is complete !
+  (broadcast the existing since 1.0 `/dbox init` if you want to change tokens across windows instead of reuse the last one)
+- Fixed #18 (bug with extra GetParent():Hide() causing master cancel button to hide UI)
 
 
 1.2.0 June 18th 2019
-    - Revamped simpler yet better and safer setup UI. One time setup is now only 3 broadcasted keystrokes:
-         Ctrl-C , Ctrl-V , Return  (copy, paste, enter; that's it !)
-    - Fixed potential issue (as previously cross realm wasn't working anyway) issue with name-realm search and replace
-        now using MoLib's ReplaceAll which properly escapes all lua gsub characters for literal search and replace.
+- Revamped simpler yet better and safer setup UI. One time setup is now only 3 broadcasted keystrokes:
+   Ctrl-C , Ctrl-V , Return  (copy, paste, enter; that's it !)
+- Fixed potential issue (as previously cross realm wasn't working anyway) issue with name-realm search and replace
+  now using MoLib's ReplaceAll which properly escapes all lua gsub characters for literal search and replace.
 
 1.1.2 June 17th 2019
-    - Fix issue #10 to allow original isboxer characters to be substring of one another, as well as new team characters
-        (normalizes team in 2 passes)
-    - Also address another TODO to remove unnecessary realm when same as self, earlier
+- Fix issue #10 to allow original isboxer characters to be substring of one another, as well as new team characters
+  (normalizes team in 2 passes)
+- Also address another TODO to remove unnecessary realm when same as self, earlier
 
 1.1.1 June 13th 2019
-    - Avoid rejoining the same channel right away while doing /dbox init setup UI (needed to clear a few more state)
+- Avoid rejoining the same channel right away while doing /dbox init setup UI (needed to clear a few more state)
 
 1.1.0 June 13th 2019
-    - Added optional id/password generator, you can tab between the 2 copy/paste etc (can be used for channel
-    but mostly for the secret, it must be pasted on all windows, if copied, `/dbox random` to get just this utility)
-    (Issue #8) with lots of work/learning to get a cool fixed width narrow display and handle tab, escape, click, select,
-    typing etc as one may expect.
-    - Handle trial accounts where BattleNet info is nil (Issue #7)
-        as part of fix prefix provided channel name with DynamicBoxer4, if left empty (but don't) uses "demo"
-    - Static dialogs are reusing widgets without reinitializing them (!) so changes made in UI config
-     need to be reverted on OnHide (like clearing password field)
-    - make sure we leave previous channel when doing "/dbox init"
-    - fix bug on macro rewrite when missing slots (lua ipairs stops at first hole)
+- Added optional id/password generator, you can tab between the 2 copy/paste etc (can be used for channel
+but mostly for the secret, it must be pasted on all windows, if copied, `/dbox random` to get just this utility)
+(Issue #8) with lots of work/learning to get a cool fixed width narrow display and handle tab, escape, click, select,
+typing etc as one may expect.
+- Handle trial accounts where BattleNet info is nil (Issue #7)
+  as part of fix prefix provided channel name with DynamicBoxer4, if left empty (but don't) uses "demo"
+- Static dialogs are reusing widgets without reinitializing them (!) so changes made in UI config
+ need to be reverted on OnHide (like clearing password field)
+- make sure we leave previous channel when doing "/dbox init"
+- fix bug on macro rewrite when missing slots (lua ipairs stops at first hole)
 
 1.0.0 June 11th 2019 - ***1.0*** After 6 alpha/beta releases
-    - Added UI (2 step dialog boxes, ran only once per account) to set channel/secret pair (Issue #2)
-    - Also re runnable using `/dbox init` later
-    - Limit maximum number of times we'll try sending/syncing (to 20 times/20s after channel join or /dbox m command)
-    - DynBoxer.enabled boolean to turn off dynboxer even if loaded/running (used when user cancels out of the setup UI)
-    - Luacheck'ed and some reformatting to 120 columns
-    - Ensure `/dbox j` always sends the sync message
-    - With all the above and testing showing things working, we are I believe feature complete for 1.0 and out of prototype mode!
+- Added UI (2 step dialog boxes, ran only once per account) to set channel/secret pair (Issue #2)
+- Also re runnable using `/dbox init` later
+- Limit maximum number of times we'll try sending/syncing (to 20 times/20s after channel join or /dbox m command)
+- DynBoxer.enabled boolean to turn off dynboxer even if loaded/running (used when user cancels out of the setup UI)
+- Luacheck'ed and some reformatting to 120 columns
+- Ensure `/dbox j` always sends the sync message
+- With all the above and testing showing things working, we are I believe feature complete for 1.0 and out of prototype mode!
 
 0.1.5 June 10th 2019
-    - Fix for lua error when not running in multiboxing setup (Issue #3)
-    - Fix duplicate join event/messages
-    - Debug output now has multiple verbosity level, use /dbox debug 9 for most verbose (new MoLib support for it)
-    - Cleanup retries
-    - Handle message send failure
+- Fix for lua error when not running in multiboxing setup (Issue #3)
+- Fix duplicate join event/messages
+- Debug output now has multiple verbosity level, use /dbox debug 9 for most verbose (new MoLib support for it)
+- Cleanup retries
+- Handle message send failure
 
 0.1.4 June 10th 2019
-    - Fix /reload on one character needing to rebroadcast from others (Issue #1)
-    - Better color scheme
-    - Only show isboxer warnings about bindings the first time
-    - Split into 3 files for clarity and keeping ISBoxer code changes in one place
-    - Refactor hooking to be cleaner and more generic and not conflict with our own functions
-    - Globe lint fixes
+- Fix /reload on one character needing to rebroadcast from others (Issue #1)
+- Better color scheme
+- Only show isboxer warnings about bindings the first time
+- Split into 3 files for clarity and keeping ISBoxer code changes in one place
+- Refactor hooking to be cleaner and more generic and not conflict with our own functions
+- Globe lint fixes
 
 0.1.3 June 7th 2019
-    - Auto resync on channel join
+- Auto resync on channel join
 
 0.1.2 June 7th 2019
-    - First working version !! (and loads correctly along ISBoxer as independent addon)
-    - Support for saved variables
-    - Fix for ISBoxer loading bindings too early (when realm name isn't yet available), unregister its UPDATE_BINDINGS
-    - updated /dbox help and commands
-    - patches to isboxer.SetMacro so it can be ran more than once
-    - need to use short name without realm when realm is same (!)
+- First working version !! (and loads correctly along ISBoxer as independent addon)
+- Support for saved variables
+- Fix for ISBoxer loading bindings too early (when realm name isn't yet available), unregister its UPDATE_BINDINGS
+- updated /dbox help and commands
+- patches to isboxer.SetMacro so it can be ran more than once
+- need to use short name without realm when realm is same (!)
 
 0.1.1 June 7th 2019
-    - Same as 0.1.0 without the logo in the addon zip
+- Same as 0.1.0 without the logo in the addon zip
 
 0.1.0 June 7th 2019
-    - Initial build as separate addon
+- Initial build as separate addon
 
 commit 5434f70c5f4242488513368f4587b60030c6a504
 Author: Moorea Tv <moorea@ymail.com>
 Date:   Sat Jun 8 05:32:21 2019 -0700
 
-    make dynamicboxer its own addon
+make dynamicboxer its own addon
 
 commit 1c8247560579b349e16bef77197310d3514f6a4c
 Author: Moorea Tv <moorea@ymail.com>
 Date:   Sat Jun 8 05:25:24 2019 -0700
 
-    new working  DB.ReconstructTeam()
+new working  DB.ReconstructTeam()
 
-    using hooks into isboxer
+using hooks into isboxer
 
-    so we can move to be independant addon instead of patching isboxer
+so we can move to be independant addon instead of patching isboxer
 
 commit 2735bc9aa31b8360769ee5fd18fb5d04b8686b03
 Author: Moorea Tv <moorea@ymail.com>
 Date:   Thu Jun 6 21:17:43 2019 -0700
 
-    use MoLib
+use MoLib
 
 commit 0a7ff2de92973b7b0af9c10ff0d7dad61e2445f2
 Author: Moorea Tv <moorea@ymail.com>
 Date:   Tue Jun 4 23:43:28 2019 -0700
 
-    use bnet for channel
+use bnet for channel
 
 commit 96c741aeb8d9d07fd00786a17f91baf6559ebbd1
 Author: Moorea Tv <moorea@ymail.com>
 Date:   Thu May 30 03:21:37 2019 -0700
 
-    delay initialization (avoids the channel end up being /1)
+delay initialization (avoids the channel end up being /1)
 
 commit 5d770e3f539c220f695613f8691e274c0d8e78d1
 Author: Moorea Tv <moorea@ymail.com>
 Date:   Thu May 30 01:52:59 2019 -0700
 
-    wip
+wip
