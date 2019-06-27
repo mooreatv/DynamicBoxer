@@ -410,9 +410,14 @@ function DB:ProcessMessage(source, from, data)
       DB.maxIter = 1 -- resend at next round
     end
   end
-  if DB.Team[idx] and DB.Team[idx].fullName == realname then
-    DB:Debug("Already known mapping, skipping % % (%)", idx, shortName, realname)
-    return
+  local previousMapping = nil -- is this a new slot info or a changed slot
+  if DB.Team[idx] then
+    previousMapping = DB.Team[idx]
+    if previousMapping.fullName == realname then
+      DB:Debug("Already known mapping, skipping % % (%)", idx, shortName, realname)
+      return
+    end
+    DB:Debug("Change of character received for slot %: was % -> now %", idx, previousMapping.fullName, realname)
   end
   DB.Team[idx] = {orig = internalname, new = shortName, fullName = realname, slot = idx}
   if EMAApi then
@@ -429,8 +434,13 @@ function DB:ProcessMessage(source, from, data)
   isboxer.NextButton = 1 -- reset the buttons
   -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
   self.ISBO.LoadBinds()
-  DB:Print(DB:format("New mapping for slot %, dynamically set ISBoxer character to % (%)", idx, shortName, realname), 0,
-           1, 1)
+  if previousMapping then
+    DB:Print(DB:format("Change of mapping for slot %, dynamically set ISBoxer character to % (%, was % before)", idx,
+                       shortName, realname, previousMapping.fullName), 0, 1, 1)
+  else
+    DB:Print(DB:format("New mapping for slot %, dynamically set ISBoxer character to % (%)", idx, shortName, realname),
+             0, 1, 1)
+  end
   if idx == 1 then
     DB:AddMaster(realname)
   end

@@ -51,6 +51,7 @@ function DB.OnSetupUIAccept(widget, data, data2)
   DB.MasterName = masterName
   DB:Debug("Current master is %", masterName) -- TODO: send it a message to dismiss its dialog and deal with cross realm
   DB:AddMaster(masterName)
+  widget.editBox:SetMaxLetters(0)
   widget:Hide()
   DB.enabled = true
   DB.inUI = false
@@ -61,6 +62,7 @@ function DB.OnUICancel(widget, _data)
   DB.enabled = false -- avoids a loop where we keep trying to ask user
   DB.inUI = false
   widget:Hide()
+  widget.editBox:SetMaxLetters(0)
   DB:Error("User cancelled. Will not use DynamicBoxer until /reload or /dbox i")
 end
 
@@ -133,12 +135,17 @@ function DB.OnMasterUIShow(widget, data)
   local e = widget.editBox
   DB.randomEditBox = e
   local masterName, tok1, tok2
+  -- TODO: allow tokens paste
+  widget.button3:Enable()
   if data and data.masterName and data.token1 and data.token2 then
     -- there is existing data to just show/reuse
     masterName = data.masterName
     tok1 = data.token1
     tok2 = data.token2
     widget.button2:Disable()
+    if DB:WeAreMaster() then
+      widget.button3:Disable() -- remove Cancel on master as there is nothing to cancel
+    end
   else
     -- we are generating a new token, we are the master
     masterName = DB.fullName
@@ -155,7 +162,7 @@ function DB.OnMasterUIShow(widget, data)
   DB:Debug("Width is %", width)
   e:SetWidth(width + 4) -- + some or highlights hides most of it/it doesn't fit
   local strLen = strlenutf8(newText) -- in glyphs
-  e:SetMaxLetters(strLen)
+  e:SetMaxLetters(strLen) -- allow paste of longer?
   e:SetScript("OnMouseUp", function(w)
     DB:Debug("Clicked on random, re-highlighting")
     w:HighlightText()
@@ -335,7 +342,7 @@ function DB:ShowTokenUI()
   if DB:WeAreMaster() then
     -- regen with us as actual master
     master = DB.fullName
-  end
+  end -- use the dbox init slave UI for slaves instead, just seeded with current token
   DB.uiTextLen = DB:CalcUITextLen(master)
   StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2",
                    {masterName = master, token1 = DB.Channel, token2 = DB.Secret, OnUICancel = DB.OnShowUICancel})
