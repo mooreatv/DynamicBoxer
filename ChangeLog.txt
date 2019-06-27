@@ -5,6 +5,8 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
     - Use new MoLib with 35s default (changeable) threshold for invalidating messages (from 15s before)
     - Better printing of new vs changing team slot assignment
     - Fixed unable to paste (longer) token after using a shorter one in /dbox init or show
+    - adding `/dbox version` to confirm/echo the version. pruned the list of commands shown from help ("/dbox")
+    - fix background lua error and failure to detect EMA isn't present
 1.4.0 June 26th 2019
     - Cross realm support: Added new communication/sync direct channel to allow for cross realm boxing (message the slot1/master).
         - Check if we are on the same realm and use alternate direct messaging when we're not.

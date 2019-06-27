@@ -449,7 +449,7 @@ function DB:ProcessMessage(source, from, data)
                        DB.currentCount), 0, 1, 1)
   end
   -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
-  if DB.currentCount == DB.expectedCount and EMAApi.FullTeamList then
+  if DB.currentCount == DB.expectedCount and EMAApi and EMAApi.FullTeamList then
     local EMAteam = _G.LibStub and _G.LibStub:GetLibrary("AceAddon-3.0", true)
     EMAteam = EMAteam and EMAteam:GetAddon("Team", true)
     if EMAteam then
@@ -676,8 +676,8 @@ function DB:Help(msg)
              "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
              "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
              "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
-             "/dbox reset team|token|all -- resets team or token or all, respectively\n" ..
-             "/dbox r -- show random id generator.\n" .. "/dbox dump global -- to dump a global.")
+             "/dbox reset team||token||all -- resets team or token or all, respectively\n" ..
+             "/dbox version -- shows addon version")
 end
 
 function DB:SetSaved(name, value)
@@ -708,6 +708,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     DB:Help("commands")
     return
   end
+  DB:Debug("Got slash cmd: %", arg)
   local cmd = string.lower(string.sub(arg, 1, 1))
   local posRest = string.find(arg, " ")
   local rest = ""
@@ -718,6 +719,9 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     -- join
     DB.joinDone = false -- force rejoin code
     DB:Join()
+  elseif cmd == "v" then
+    -- version
+    DB:Print("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv")
   elseif cmd == "i" then
     -- re do initialization
     DB:ForceInit()

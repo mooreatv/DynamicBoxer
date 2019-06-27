@@ -30,6 +30,7 @@ function DB.OnSlaveUIShow(widget, _data)
   local width = DB.fontString:GetStringWidth()
   DB:Debug("Width is % for %", width, newText)
   e:SetWidth(width)
+  e:SetMaxLetters(0)
   e.Instructions:SetText("  Paste here from Slot 1")
   e:HighlightText()
   -- e:SetCursorPosition(#newText)
@@ -180,6 +181,7 @@ StaticPopupDialogs["DYNBOXER_RANDOM"] = {
   hideOnEscape = 1, -- doesn't help when there is an edit box, real stuff is:
   EditBoxOnEscapePressed = function(self)
     self:GetParent():Hide()
+    self:GetParent().editBox:SetMaxLetters(0)
   end,
   OnShow = DB.OnRandomUIShow,
   OnAccept = DB.OnRandomUIShow,
