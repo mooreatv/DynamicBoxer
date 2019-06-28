@@ -6,6 +6,7 @@
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ## Dependencies: ISBoxer
+## OptionalDeps: EMA, EMA-Classic
 ## SavedVariables:  dynamicBoxerSaved
 ## Globe: check-classic
 MoLib/MoLib.lua

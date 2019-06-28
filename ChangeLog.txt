@@ -1,5 +1,10 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+1.4.2 TBD
+- Adding EMA and EMA-Classic to optional deps so we can get handle to EMA at load time
+- Clear EMA team at start to avoid extra messages
+- Fixed issue #25 where optimization added in 1.4.1 broke the simple reload in same realm case
+- Use MoLib to/fromTable in LRU class
 1.4.1 June 27th 2019
 - Fixes for Issue #22 (Thanks Darknight for the debugging session)
 - Use (broadcast) `/dbox show` when logging in new cross realm characters, copy from slot 1,

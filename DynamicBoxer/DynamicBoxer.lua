@@ -72,6 +72,9 @@ DB.configVersion = 1 -- bump up to support conversion (and update the ADDON_LOAD
 
 DB.manual = 0 -- testing manual mode, 0 is off, number is slot id
 
+DB.EMA = _G.LibStub and _G.LibStub:GetLibrary("AceAddon-3.0", true)
+DB.EMA = DB.EMA and DB.EMA:GetAddon("Team", true)
+
 -- Returns if we should be operating (basically if isboxer has a static team defined)
 function DB:IsActive()
   return self.enabled and (isboxer.Character_LoadBinds or self.manual > 0)
@@ -220,7 +223,12 @@ function DB:ReconstructTeam()
   dynamicBoxerSaved.teamHistory = DB.teamHistory
   DB.currentCount = DB:SortTeam() -- will be 1
   DB.expectedCount = #DB.ISBTeam
-  DB:Debug("Unique team string key is %, updated in history, expecting a team of size #", teamStr, DB.expectedCount)
+  DB:Debug("Unique team string key is %, updated in history, expecting a team of size #%", teamStr, DB.expectedCount)
+  if DB.EMA then
+    DB.EMA.db.newTeamList = {}
+    EMAApi.AddMember(DB.fullName)
+    DB:Debug("Cleared EMA team")
+  end
 end
 
 function DB:SameRealmAsMaster()
@@ -275,14 +283,11 @@ function DB:Sync()
     return
   end
   local payload = DB:InfoPayload(DB.ISBIndex, DB.firstMsg, DB.maxIter)
-  -- no point in resending if we are team complete (and not asked to resync)
-  if (DB.currentCount >= DB.expectedCount) and DB.firstMsg ~= 1 then
-    DB:Debug("Team is complete (and not asked for sync), aborting sync")
-    return
-  end
   -- redundant check but we can (and used to) have WeAreMaster true because of slot1/index
   -- and SameRealmAsMaster false because the master realm came from a previous token
-  if not (DB:WeAreMaster() or DB:SameRealmAsMaster()) then
+  -- no point in resending if we are team complete (and not asked to resync)
+  if not (DB:WeAreMaster() or DB:SameRealmAsMaster()) and ((DB.currentCount < DB.expectedCount) or DB.firstMsg == 1) then
+    DB:Debug("Cross realm sync and team incomplete, pinging master %", DB.MasterName)
     DB:SendDirectMessage(DB.MasterName, payload)
     if DB.firstMsg == 1 and DB.maxIter <= 0 then
       DB:Debug("Cross realm sync, first time, increasing msg sync to 2 more")
@@ -309,10 +314,7 @@ end
 
 function DB:AddMaster(masterName)
   DB.masterHistory:add(DB.faction .. " " .. masterName)
-  dynamicBoxerSaved.serializedMasterHistory = {}
-  for v in DB.masterHistory:iterateOldest() do
-    table.insert(dynamicBoxerSaved.serializedMasterHistory, v)
-  end
+  dynamicBoxerSaved.serializedMasterHistory = DB.masterHistory:toTable()
   self:Debug(1, "New master % list newest at the end: %", masterName, dynamicBoxerSaved.serializedMasterHistory)
 end
 
@@ -415,7 +417,7 @@ function DB:ProcessMessage(source, from, data)
     DB:ShowTokenUI()
   end
   if idx == DB.ISBIndex then
-    DB:Debug("This (a/our own) % message, about us, from % (real name claim is %)", source, from, realname)
+    DB:Debug("% message, about us, from % (real name claim is %)", source, from, realname)
     if realname ~= DB.fullName then
       DB:Warning("Bug? misconfig ? got a % message from % for our slot % with name % instead of ours (%)", source, from,
                  idx, realname, DB.fullName)
@@ -468,26 +470,23 @@ function DB:ProcessMessage(source, from, data)
                        DB.currentCount), 0, 1, 1)
   end
   -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
-  if DB.currentCount == DB.expectedCount and EMAApi and EMAApi.FullTeamList then
-    local EMAteam = _G.LibStub and _G.LibStub:GetLibrary("AceAddon-3.0", true)
-    EMAteam = EMAteam and EMAteam:GetAddon("Team", true)
-    if EMAteam then
-      -- why is there 2 levels ?? - adapted from FullTeamList in Core/Team.lua of EMA
-      for name, info in pairs(EMAteam.db.newTeamList) do
-        local i = DB.TeamIdxByName[name]
-        if i then
-          -- set correct order
-          info[1].order = i
-        else
-          -- remove toons not in our list
-          DB:Debug("Removing % (%) from EMA team", name, info)
-          EMAteam.db.newTeamList[name] = nil
-        end
+  if DB.currentCount == DB.expectedCount and DB.EMA then
+    -- why is there an extra level of table? - adapted from FullTeamList in Core/Team.lua of EMA
+    for name, info in pairs(DB.EMA.db.newTeamList) do
+      local i = DB.TeamIdxByName[name]
+      if i then
+        -- set correct order
+        info[1].order = i
+      else
+        -- remove toons not in our list
+        DB:Debug("Removing % (%) from EMA team", name, info)
+        DB.EMA.db.newTeamList[name] = nil
       end
-    else
-      DB:Warning("Unable to get EMA team!")
     end
-    -- need to make ema notice ordering change
+    -- kinda hard to find what is needed minimally to get the ema list to refresh in the order set above
+    -- it might be DisplayGroupsForCharacterInGroupsList but that's not exposed
+    -- neither SettingsTeamListScrollRefresh nor SettingsRefresh() work...
+    DB.EMA:SendMessage(DB.EMA.MESSAGE_TEAM_ORDER_CHANGED)
     DB:Debug(1, "Ema team fully set.")
   end
 end
@@ -605,13 +604,8 @@ DB.EventD = {
           DB.MasterName = masterName
           DB.Channel = tok1
           DB.Secret = tok2
-          -- restore LRU / reverse order/newest last
-          if not dynamicBoxerSaved.serializedMasterHistory then
-            dynamicBoxerSaved.serializedMasterHistory = {} -- initialize if needed
-          end
-          for _, v in ipairs(dynamicBoxerSaved.serializedMasterHistory) do
-            DB.masterHistory:add(v)
-          end
+          -- restore LRU.
+          DB.masterHistory:fromTable(dynamicBoxerSaved.serializedMasterHistory)
           self:Debug(3, "Loaded valid saved vars %", dynamicBoxerSaved)
           return
         end
@@ -621,7 +615,6 @@ DB.EventD = {
     self:Debug("Initialized empty saved vars")
     dynamicBoxerSaved = {}
     dynamicBoxerSaved.configVersion = DB.configVersion
-    dynamicBoxerSaved.serializedMasterHistory = {}
   end
 }
 
