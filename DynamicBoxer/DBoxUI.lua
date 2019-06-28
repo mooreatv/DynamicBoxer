@@ -10,6 +10,8 @@
 -- Created by DBoxInit
 local DB = DynBoxer
 
+DB.fontString = DB:CreateFontString() -- used for width calculations
+
 -- this file already has widget as "self" so we still use . in the definitions here
 -- for all the On*(widget...)
 
