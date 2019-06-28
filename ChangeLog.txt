@@ -1,8 +1,9 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 1.4.3 June 28th 2019
-- Moved random token UI out of DynamicBoxer into its own Addon
+- Moved now unnecessary random token generator UI out of DynamicBoxer into its own Addon
   https://github.com/mooreatv/RandomGenerator
+  (making this one 12k lighter)
 
 1.4.2 June 27th 2019
 - Significantly reduced resend/retries thus also reducing throttling and lag (Issue #26)
