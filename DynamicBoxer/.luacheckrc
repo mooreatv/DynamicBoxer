@@ -1,5 +1,6 @@
 globals = {
     "isboxer",
+    "date",
     "DynBoxer",
     "dynamicBoxerSaved",
     "BNGetInfo",
@@ -10,6 +11,7 @@ globals = {
     "C_Timer",
     "GetChannelName",
     "GetServerTime",
+    "GetTime",
     "JoinTemporaryChannel",
     "EMAApi",
     "GetBindingAction",
@@ -24,6 +26,7 @@ globals = {
     "StaticPopup_Show",
     "strlenutf8",
     "UIParent",
+    "UnitFactionGroup",
     "OKAY",
     "CANCEL",
 }

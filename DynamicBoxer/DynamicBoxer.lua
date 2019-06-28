@@ -34,7 +34,7 @@
    ]] --
 --
 -- our name, our empty default (and unused) anonymous ns
-local addon, ns = ...
+local addon = ...
 
 -- Created by DBoxInit
 local DB = DynBoxer
@@ -787,9 +787,6 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     else
       DB:Error("Use /dbox reset x -- where x is one of team, token, all")
     end
-  elseif cmd == "r" then
-    -- random id generator (misc bonus util)
-    DB:RandomGeneratorUI()
   elseif cmd == "m" then
     -- message again
     DB.maxIter = 1

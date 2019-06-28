@@ -1,5 +1,9 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+1.4.3 June 28th 2019
+- Moved random token UI out of DynamicBoxer into its own Addon
+  https://github.com/mooreatv/RandomGenerator
+
 1.4.2 June 27th 2019
 - Significantly reduced resend/retries thus also reducing throttling and lag (Issue #26)
 - Adding EMA and EMA-Classic to optional deps so we can get handle to EMA at load time
