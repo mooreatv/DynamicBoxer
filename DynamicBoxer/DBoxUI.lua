@@ -322,7 +322,7 @@ function DB:CalcUITextLen(masterName)
 end
 
 function DB:SetupUI()
-  DB:Debug(8, "SetupUI % % %", DB.inUI, DB.Channel, StaticPopupDialogs["DYNBOXER_CHANNEL"])
+  DB:Debug(8, "SetupUI %", DB.inUI)
   if DB.inUI then
     DB:Debug(7, "Already in UI, skipping")
     return
