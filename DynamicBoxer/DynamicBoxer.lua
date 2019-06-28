@@ -180,16 +180,23 @@ function DB:ReconstructTeam()
   end
   local prev = isboxer.SetMacro
   DB.ISBTeam = {}
+  DB.ISBIndex = -1
+  DB.IsbAssistMacro = "<not found>"
   -- parse the text which looks like (note the ]xxx; delimiters for most but \n at the end)
   -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt...,mod:lctrl]LAST\n""
   isboxer.SetMacro = function(macro, _key, text)
     if macro ~= "FTLAssist" then
       return
     end
+    DB.ISBAssistMacro = text
     for x in text:gmatch("%]([^;]+)[;\n]") do
       table.insert(DB.ISBTeam, x)
       if x == isboxer.Character.ActualName then
-        DB.ISBIndex = #DB.ISBTeam
+        if DB.ISBIndex > 0 then
+          DB:Warning("Duplicate entry for % found in %!", isboxer.Character.ActualName, text)
+        else
+          DB.ISBIndex = #DB.ISBTeam
+        end
       end
     end
   end
@@ -201,6 +208,10 @@ function DB:ReconstructTeam()
     DB.ISBTeam[DB.ISBIndex] = DB:format("Slot%", DB.ISBIndex)
   end
   isboxer.SetMacro = prev
+  if not DB.ISBIndex or DB.ISBIndex <= 0 then
+    DB:Error("Problem identifying this character isboxer.Character.ActualName=% in the isboxer macro FTLAssist=%",
+             isboxer.Character.ActualName, DB.ISBAssistMacro)
+  end
   DB:Debug("Found isbteam to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
            isboxer.CharacterSet.Members)
   DB.Team[DB.ISBIndex] = {
@@ -467,7 +478,8 @@ function DB:ProcessMessage(source, from, data)
     end
     DB:Debug("Change of character received for slot %: was % -> now %", idx, previousMapping.fullName, realname)
   end
-  DB.Team[idx] = {orig = internalname, new = shortName, fullName = realname, slot = idx}
+  DB:Debug("Slot %: % think they were originally % we think they are %", idx, realname, internalname, DB.ISBTeam[idx])
+  DB.Team[idx] = {orig = DB.ISBTeam[idx], new = shortName, fullName = realname, slot = idx}
   if EMAApi then
     EMAApi.AddMember(realname)
   end
