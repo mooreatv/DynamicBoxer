@@ -1,10 +1,19 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
-1.4.2 TBD
+1.4.2 June 27th 2019
+- Significantly reduced resend/retries thus also reducing throttling and lag (Issue #26)
 - Adding EMA and EMA-Classic to optional deps so we can get handle to EMA at load time
 - Clear EMA team at start to avoid extra messages
+- Refreshes EMA team display order once team is complete
 - Fixed issue #25 where optimization added in 1.4.1 broke the simple reload in same realm case
-- Use MoLib to/fromTable in LRU class
+- Use MoLib to/fromTable in LRU class and new 100th second log timestamp
+
+Coming next:
+- Setup/use master memory to avoid needing a `/dbox j` when when reloading just the master
+- More refinements on the above
+- Your input/suggestions welcome !
+- Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
+
 1.4.1 June 27th 2019
 - Fixes for Issue #22 (Thanks Darknight for the debugging session)
 - Use (broadcast) `/dbox show` when logging in new cross realm characters, copy from slot 1,
@@ -17,11 +26,6 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 - fix case where popup on master wouldn't auto close (cross message trigger instead of channel)
 - fix bug where new master would try to message the old master (if token points to old master)
 - when cross realm try to sync up to 3 times to get full team, this fixes the most common cases of sync
-
-Coming next:
-- More refinements on the above
-- Your input/suggestions welcome !
-- Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 1.4.0 June 26th 2019
 - Cross realm support: Added new communication/sync direct channel to allow for cross realm boxing (message the slot1/master).

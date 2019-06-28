@@ -58,7 +58,7 @@ DB.expectedCount = 0 -- how many slots we expect to see/map
 -- DB.debug = 9
 
 DB.maxIter = 1 -- We really only need to send the message once (and resend when seeing join from others, batched)
-DB.refresh = 1
+DB.refresh = 2.5
 DB.totalRetries = 0
 DB.maxRetries = 20 -- after 20s we stop/give up
 
@@ -240,12 +240,24 @@ function DB:WeAreMaster()
   return DB.ISBIndex == 1
 end
 
+function DB:DebugLogWrite(what)
+  -- format is HH:MM:SS hundredsOfSec the 2 clock source aren't aligned so for deltas of
+  -- 9 seconds or less, substract the 2 hundredsOfSec (and divide by 100 to get seconds)
+  local ts = date("%H:%M:%S")
+  ts = string.format("%s %03d ", ts, (1000 * select(2, math.modf(GetTime() / 10)) + 0.5))
+  table.insert(dynamicBoxerSaved.debugLog, ts .. what)
+end
+
+DB.sentMessageCount = 0
+
 function DB:SendDirectMessage(to, payload)
+  DB.sentMessageCount = DB.sentMessageCount + 1
+  DB:DebugLogWrite("To : " .. to .. " : " .. payload)
   local secureMessage, messageId = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
   local toSend = DB.whisperPrefix .. secureMessage
   -- must stay under 255 bytes, we are around 96 bytes atm (depends on character name (accentuated characters count double)
   -- and realm length, the hash alone is 16 bytes)
-  DB:Debug("About to send message id % to % len % msg=%", messageId, to, #toSend, toSend)
+  DB:Debug("About to send message #% id % to % len % msg=%", DB.sentMessageCount, messageId, to, #toSend, toSend)
   -- local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", DB.MasterName) -- doesn't work cross realm
   SendChatMessage(toSend, "WHISPER", nil, to) -- returns nothing even if successful (!)
   -- We would need to watch (asynchronously, for how long ?) for CHAT_MSG_WHISPER_INFORM for success or CHAT_MSG_SYSTEM for errors
@@ -254,19 +266,20 @@ function DB:SendDirectMessage(to, payload)
   return messageId
 end
 
-function DB:InfoPayload(slot, firstFlag, msgIter)
+function DB:InfoPayload(slot, firstFlag)
   local toonInfo = DB.Team[slot]
   local payload = tostring(slot) .. " " .. toonInfo.fullName .. " " .. toonInfo.orig .. " " .. firstFlag .. " msg " ..
-                    msgIter
+                    tostring(DB.syncNum) .. "/" .. tostring(DB.sentMessageCount)
   DB:Debug("Created payload for slot %: %", slot, payload)
   return payload
 end
 
 -- the first time, ie after /reload - we will force a resync
 DB.firstMsg = 1
+DB.syncNum = 1
 
-function DB:Sync()
-  DB:Debug(9, "DB:Sync maxIter %", DB.maxIter)
+function DB.Sync() -- called as ticker so no :
+  DB:Debug(9, "DB:Sync #% maxIter %", DB.syncNum, DB.maxIter)
   if DB.maxIter <= 0 or not DB:IsActive() then
     return
   end
@@ -277,22 +290,31 @@ function DB:Sync()
     return -- for now keep trying until we get a channel
   end
   DB.maxIter = DB.maxIter - 1
-  DB:Debug("Sync called for slot % our fullname is %, maxIter is now %", DB.ISBIndex, DB.fullName, DB.maxIter)
+  DB:Debug("Sync #% called for slot % our fullname is %, maxIter is now %", DB.syncNum, DB.ISBIndex, DB.fullName,
+           DB.maxIter)
+  DB.syncNum = DB.syncNum + 1
   if not DB.ISBIndex then
     DB:Debug("We don't know our slot/actual yet")
     return
   end
-  local payload = DB:InfoPayload(DB.ISBIndex, DB.firstMsg, DB.maxIter)
+  local payload = DB:InfoPayload(DB.ISBIndex, DB.firstMsg, DB.syncNum)
   -- redundant check but we can (and used to) have WeAreMaster true because of slot1/index
   -- and SameRealmAsMaster false because the master realm came from a previous token
   -- no point in resending if we are team complete (and not asked to resync)
   if not (DB:WeAreMaster() or DB:SameRealmAsMaster()) and ((DB.currentCount < DB.expectedCount) or DB.firstMsg == 1) then
-    DB:Debug("Cross realm sync and team incomplete, pinging master %", DB.MasterName)
-    DB:SendDirectMessage(DB.MasterName, payload)
-    if DB.firstMsg == 1 and DB.maxIter <= 0 then
-      DB:Debug("Cross realm sync, first time, increasing msg sync to 2 more")
-      -- we have to sync twice to complete the team (if all goes well)
-      DB.maxIter = 2 -- give it an extra attempt in case 1 slave is slow
+    -- if we did just send a message we should wait next iteration
+    local now = GetTime() -- higher rez than seconds
+    if DB.lastDirectMessage and (now <= DB.lastDirectMessage + DB.refresh) then
+      DB:Debug("Will postpone pinging master because we received a msg recently")
+      DB.maxIter = DB.maxIter + 1
+    else
+      DB:Debug("Cross realm sync and team incomplete, pinging master %", DB.MasterName)
+      DB:SendDirectMessage(DB.MasterName, payload)
+      if DB.firstMsg == 1 and DB.maxIter <= 0 then
+        DB:Debug("Cross realm sync, first time, increasing msg sync to 2 more")
+        -- we have to sync twice to complete the team (if all goes well)
+        DB.maxIter = 2 -- give it an extra attempt in case 1 slave is slow
+      end
     end
   end
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
@@ -355,6 +377,8 @@ function DB:ProcessMessage(source, from, data)
     if msg then
       DB:Debug(2, "Received valid secure message from % lag is %s, msg id is % part of full message %", from, lag,
                msgId, data)
+      DB:DebugLogWrite("Frm: " .. from .. " : " .. msg .. " (lag " .. tostring(lag) .. ")")
+      DB.lastDirectMessage = GetTime()
       if DB:WeAreMaster() then
         doForward = msg
       end
@@ -399,9 +423,12 @@ function DB:ProcessMessage(source, from, data)
     -- TODO: schedule a sync when we have the full team
     local count = 0
     for k, _ in pairs(DB.Team) do
-      local payload = DB:InfoPayload(k, 0, DB.maxIter)
-      DB:SendDirectMessage(from, payload)
-      count = count + 1
+      local payload = DB:InfoPayload(k, 0, DB.sentMessageCount)
+      -- skip our idx (unless force/first) and theirs
+      if (k == 1 and force == 1) or (k ~= 1 and k ~= idx) then
+        DB:SendDirectMessage(from, payload)
+        count = count + 1
+      end
     end
     DB:Debug("P2P Send % / % slots back to %", count, DB.expectedCount, from)
   end
@@ -509,7 +536,11 @@ DB.EventD = {
 
   PLAYER_ENTERING_WORLD = function(self, ...)
     self:Debug("OnPlayerEnteringWorld " .. DB:Dump(...))
-    DB:Sync()
+    if DB.ticker then
+      DB.ticker:Cancel() -- cancel previous one to resync timer
+    end
+    DB.Sync() -- first one at load
+    DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync) -- and one every refresh
   end,
 
   CHANNEL_COUNT_UPDATE = function(self, _event, displayIndex, count) -- Note: never seem to fire
@@ -583,6 +614,8 @@ DB.EventD = {
     end
     DB:Print("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv: type /dbox for command list/help.")
     if dynamicBoxerSaved then
+      -- always clear the one time log
+      dynamicBoxerSaved.debugLog = {}
       if not dynamicBoxerSaved.configVersion or dynamicBoxerSaved.configVersion ~= DB.configVersion then
         -- Support conversion from 1 to 2 etc...
         DB:Error(
@@ -615,6 +648,7 @@ DB.EventD = {
     self:Debug("Initialized empty saved vars")
     dynamicBoxerSaved = {}
     dynamicBoxerSaved.configVersion = DB.configVersion
+    dynamicBoxerSaved.debugLog = {}
   end
 }
 
@@ -663,6 +697,7 @@ function DB:Join()
   end
   DB.joinDone = true
   DB.totalRetries = 0 -- try at most maxRetries (20) times after this point
+  DB.firstMsg = 1
   if DB.maxIter <= 0 then
     DB.maxIter = 1
   end
@@ -759,7 +794,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     -- message again
     DB.maxIter = 1
     DB.totalRetries = 0
-    DB:Sync()
+    DB.Sync()
   elseif cmd == "s" then
     -- show ui or set token depending on argument
     if #rest >= DB.tokenMinLen then
@@ -810,5 +845,5 @@ for k, _ in pairs(DB.EventD) do
   DB:RegisterEvent(k)
 end
 
+-- DB.debug = 2
 DB:Debug("dbox main file loaded")
-DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync)
