@@ -93,7 +93,6 @@ function DB.OnMasterUIShow(widget, data)
   local e = widget.editBox
   DB.randomEditBox = e
   local masterName, tok1, tok2
-  -- TODO: allow tokens paste
   widget.button3:Enable()
   if data and data.masterName and data.token1 and data.token2 then
     -- there is existing data to just show/reuse

@@ -551,6 +551,8 @@ function DB:ProcessMessage(source, from, data)
         DB.EMA.db.newTeamList[name] = nil
       end
     end
+    DB.EMA.db.master = DB.Team[1].fullName -- set the master too
+    DB:Debug("Set ema master to %", DB.EMA.db.master)
     -- kinda hard to find what is needed minimally to get the ema list to refresh in the order set above
     -- it might be DisplayGroupsForCharacterInGroupsList but that's not exposed
     -- neither SettingsTeamListScrollRefresh nor SettingsRefresh() work...

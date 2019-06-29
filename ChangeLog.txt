@@ -3,6 +3,7 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 1.5.0 WIP June 29th 2019
 - Remember masters, by faction
 - Change the on-the-wire protocol and encoding to support a Single slot message vs a Team positional message
+- EMA: also sets the master in addition to the team order (to slot 1)
 
 1.4.4 June 28th 2019
 - More checks for bad channel which seems to happen _sometimes_
