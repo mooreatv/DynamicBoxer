@@ -2,6 +2,7 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 1.5.0 June 29th 2019
 - Remember masters, by faction. Starts to use it to keep the last Slot1 memory per faction to automatically switch to.
+  (uses new MoLib functions)
 - downgrade priority/broadcast capability of fwded messages.
 - Change the on-the-wire protocol and encoding to support a Single slot message vs a Team positional message
 - EMA: also sets the master in addition to the team order (to slot 1)
