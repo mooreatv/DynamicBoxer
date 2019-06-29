@@ -292,6 +292,7 @@ end
 DB.firstMsg = 1
 DB.syncNum = 1
 
+-- TODO: separate / disentangle  channel and direct message sync
 function DB.Sync() -- called as ticker so no :
   local isActive = DB:IsActive()
   DB:Debug(9, "DB:Sync #% maxIter % active %", DB.syncNum, DB.maxIter, isActive)
@@ -344,6 +345,10 @@ function DB.Sync() -- called as ticker so no :
       DB:Error("Giving up sending/syncing after % retries. Use /dbox j to try again later", DB.totalRetries)
       return
     end
+    if DB.totalRetries % 5 == 0 then
+      DB:Warning("We tried % times to message the channel, will try rejoining instead")
+      DB:CheckChannelOk(DB:format("from Sync %", DB.totalRetries))
+    end
     if DB.maxIter <= 0 then
       DB.maxIter = 1
     end
@@ -378,6 +383,20 @@ function DB:SortTeam()
   self:Debug(1, "Team map (sorted by longest orig name first) is now % - size %; reverse index is %", self.SortedTeam,
              presentCount, self.TeamIdxByName)
   return presentCount
+end
+
+-- additional message if failed
+function DB:CheckChannelOk(msg)
+  if not DB.joinedChannel or #DB.joinedChannel < 1 then
+    DB:Warning("We haven't calculated the channel yet, will retry (" .. msg .. ")")
+    return false
+  end
+  DB.channelId = GetChannelName(DB.joinedChannel)
+  if not DB.channelId then
+    DB:Warning("Couldn't get channel id for our channel %, will retry (" .. msg .. ")", DB.joinedChannel)
+    return false
+  end
+  return true
 end
 
 DB.Team = {}
@@ -433,8 +452,10 @@ function DB:ProcessMessage(source, from, data)
       return
     end
     -- TODO: count how many msg we sent to who so we don't get tricked (or bugged) into flood
-    local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, doForward, "CHANNEL", DB.channelId)
-    DB:Debug("Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
+    if DB:CheckChannelOk("Msg Fwd") then
+      local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, doForward, "CHANNEL", DB.channelId)
+      DB:Debug("Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
+    end
     -- We need to reply with our info (todo: ack the actual token/message id)
     -- TODO: schedule a sync when we have the full team
     local count = 0
@@ -731,9 +752,7 @@ function DB:Join()
   end
   DB.joinedChannel = "DynamicBoxer4" .. DB.Channel -- only alphanums seems legal, couldn't find better seperator than 4
   local t, n = JoinTemporaryChannel(DB.joinedChannel, DB.Secret)
-  DB.channelId = GetChannelName(DB.joinedChannel)
-  if not DB.channelId then
-    DB:Warning("Couldn't get channel id for our channel %, will retry (t=% n=%)", DB.joinedChannel, t, n)
+  if not DB:CheckChannelOk(DB:format("from Join t=% n=%", t, n)) then
     return
   end
   DB:Debug("Joined channel % / % type % name % id %", DB.joinedChannel, DB.Secret, t, n, DB.channelId)
@@ -743,6 +762,11 @@ function DB:Join()
   DB.joinDone = true
   return DB.channelId
 end
+
+-- testing strings
+-- ÁßçÐéÞýØîÿÆü
+-- 乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒
+-- ÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÇÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁ
 
 function DB:Help(msg)
   DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox init -- redo the one time channel/secret setup UI\n" ..

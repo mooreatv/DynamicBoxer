@@ -1,5 +1,7 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+1.4.4
+- More check for bad channel which seems to happen _sometimes_
 1.4.3 June 28th 2019
 - Moved now unnecessary random token generator UI out of DynamicBoxer into its own Addon
   https://github.com/mooreatv/RandomGenerator
