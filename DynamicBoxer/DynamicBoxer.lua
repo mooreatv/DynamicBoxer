@@ -63,7 +63,7 @@ DB.expectedCount = 0 -- how many slots we expect to see/map
 -- DB.debug = 9
 
 DB.maxIter = 1 -- We really only need to send the message once (and resend when seeing join from others, batched)
-DB.refresh = 2.5
+DB.refresh = 3
 DB.totalRetries = 0
 DB.maxRetries = 20 -- after 20s we stop/give up
 
@@ -175,7 +175,7 @@ end
 -- (isboxer.CharacterSet.Members isn't always set when making teams without realm)
 function DB:ReconstructTeam()
   if DB.ISBTeam then
-    DB:Debug("Already know team to be % and my index % (isb members %)", DB.ISBTeam, DB.ISBIndex,
+    DB:Debug(3, "Already know team to be % and my index % (isb members %)", DB.ISBTeam, DB.ISBIndex,
              isboxer.CharacterSet.Members)
     return
   end
@@ -234,7 +234,7 @@ function DB:ReconstructTeam()
   DB:Debug("Team map initial value = %", DB.Team)
   -- detect team changes, keep unique teams
   local teamStr = table.concat(DB.ISBTeam, " ")
-  if not DB.teamHistory[teamStr] then
+  if not DB.justInit and not DB.teamHistory[teamStr] then
     DB:Warning("New (isboxer) team detected, will show master token for copy paste until team is complete.")
     DB.newTeam = true
   end
@@ -248,6 +248,39 @@ function DB:ReconstructTeam()
     EMAApi.AddMember(DB.fullName)
     DB:Debug("Cleared EMA team")
   end
+end
+
+function DB:CheckMasterFaction()
+  if DB:WeAreMaster() then
+    DB:Debug(3, "Not checking master history on master slot")
+    return true
+  end
+  if DB.masterHistory[DB.faction]:exists(DB.MasterName) then
+    DB:Debug(3, "Master % is known to our faction history %", DB.MasterName, DB.faction)
+    return true
+  end
+  local master = DB.masterHistory[DB.faction]:newest()
+  if not master then
+    DB:Debug("There is no history in our faction %: %", DB.faction, DB.masterHistory[DB.faction])
+  end
+  -- either brand new master (and we don't know for sure yet which faction, or bad faction)
+  for _, faction in ipairs(DB.Factions) do
+    if DB.masterHistory[faction]:exists(DB.MasterName) then
+      DB:Debug(1, "Master % is wrong faction % vs ours %", DB.MasterName, faction, DB.faction)
+      if master then
+        DB:Warning("Detected other faction (%) master %, will use ours (%) instead: %", faction, DB.MasterName,
+                   DB.faction, master)
+        DB.MasterName = master
+        return false
+      end
+      DB:Warning("Wrong master faction % and first time in this faction %, please paste the token from slot 1", faction,
+                 DB.faction)
+      DB:ShowTokenUI()
+      return false
+    end
+  end
+  DB:Warning("Completely unknown master %, we'll try it...", DB.MasterName)
+  return true
 end
 
 function DB:SameRealmAsMaster()
@@ -276,7 +309,7 @@ function DB:SendDirectMessage(to, payload)
   local toSend = DB.whisperPrefix .. secureMessage
   -- must stay under 255 bytes, we are around 96 bytes atm (depends on character name (accentuated characters count double)
   -- and realm length, the hash alone is 16 bytes)
-  DB:Debug("About to send message #% id % to % len % msg=%", DB.sentMessageCount, messageId, to, #toSend, toSend)
+  DB:Debug(2, "About to send message #% id % to % len % msg=%", DB.sentMessageCount, messageId, to, #toSend, toSend)
   -- local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", DB.MasterName) -- doesn't work cross realm
   SendChatMessage(toSend, "WHISPER", nil, to) -- returns nothing even if successful (!)
   -- We would need to watch (asynchronously, for how long ?) for CHAT_MSG_WHISPER_INFORM for success or CHAT_MSG_SYSTEM for errors
@@ -286,10 +319,14 @@ function DB:SendDirectMessage(to, payload)
 end
 
 function DB:InfoPayload(slot, firstFlag)
-  local toonInfo = DB.Team[slot]
-  local payload = "S" .. tostring(slot) .. " " .. toonInfo.fullName .. " " .. firstFlag .. " msg " ..
-                    tostring(DB.syncNum) .. "/" .. tostring(DB.sentMessageCount)
-  DB:Debug("Created slot payload for slot %: %", slot, payload)
+  return DB:SlotCommand(slot, DB.Team[slot].fullName, firstFlag)
+end
+
+function DB:SlotCommand(slot, fullName, firstFlag)
+  local payload =
+    "S" .. tostring(slot) .. " " .. fullName .. " " .. firstFlag .. " msg " .. tostring(DB.syncNum) .. "/" ..
+      tostring(DB.sentMessageCount)
+  DB:Debug(3, "Created slot payload for slot %: %", slot, payload)
   return payload
 end
 
@@ -320,10 +357,12 @@ function DB.Sync() -- called as ticker so no :
     return
   end
   local payload = DB:InfoPayload(DB.ISBIndex, DB.firstMsg, DB.syncNum)
+  -- check the master isn't from another faction
   -- redundant check but we can (and used to) have WeAreMaster true because of slot1/index
   -- and SameRealmAsMaster false because the master realm came from a previous token
   -- no point in resending if we are team complete (and not asked to resync)
-  if not (DB:WeAreMaster() or DB:SameRealmAsMaster()) and ((DB.currentCount < DB.expectedCount) or DB.firstMsg == 1) then
+  if DB:CheckMasterFaction() and not (DB:WeAreMaster() or DB:SameRealmAsMaster()) and
+    ((DB.currentCount < DB.expectedCount) or DB.firstMsg == 1) then
     -- if we did just send a message we should wait next iteration
     local now = GetTime() -- higher rez than seconds
     if DB.lastDirectMessage and (now <= DB.lastDirectMessage + DB.refresh) then
@@ -340,7 +379,7 @@ function DB.Sync() -- called as ticker so no :
     end
   end
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
-  DB:Debug("Channel Message send retcode is % on chanId %", ret, DB.channelId)
+  DB:Debug(2, "Channel Message send retcode is % on chanId %", ret, DB.channelId)
   if ret then
     DB.firstMsg = 0
   else
@@ -351,8 +390,10 @@ function DB.Sync() -- called as ticker so no :
       return
     end
     if DB.totalRetries % 5 == 0 then
-      DB:Warning("We tried % times to message the channel, will try rejoining instead")
-      DB:CheckChannelOk(DB:format("from Sync %", DB.totalRetries))
+      DB:Warning("We tried % times to message the channel, will try rejoining instead", DB.totalRetries)
+      DB:SetupChange()
+      DB.enabled = true -- must be after the previous line which sets it off
+      -- DB:CheckChannelOk(DB:format("from Sync %", DB.totalRetries)) -- not enough to detect/fix it seems
     end
     if DB.maxIter <= 0 then
       DB.maxIter = 1
@@ -381,7 +422,7 @@ function DB:SortTeam()
       table.insert(self.SortedTeam, v)
       presentCount = presentCount + 1
       -- while at it create/maintains the reverse mapping name->index
-      DB:Debug("v is %, v.fullName %", v, v.fullName)
+      DB:Debug(3, "v is %, v.fullName %", v, v.fullName)
       self.TeamIdxByName[v.fullName] = v.slot
     end
   end
@@ -446,7 +487,7 @@ function DB:ProcessMessage(source, from, data)
   end
   if from ~= realname then
     -- Since 1.4 and secure message support allow relay/another toon to set other slots it knows
-    DB:Debug("Fwded message from % about % (source is %)", from, realname, source)
+    DB:Debug(3, "Fwded message from % about % (source is %)", from, realname, source)
   end
   if doForward then -- we are master when we are forwarding
     -- check for loops/sanity; that the data is really only about their slot
@@ -461,8 +502,12 @@ function DB:ProcessMessage(source, from, data)
     end
     -- TODO: count how many msg we sent to who so we don't get tricked (or bugged) into flood
     if DB:CheckChannelOk("Msg Fwd") then
-      local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, doForward, "CHANNEL", DB.channelId)
-      DB:Debug("Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
+      local payload = DB:SlotCommand(idx, realname, 0) -- drop/patch the force flag out
+      local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
+      DB:Debug(2, "Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
+      if not ret then
+        DB:Debug(1, "FAILED to send % long FWD for % (% -> %)", #payload, DB.channelId, doForward, payload)
+      end
     end
     -- We need to reply with our info (todo: ack the actual token/message id)
     -- TODO: schedule a sync when we have the full team
@@ -489,7 +534,7 @@ function DB:ProcessMessage(source, from, data)
     DB:ShowTokenUI()
   end
   if idx == DB.ISBIndex then
-    DB:Debug("% message, about us, from % (real name claim is %)", source, from, realname)
+    DB:Debug(3, "% message, about us, from % (real name claim is %)", source, from, realname)
     if realname ~= DB.fullName then
       DB:Warning("Bug? misconfig ? got a % message from % for our slot % with name % instead of ours (%)", source, from,
                  idx, realname, DB.fullName)
@@ -619,11 +664,11 @@ DB.EventD = {
   end,
 
   BN_FRIEND_INFO_CHANGED = function(self, ...)
-    self:DebugEvCall(3, ...)
+    self:DebugEvCall(4, ...)
   end,
 
   BN_INFO_CHANGED = function(self, ...)
-    self:DebugEvCall(3, ...)
+    self:DebugEvCall(4, ...)
   end,
 
   EXECUTE_CHAT_LINE = function(self, ...)
@@ -631,26 +676,30 @@ DB.EventD = {
   end,
 
   CLUB_MESSAGE_ADDED = function(self, ...)
-    self:DebugEvCall(2, ...)
+    self:DebugEvCall(3, ...)
   end,
 
   CHAT_MSG_WHISPER = function(self, ...)
-    self:DebugEvCall(2, ...)
+    self:DebugEvCall(3, ...)
   end,
 
   CHAT_MSG_COMMUNITIES_CHANNEL = function(self, ...)
-    self:DebugEvCall(2, ...)
+    self:DebugEvCall(3, ...)
   end,
 
   CLUB_MESSAGE_HISTORY_RECEIVED = function(self, ...)
-    self:DebugEvCall(2, ...)
+    self:DebugEvCall(3, ...)
   end,
 
   CHAT_MSG_BN_WHISPER_INFORM = function(self, ...)
-    self:DebugEvCall(2, ...)
+    self:DebugEvCall(3, ...)
   end,
 
   CHAT_MSG_BN_WHISPER = function(self, ...)
+    self:DebugEvCall(3, ...)
+  end,
+
+  GROUP_ROSTER_UPDATE = function(self, ...)
     self:DebugEvCall(2, ...)
   end,
 
@@ -788,14 +837,14 @@ function DB:Help(msg)
              "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
              "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
              "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
-             "/dbox reset team||token||all -- resets team or token or all, respectively\n" ..
+             "/dbox reset team||token||master||all -- resets team or token or all, respectively\n" ..
              "/dbox version -- shows addon version")
 end
 
 function DB:SetSaved(name, value)
   self[name] = value
   dynamicBoxerSaved[name] = value
-  DB:Debug("(Saved) Setting % set to % - dynamicBoxerSaved=%", name, value, dynamicBoxerSaved)
+  DB:Debug(5, "(Saved) Setting % set to % - dynamicBoxerSaved=%", name, value, dynamicBoxerSaved)
 end
 
 function DB:SetupChange()
@@ -814,6 +863,7 @@ function DB:ForceInit()
   DB.fullName = DB:GetMyFQN() -- usually set in reconstruct team but we can call /dbox i for testing without isboxer on
   DB.faction = UnitFactionGroup("player")
   DB:SetupUI()
+  DB.justInit = true
 end
 
 function DB.Slash(arg) -- can't be a : because used directly as slash command
@@ -846,12 +896,19 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     elseif rest == "token" then
       dynamicBoxerSaved.MasterToken = nil
       DB:Warning("Token cleared per request, will prompt for it at next login")
+    elseif rest == "master" then
+      if dynamicBoxerSaved.serializedMasterHistory then
+        dynamicBoxerSaved.serializedMasterHistory[DB.faction] = {}
+        DB:Warning("Master history for % cleared per request, will likely need manual /dbox show next login", DB.faction)
+      else
+        DB:Warning("No master history to clear")
+      end
     elseif rest == "all" then
       dynamicBoxerSaved = nil -- any subsequent DB:SetSaved will fail...
       DB:Warning("State all reset per request, please /reload !")
       -- C_UI.Reload() -- in theory we could reload for them but that seems bad form
     else
-      DB:Error("Use /dbox reset x -- where x is one of team, token, all")
+      DB:Error("Use /dbox reset x -- where x is one of team, token, master, all")
     end
   elseif cmd == "m" then
     -- message again
@@ -870,7 +927,6 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
         DB.Channel = tok1
         DB.Secret = tok2
         DB.MasterName = masterName
-        DB:AddMaster(masterName)
         DB:SetupChange()
         DB.enabled = true
         DB:Join()

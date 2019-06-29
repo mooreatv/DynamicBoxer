@@ -1,18 +1,23 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
-1.5.0 WIP June 29th 2019
-- Remember masters, by faction, initialize properly at first.
+1.5.0 June 29th 2019
+- Remember masters, by faction. Starts to use it to keep the last Slot1 memory per faction to automatically switch to.
+- downgrade priority/broadcast capability of fwded messages.
 - Change the on-the-wire protocol and encoding to support a Single slot message vs a Team positional message
 - EMA: also sets the master in addition to the team order (to slot 1)
-
-1.4.4 June 28th 2019
-- More checks for bad channel which seems to happen _sometimes_
+- tweaked debug levels so `/dbox debug 2` is both informative but not too floody.
+  (run at least with `/dbox debug 1` if troubleshooting something)
+- lowered retry/refresh to 3s
+- don't popup the master dialog if we just did a full init `/dbox init`
 
 Coming next:
-- Setup/use master memory to avoid needing a `/dbox j` when when reloading just the master
+- Setup/use more master memory to avoid needing a `/dbox j` when when reloading just the master
 - More refinements on the above
 - Your input/suggestions welcome !
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
+
+1.4.4 June 28th 2019
+- More checks for bad channel which seems to happen _sometimes_
 
 1.4.3 June 28th 2019
 - Moved now unnecessary random token generator UI out of DynamicBoxer into its own Addon
