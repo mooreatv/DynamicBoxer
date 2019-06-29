@@ -11,7 +11,7 @@ local addon, ns = ...
 local DB = DynBoxer
 
 function DB:ChatFilter(event, msg, author, ...)
-  DB:Debug(2, "Chat Filter cb for s=% e=% msg=% author=% rest=%", self and self:GetName() or "<no name>", event, msg,
+  DB:Debug(3, "Chat Filter cb for s=% e=% msg=% author=% rest=%", self and self:GetName() or "<no name>", event, msg,
            author, {...})
   local data -- set by callback to what's after the prefix
   if DB:StartsWith(msg, DB.whisperPrefix, function(rest)
