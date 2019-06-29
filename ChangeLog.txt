@@ -1,7 +1,14 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
-1.4.4
-- More check for bad channel which seems to happen _sometimes_
+1.4.4 June 28th 2019
+- More checks for bad channel which seems to happen _sometimes_
+
+Coming next:
+- Setup/use master memory to avoid needing a `/dbox j` when when reloading just the master
+- More refinements on the above
+- Your input/suggestions welcome !
+- Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
+
 1.4.3 June 28th 2019
 - Moved now unnecessary random token generator UI out of DynamicBoxer into its own Addon
   https://github.com/mooreatv/RandomGenerator
@@ -10,12 +17,6 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
   also added more safeguard for unexpected issues with isboxer generated lua
 - Make "/dbox show" accept ensure initial handshake is retried
 - Address the fact that joining channel can succeed at first, then fail later (!) so we rejoin
-
-Coming next:
-- Setup/use master memory to avoid needing a `/dbox j` when when reloading just the master
-- More refinements on the above
-- Your input/suggestions welcome !
-- Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 1.4.2 June 27th 2019
 - Significantly reduced resend/retries thus also reducing throttling and lag (Issue #26)
