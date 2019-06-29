@@ -50,7 +50,12 @@ DB.Secret = ""
 DB.MasterName = ""
 DB.MasterToken = nil -- Nil will force UI/dialog setup (unless already saved in saved vars)
 DB.teamHistory = {}
-DB.masterHistory = DB:LRU(48) -- how many to keep
+
+DB.masterHistory = {}
+for _, faction in ipairs(DB.Factions) do
+  DB.masterHistory[faction] = DB:LRU(50)
+end
+
 DB.currentCount = 0 -- how many characters from the team have been mapped (ie size of sorted team)
 DB.expectedCount = 0 -- how many slots we expect to see/map
 
@@ -62,8 +67,8 @@ DB.refresh = 2.5
 DB.totalRetries = 0
 DB.maxRetries = 20 -- after 20s we stop/give up
 
-DB.chatPrefix = "dbox0" -- protocol version in prefix for the addon messages
-DB.whisperPrefix = "DynamicBoxer:" -- chat prefix in case it goes to wrong toon, to make it clearer what it may be
+DB.chatPrefix = "dbox1" -- protocol version in prefix for the addon messages
+DB.whisperPrefix = "DynamicBoxer~" -- chat prefix in case it goes to wrong toon, to make it clearer what it may be
 DB.channelId = nil
 DB.enabled = true -- set to false if the users cancels out of the UI
 DB.randomIdLen = 8 -- we generate 8 characters long random ids
@@ -282,9 +287,9 @@ end
 
 function DB:InfoPayload(slot, firstFlag)
   local toonInfo = DB.Team[slot]
-  local payload = tostring(slot) .. " " .. toonInfo.fullName .. " " .. toonInfo.orig .. " " .. firstFlag .. " msg " ..
+  local payload = "S" .. tostring(slot) .. " " .. toonInfo.fullName .. " " .. firstFlag .. " msg " ..
                     tostring(DB.syncNum) .. "/" .. tostring(DB.sentMessageCount)
-  DB:Debug("Created payload for slot %: %", slot, payload)
+  DB:Debug("Created slot payload for slot %: %", slot, payload)
   return payload
 end
 
@@ -356,8 +361,8 @@ function DB.Sync() -- called as ticker so no :
 end
 
 function DB:AddMaster(masterName)
-  DB.masterHistory:add(DB.faction .. " " .. masterName)
-  dynamicBoxerSaved.serializedMasterHistory = DB.masterHistory:toTable()
+  DB.masterHistory[DB.faction]:add(masterName)
+  dynamicBoxerSaved.serializedMasterHistory[DB.faction] = DB.masterHistory[DB.faction]:toTable()
   self:Debug(1, "New master % list newest at the end: %", masterName, dynamicBoxerSaved.serializedMasterHistory)
 end
 
@@ -423,9 +428,8 @@ function DB:ProcessMessage(source, from, data)
     end
     data = msg
   end
-  local idxStr, realname, internalname, forceStr = data:match("^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)") -- or strplit(" ", data)
-  DB:Debug("on % from %, got idx=% realname=% internal name=% first/force=%", source, from, idxStr, realname,
-           internalname, forceStr)
+  local idxStr, realname, forceStr = data:match("^S([^ ]+) ([^ ]+) ([^ ]+)") -- or strplit(" ", data)
+  DB:Debug("on % from %, got idx=% realname=% first/force=%", source, from, idxStr, realname, forceStr)
   local idx = tonumber(idxStr)
   if not idx then
     DB:Error("invalid non numerical idx %", idxStr)
@@ -504,7 +508,6 @@ function DB:ProcessMessage(source, from, data)
     end
     DB:Debug("Change of character received for slot %: was % -> now %", idx, previousMapping.fullName, realname)
   end
-  DB:Debug("Slot %: % think they were originally % we think they are %", idx, realname, internalname, DB.ISBTeam[idx])
   DB.Team[idx] = {orig = DB.ISBTeam[idx], new = shortName, fullName = realname, slot = idx}
   if EMAApi then
     EMAApi.AddMember(realname)
@@ -675,8 +678,10 @@ DB.EventD = {
           DB.MasterName = masterName
           DB.Channel = tok1
           DB.Secret = tok2
-          -- restore LRU.
-          DB.masterHistory:fromTable(dynamicBoxerSaved.serializedMasterHistory)
+          -- restore LRUs.
+          for _, faction in ipairs(DB.Factions) do
+            DB.masterHistory[faction]:fromTable(dynamicBoxerSaved.serializedMasterHistory[faction])
+          end
           self:Debug(3, "Loaded valid saved vars %", dynamicBoxerSaved)
           return
         end
