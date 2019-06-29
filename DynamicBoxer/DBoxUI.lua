@@ -64,9 +64,11 @@ function DB.OnSetupUIAccept(widget, data, data2)
   widget:Hide()
   DB.enabled = true
   DB.inUI = false
+  DB:SetupChange()
   if DB.maxIter <= 0 then
     DB.maxIter = 1
   end
+  DB.firstMsg = 1 -- force resync of master
   DB:Join()
 end
 

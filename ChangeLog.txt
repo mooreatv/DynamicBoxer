@@ -6,6 +6,7 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
   (making this one 12k lighter)
 - Fixed issue where if the original isboxer team was cross realm the substitution was incorrect
   also added more safeguard for unexpected issues with isboxer generated lua
+- Make "/dbox show" accept ensure initial handshake is retried
 
 1.4.2 June 27th 2019
 - Significantly reduced resend/retries thus also reducing throttling and lag (Issue #26)
