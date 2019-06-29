@@ -362,6 +362,9 @@ end
 
 function DB:AddMaster(masterName)
   DB.masterHistory[DB.faction]:add(masterName)
+  if not dynamicBoxerSaved.serializedMasterHistory then
+    dynamicBoxerSaved.serializedMasterHistory = {}
+  end
   dynamicBoxerSaved.serializedMasterHistory[DB.faction] = DB.masterHistory[DB.faction]:toTable()
   self:Debug(1, "New master % list newest at the end: %", masterName, dynamicBoxerSaved.serializedMasterHistory)
 end
@@ -404,8 +407,9 @@ function DB:CheckChannelOk(msg)
   return true
 end
 
-DB.Team = {}
--- Too bad addon message don't work cross realm even through whisper
+DB.Team = {} -- TODO: save the team for caching/less waste upon reload (and/or check party/raid chat)
+
+-- Too bad addon messages don't work cross realm even through whisper
 -- (and yet they work with BN friends BUT they don't work with yourself!)
 -- TODO: refactor, this is too long / complicated for 1 function
 function DB:ProcessMessage(source, from, data)
@@ -681,6 +685,9 @@ DB.EventD = {
           DB.Channel = tok1
           DB.Secret = tok2
           -- restore LRUs.
+          if not dynamicBoxerSaved.serializedMasterHistory then
+            dynamicBoxerSaved.serializedMasterHistory = {}
+          end
           for _, faction in ipairs(DB.Factions) do
             DB.masterHistory[faction]:fromTable(dynamicBoxerSaved.serializedMasterHistory[faction])
           end
@@ -805,6 +812,7 @@ end
 function DB:ForceInit()
   DB:SetupChange()
   DB.fullName = DB:GetMyFQN() -- usually set in reconstruct team but we can call /dbox i for testing without isboxer on
+  DB.faction = UnitFactionGroup("player")
   DB:SetupUI()
 end
 
