@@ -77,7 +77,10 @@ DB.EMA = DB.EMA and DB.EMA:GetAddon("Team", true)
 
 -- Returns if we should be operating (basically if isboxer has a static team defined)
 function DB:IsActive()
-  return self.enabled and (isboxer.Character_LoadBinds or self.manual > 0)
+  if self.enabled and (isboxer.Character_LoadBinds or self.manual > 0) then
+    return true -- so we don't return the LoadBinds function
+  end
+  return false
 end
 
 -- Replace team members in original macro text by the dynamic one.
@@ -290,14 +293,16 @@ DB.firstMsg = 1
 DB.syncNum = 1
 
 function DB.Sync() -- called as ticker so no :
-  DB:Debug(9, "DB:Sync #% maxIter %", DB.syncNum, DB.maxIter)
-  if DB.maxIter <= 0 or not DB:IsActive() then
+  local isActive = DB:IsActive()
+  DB:Debug(9, "DB:Sync #% maxIter % active %", DB.syncNum, DB.maxIter, isActive)
+  if DB.maxIter <= 0 or not isActive then
     return
   end
   if not DB.channelId then
     DB:DynamicInit()
   end
   if not DB.channelId then
+    DB:Debug(8, "We don't have a channel id to do sync #% maxIter %", DB.syncNum, DB.maxIter)
     return -- for now keep trying until we get a channel
   end
   DB.maxIter = DB.maxIter - 1
@@ -703,19 +708,23 @@ function DB:Join()
     DB:Debug("Not yet in std channel, retry later")
     return
   end
-  if DB.joinDone then
-    DB:Debug("Join already done. skipping this one") -- Sync will retry
+  if DB.joinDone and DB.joinedChannel and GetChannelName(DB.joinedChannel) then
+    DB:Debug("Join already done and channel id still valid. skipping this one") -- Sync will retry
     return
   end
-  DB.joinDone = true
-  DB.totalRetries = 0 -- try at most maxRetries (20) times after this point
+  local action = "Rejoined"
+  if not DB.joinDone then
+    -- one time setup
+    DB.totalRetries = 0 -- try at most maxRetries (20) times after this point but only if first join or manual rejoin
+    DB:ReconstructTeam()
+    local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
+    DB:Debug("Prefix register success % in dynamic setup", ret)
+    action = "Joined"
+  end
   DB.firstMsg = 1
   if DB.maxIter <= 0 then
     DB.maxIter = 1
   end
-  DB:ReconstructTeam()
-  local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
-  DB:Debug("Prefix register success % in dynamic setup", ret)
   if not DB.Channel or #DB.Channel == 0 or not DB.Secret or #DB.Secret == 0 then
     DB:Error("Channel and or Password are empty - this should not be reached/happen")
     return
@@ -723,9 +732,15 @@ function DB:Join()
   DB.joinedChannel = "DynamicBoxer4" .. DB.Channel -- only alphanums seems legal, couldn't find better seperator than 4
   local t, n = JoinTemporaryChannel(DB.joinedChannel, DB.Secret)
   DB.channelId = GetChannelName(DB.joinedChannel)
+  if not DB.channelId then
+    DB:Warning("Couldn't get channel id for our channel %, will retry (t=% n=%)", DB.joinedChannel, t, n)
+    return
+  end
   DB:Debug("Joined channel % / % type % name % id %", DB.joinedChannel, DB.Secret, t, n, DB.channelId)
-  DB:Print(DB:format("Joined DynBoxer secure channel. This is slot % and dynamically setting ISBoxer character to %",
-                     DB.ISBIndex, DB.fullName), 0, 1, 1)
+  DB:Print(DB:format(
+             action .. " DynBoxer secure channel. This is slot % and dynamically setting ISBoxer character to %",
+             DB.ISBIndex, DB.fullName), 0, 1, 1)
+  DB.joinDone = true
   return DB.channelId
 end
 

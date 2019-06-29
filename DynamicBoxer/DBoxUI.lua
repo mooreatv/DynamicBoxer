@@ -6,7 +6,6 @@
 ]] --
 -- our name, our empty default (and unused) anonymous ns
 -- local _addon, _ns = ...
-
 -- Created by DBoxInit
 local DB = DynBoxer
 
@@ -26,7 +25,7 @@ function DB.OnSlaveUIShow(widget, data)
   DB:Debug("Len field is % vs expected min % (%)", len, minLen, DB.uiTextLen)
   if len < minLen then
     -- do we have a master token (ie is this /dbox show and not /dbox init)
-    if data.token and #data.token > 0 then
+    if data and data.token and #data.token > 0 then
       newText = data.token
       e:SetText(newText)
     else
@@ -54,22 +53,25 @@ function DB.OnSetupUIAccept(widget, data, data2)
     DB:Warning("Invalid token % !", token)
     return true
   end
+  widget.editBox:SetMaxLetters(0)
+  widget:Hide()
+  DB.inUI = false
+  if DB.MasterToken == token and DB.enabled then
+    DB:Debug("Exact same token set, done with setup")
+    return
+  end
   DB:SetSaved("MasterToken", token)
   DB.Channel = tok1
   DB.Secret = tok2
   DB.MasterName = masterName
-  DB:Debug("Current master is %", masterName) -- TODO: send it a message to dismiss its dialog and deal with cross realm
+  DB:Debug("Current master is %", masterName) -- we'll send it a message so it's box stops showing
   DB:AddMaster(masterName)
-  widget.editBox:SetMaxLetters(0)
-  widget:Hide()
-  DB.enabled = true
-  DB.inUI = false
-  DB:SetupChange()
+  DB:SetupChange() -- joining just after leaving seems to break so we need to wait next sync
+  DB.enabled = true -- must be after the previous line which sets it off
   if DB.maxIter <= 0 then
     DB.maxIter = 1
   end
   DB.firstMsg = 1 -- force resync of master
-  DB:Join()
 end
 
 function DB.OnUICancel(widget, _data)
@@ -85,7 +87,6 @@ function DB.OnShowUICancel(widget, _data)
   widget:Hide()
   DB:Warning("Escaped/cancelled from UI show (use <return> key to close normally when done copy pasting)")
 end
-
 
 function DB.OnMasterUIShow(widget, data)
   DB:Debug("Master UI Show/Regen data is %", data)
@@ -182,15 +183,23 @@ StaticPopupDialogs["DYNBOXER_SLAVE"] = {
   EditBoxOnTextChanged = function(self, data)
     -- enable accept only after they paste a valid checksumed entry
     DB:Debug(4, "Slave EditBoxOnTextChanged called")
-    if data.previous and self:GetText() == data then
+    local widget = self:GetParent()
+    local text = self:GetText()
+    if data and data.previous and text == data then
       return -- no changes since last time, done
     end
-    self:GetParent().data.previous = self:GetText()
-    DB.OnSlaveUIShow(self:GetParent(), data)
-    if DB:IsValidToken(self:GetText()) then
-      self:GetParent().button1:Enable()
+    if not widget.data then
+      widget.data = {}
+    end
+    if not data then
+      data = widget.data
+    end
+    data.previous = text
+    DB.OnSlaveUIShow(widget, data)
+    if DB:IsValidToken(text) then
+      widget.button1:Enable()
     else
-      self:GetParent().button1:Disable()
+      widget.button1:Disable()
     end
   end,
   hasEditBox = true
@@ -269,7 +278,7 @@ function DB:ShowTokenUI()
   local master = DB.MasterName
   if DB:WeAreMaster() then
     -- regen with us as actual master
-    master = DB.fullName  -- already done now in base file/all case so we don't msg old master
+    master = DB.fullName -- already done now in base file/all case so we don't msg old master
     DB.uiTextLen = DB:CalcUITextLen(master)
     StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2",
                      {masterName = master, token1 = DB.Channel, token2 = DB.Secret, OnUICancel = DB.OnShowUICancel})
