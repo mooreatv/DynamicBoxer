@@ -14,6 +14,7 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
   (run at least with `/dbox debug 1` if troubleshooting something)
 - lowered retry/refresh to 3s
 - don't popup the master dialog if we just did a full init `/dbox init`, take 2
+- don't reset max retries when trying to re join every 5 failures
 
 Coming next:
 - Setup/use more master memory to avoid needing a `/dbox j` when when reloading just the master

@@ -293,6 +293,7 @@ function DB:WeAreMaster()
   return DB.ISBIndex == 1
 end
 
+-- TODO: move to MoLib
 function DB:DebugLogWrite(what)
   -- format is HH:MM:SS hundredsOfSec the 2 clock source aren't aligned so for deltas of
   -- 9 seconds or less, substract the 2 hundredsOfSec (and divide by 100 to get seconds)
@@ -814,7 +815,6 @@ function DB:Join()
   local action = "Rejoined"
   if not DB.joinDone then
     -- one time setup
-    DB.totalRetries = 0 -- try at most maxRetries (20) times after this point but only if first join or manual rejoin
     DB:ReconstructTeam()
     local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
     DB:Debug("Prefix register success % in dynamic setup", ret)
@@ -896,6 +896,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
   if cmd == "j" then
     -- join
     DB.joinDone = false -- force rejoin code
+    DB.totalRetries = 0
     DB:Join()
   elseif cmd == "v" then
     -- version
