@@ -461,8 +461,8 @@ function DB:ProcessMessage(source, from, data)
   local channelMessage = (source == "CHANNEL")
   if not channelMessage then
     -- check authenticity (channel sends unsigned messages)
-    local msg, lag, msgId = DB:VerifySecureMessage(data, DB.Channel, DB.Secret)
-    if msg then
+    local valid, msg, lag, msgId = DB:VerifySecureMessage(data, DB.Channel, DB.Secret)
+    if valid then
       DB:Debug(2, "Received valid secure message from % lag is %s, msg id is % part of full message %", from, lag,
                msgId, data)
       local isDup = false
@@ -482,7 +482,7 @@ function DB:ProcessMessage(source, from, data)
         doForward = msg
       end
     else
-      DB:Warning("Received invalid message from %: %", from, data)
+      DB:Warning("Received invalid (" .. msg .. ") message from %: %", from, data)
       return
     end
     data = msg
@@ -732,6 +732,7 @@ DB.EventD = {
           "Invalid/unexpected config version (%, we expect %), sorry conversion not available, starting from scratch!",
           dynamicBoxerSaved.configVersion, DB.configVersion)
       else
+        dynamicBoxerSaved.addonVersion = DB.manifestVersion
         local valid, masterName, tok1, tok2 -- start nil
         if not dynamicBoxerSaved.MasterToken or #dynamicBoxerSaved.MasterToken == 0 then
           -- allow nil/unset master token

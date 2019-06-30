@@ -1,6 +1,8 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 1.5.0 June 29th 2019
+- Bug fix: chat message filters should drop duplicate consecutive line ids
+- Make VerifySecureMessage problems only 1 instead of 2 warnings (changed signature in MoLib)
 - Duplicate message detection and logging of messageIds in the debugLog
 - Auto hide show token on slaves too when team completes
 - Remember masters, by faction. Starts to use it to keep the last Slot1 memory per faction to automatically switch to.
