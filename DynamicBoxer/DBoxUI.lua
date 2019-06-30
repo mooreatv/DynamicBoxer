@@ -292,7 +292,11 @@ function DB:HideTokenUI()
     DB:Debug(1, "HideTokenUI(): Already in not UI, skipping")
     return
   end
-  StaticPopup_Hide("DYNBOXER_MASTER")
+  if DB:WeAreMaster() then
+    StaticPopup_Hide("DYNBOXER_MASTER")
+  else
+    StaticPopup_Hide("DYNBOXER_MASTER")
+  end
   DB.inUI = false
 end
 

@@ -235,7 +235,8 @@ function DB:ReconstructTeam()
   -- detect team changes, keep unique teams
   local teamStr = table.concat(DB.ISBTeam, " ")
   if not DB.justInit and not DB.teamHistory[teamStr] then
-    DB:Warning("New (isboxer) team detected, will show master token for copy paste until team is complete.")
+    DB:Debug(
+      "New (isboxer) team detected, will show master token for copy paste until team is complete (if this isn't first init).")
     DB.newTeam = true
   end
   DB.teamHistory[teamStr] = GetServerTime()
@@ -304,8 +305,8 @@ DB.sentMessageCount = 0
 
 function DB:SendDirectMessage(to, payload)
   DB.sentMessageCount = DB.sentMessageCount + 1
-  DB:DebugLogWrite("To : " .. to .. " : " .. payload)
   local secureMessage, messageId = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
+  DB:DebugLogWrite(messageId .. " :        To: " .. to .. " : " .. payload)
   local toSend = DB.whisperPrefix .. secureMessage
   -- must stay under 255 bytes, we are around 96 bytes atm (depends on character name (accentuated characters count double)
   -- and realm length, the hash alone is 16 bytes)
@@ -450,6 +451,8 @@ end
 
 DB.Team = {} -- TODO: save the team for caching/less waste upon reload (and/or check party/raid chat)
 
+DB.duplicateMsg = DB:LRU(100)
+
 -- Too bad addon messages don't work cross realm even through whisper
 -- (and yet they work with BN friends BUT they don't work with yourself!)
 -- TODO: refactor, this is too long / complicated for 1 function
@@ -462,8 +465,19 @@ function DB:ProcessMessage(source, from, data)
     if msg then
       DB:Debug(2, "Received valid secure message from % lag is %s, msg id is % part of full message %", from, lag,
                msgId, data)
-      DB:DebugLogWrite("Frm: " .. from .. " : " .. msg .. " (lag " .. tostring(lag) .. ")")
+      local isDup = false
+      if DB.duplicateMsg:exists(msgId) then
+        DB:Warning("!!!Received % duplicate msg from %, will ignore: %", source, from, data)
+        isDup = true
+      end
+      DB.duplicateMsg:add(msgId)
       DB.lastDirectMessage = GetTime()
+      if isDup then
+        DB:DebugLogWrite(msgId .. " : From: " .. from .. "  DUP : " .. msg .. " (lag " .. tostring(lag) .. ")")
+        return
+      else
+        DB:DebugLogWrite(msgId .. " : From: " .. from .. "      : " .. msg .. " (lag " .. tostring(lag) .. ")")
+      end
       if DB:WeAreMaster() then
         doForward = msg
       end
@@ -529,8 +543,8 @@ function DB:ProcessMessage(source, from, data)
     shortName = s -- use the short name without realm when on same realm, using full name breaks (!)
   end
   -- we should do that after we joined our channel to get a chance to get completion
-  if channelMessage and DB.newTeam and DB:WeAreMaster() and (DB.currentCount < DB.expectedCount) then
-    DB:Debug(1, "New team detected, on master, showing current token")
+  if channelMessage and DB.newTeam and not DB.justInit and DB:WeAreMaster() and (DB.currentCount < DB.expectedCount) then
+    DB:Warning("New (isboxer) team detected, on master, showing current token")
     DB:ShowTokenUI()
   end
   if idx == DB.ISBIndex then
@@ -565,7 +579,7 @@ function DB:ProcessMessage(source, from, data)
   DB.currentCount = DB:SortTeam()
   local teamComplete = (DB.currentCount >= DB.expectedCount and DB.currentCount ~= oldCount)
   -- if team is complete, hide the show button
-  if DB.newTeam and DB:WeAreMaster() and teamComplete then
+  if teamComplete then
     DB:Debug(1, "Team complete, hiding current token dialog")
     DB:HideTokenUI()
   end

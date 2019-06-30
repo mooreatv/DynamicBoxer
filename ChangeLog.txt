@@ -1,6 +1,8 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 1.5.0 June 29th 2019
+- Duplicate message detection and logging of messageIds in the debugLog
+- Auto hide show token on slaves too when team completes
 - Remember masters, by faction. Starts to use it to keep the last Slot1 memory per faction to automatically switch to.
   (uses new MoLib functions)
 - downgrade priority/broadcast capability of fwded messages.
@@ -9,7 +11,7 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 - tweaked debug levels so `/dbox debug 2` is both informative but not too floody.
   (run at least with `/dbox debug 1` if troubleshooting something)
 - lowered retry/refresh to 3s
-- don't popup the master dialog if we just did a full init `/dbox init`
+- don't popup the master dialog if we just did a full init `/dbox init`, take 2
 
 Coming next:
 - Setup/use more master memory to avoid needing a `/dbox j` when when reloading just the master
