@@ -306,17 +306,19 @@ DB.optionsPanel = CreateFrame("Frame")
 DB.optionsPanel.name = "DynamicBoxer"
 
 function DB.optionsPanel:HandleOk()
-  DB:Warning("Generating lua error on purpose in DB.optionsPanel:HandleOk()")
-  error("testing errors")
+  --DB:Warning("Generating lua error on purpose in DB.optionsPanel:HandleOk()")
+  --error("testing errors")
 end
 
 function DB.optionsPanel.okay()
   DB:Debug("DB.optionsPanel.okay()")
   if DB.debug then
+    -- expose errors
     xpcall(function()
       DB.optionsPanel:HandleOk()
     end, geterrorhandler())
   else
+    -- normal behavior for interface option panel: errors swallowed by caller
     DB.optionsPanel:HandleOk()
   end
 end
