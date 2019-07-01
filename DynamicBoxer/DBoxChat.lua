@@ -5,7 +5,7 @@
    ]] --
 --
 -- our name, our empty default (and unused) anonymous ns
-local addon, ns = ...
+local _addon, _ns = ...
 
 -- Created by DBoxInit
 local DB = DynBoxer

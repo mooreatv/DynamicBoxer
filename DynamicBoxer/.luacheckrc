@@ -12,6 +12,7 @@ globals = {
     "EventTraceFrame",
     "EventTraceFrame_HandleSlashCmd",
     "EventTraceFrame_OnShow",
+    "geterrorhandler",
     "GetChannelName",
     "GetServerTime",
     "GetTime",
@@ -37,6 +38,7 @@ globals = {
 }
 max_line_length = 132
 ignore = {
-    "212/_.*"
+    "211/_.*",
+    "212/_.*",
 }
 self=false

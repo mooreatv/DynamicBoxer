@@ -3,7 +3,7 @@
    ]] --
 --
 -- our name, our empty default (and unused) anonymous ns
-local addon, ns = ...
+local addon, _ns = ...
 
 local shortName = "DynBoxer"
 
