@@ -183,7 +183,8 @@ function DB:ReconstructTeam()
   DB.faction = UnitFactionGroup("player")
   DB.shortName, DB.myRealm = DB:SplitFullname(DB.fullName)
   if not DB:IsActive() then
-    DB:Print("DynamicBoxer skipping team reconstruction as there is no isboxer team (not running under innerspace).")
+    DB:PrintDefault(
+      "DynamicBoxer skipping team reconstruction as there is no isboxer team (not running under innerspace).")
     return
   end
   local prev = isboxer.SetMacro
@@ -588,18 +589,16 @@ function DB:ProcessMessage(source, from, data)
   -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
   self.ISBO.LoadBinds()
   if previousMapping then
-    DB:Print(DB:format("Change of mapping for slot %, dynamically set ISBoxer character to % (%, was % before)", idx,
-                       shortName, realname, previousMapping.fullName), 0, 1, 1)
+    DB:PrintInfo("Change of mapping for slot %, dynamically set ISBoxer character to % (%, was % before)", idx,
+                 shortName, realname, previousMapping.fullName)
   else
-    DB:Print(DB:format("New mapping for slot %, dynamically set ISBoxer character to % (%)", idx, shortName, realname),
-             0, 1, 1)
+    DB:PrintInfo("New mapping for slot %, dynamically set ISBoxer character to % (%)", idx, shortName, realname)
   end
   if idx == 1 then
     DB:AddMaster(realname)
   end
   if teamComplete then
-    DB:Print(DB:format("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!",
-                       DB.currentCount), 0, 1, 1)
+    DB:PrintInfo("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!", DB.currentCount)
   end
   -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
   if DB.currentCount == DB.expectedCount and DB.EMA then
@@ -723,7 +722,7 @@ DB.EventD = {
     if name ~= addon then
       return -- not us, return
     end
-    DB:Print("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv: type /dbox for command list/help.")
+    DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv: type /dbox for command list/help.")
     if dynamicBoxerSaved then
       -- always clear the one time log
       dynamicBoxerSaved.debugLog = {}
@@ -786,7 +785,7 @@ function DB:DynamicInit()
     return
   end
   if not DB:IsActive() then
-    DB:Print("DynamicBoxer: No static team/not running under innerspace or user abort... skipping...")
+    DB:PrintDefault("DynamicBoxer: No static team/not running under innerspace or user abort... skipping...")
     return
   end
   if not DB.MasterToken or #DB.MasterToken == 0 then
@@ -834,9 +833,8 @@ function DB:Join()
     return
   end
   DB:Debug("Joined channel % / % type % name % id %", DB.joinedChannel, DB.Secret, t, n, DB.channelId)
-  DB:Print(DB:format(
-             action .. " DynBoxer secure channel. This is slot % and dynamically setting ISBoxer character to %",
-             DB.ISBIndex, DB.fullName), 0, 1, 1)
+  DB:PrintInfo(action .. " DynBoxer secure channel. This is slot % and dynamically setting ISBoxer character to %",
+               DB.ISBIndex, DB.fullName)
   DB.joinDone = true
   return DB.channelId
 end
@@ -847,13 +845,14 @@ end
 -- ÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÇÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁÁÁÑÁÁÁÁÁÁÁ
 
 function DB:Help(msg)
-  DB:Print("DynamicBoxer: " .. msg .. "\n" .. "/dbox init -- redo the one time channel/secret setup UI\n" ..
-             "/dbox show -- shows the current token string.\n" ..
-             "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
-             "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
-             "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
-             "/dbox reset team||token||master||all -- resets team or token or all, respectively\n" ..
-             "/dbox version -- shows addon version")
+  DB:PrintDefault("DynamicBoxer: " .. msg .. "\n" .. "/dbox init -- redo the one time channel/secret setup UI\n" ..
+                    "/dbox show -- shows the current token string.\n" ..
+                    "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
+                    "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
+                    "/dbox config -- open addon config, dbox c works too\n" ..
+                    "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
+                    "/dbox reset team||token||master||all -- resets team or token or all, respectively\n" ..
+                    "/dbox version -- shows addon version")
 end
 
 function DB:SetSaved(name, value)
@@ -900,7 +899,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     DB:Join()
   elseif cmd == "v" then
     -- version
-    DB:Print("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv")
+    DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv")
   elseif cmd == "i" then
     -- re do initialization
     DB:ForceInit()
@@ -952,6 +951,28 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     -- if above didn't match, failed/didn't return, then fall back to showing UI
     DB:ShowTokenUI()
     -- for debug, needs exact match (of start of "debug ..."):
+  elseif cmd == "e" then
+    UIParentLoadAddOn("Blizzard_DebugTools")
+    -- hook our code, only once/if there are no other hooks
+    if EventTraceFrame:GetScript("OnShow") == EventTraceFrame_OnShow then
+      EventTraceFrame:HookScript("OnShow", function()
+        EventTraceFrame.ignoredEvents = DB:CloneTable(DB.etraceIgnored)
+        DB:PrintDefault("Restored ignored etrace events: %", DB.etraceIgnored)
+      end)
+    else
+      DB:Debug(3, "EventTraceFrame:OnShow already hooked, hopefully to ours")
+    end
+    -- save or anything starting with s that isn't the start/stop commands of actual eventtrace
+    if DB:StartsWith(rest, "s") and rest ~= "start" and rest ~= "stop" then
+      DB:SetSaved("etraceIgnored", DB:CloneTable(EventTraceFrame.ignoredEvents))
+      DB:PrintDefault("Saved ignored etrace events: %", DB.etraceIgnored)
+    elseif DB:StartsWith(rest, "c") then
+      EventTraceFrame.ignoredEvents = {}
+      DB:PrintDefault("Cleared the current event filters")
+    else -- leave the other sub commands unchanged, like start/stop and n
+      DB:Debug("Calling  EventTraceFrame_HandleSlashCmd(%)", rest)
+      EventTraceFrame_HandleSlashCmd(rest)
+    end
   elseif DB:StartsWith(arg, "debug") then
     -- debug
     if rest == "on" then
@@ -961,10 +982,10 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     else
       DB:SetSaved("debug", tonumber(rest))
     end
-    DB:Print(DB:format("DynBoxer debug now %", DB.debug))
+    DB:PrintDefault("DynBoxer debug now %", DB.debug)
   elseif cmd == "d" then
     -- dump
-    DB:Print(DB:format("DynBoxer dump of % = " .. DB:Dump(_G[rest]), rest), .7, .7, .9)
+    DB:PrintInfo("DynBoxer dump of % = %", rest, _G[rest])
   else
     DB:Help('unknown command "' .. arg .. '", usage:')
   end

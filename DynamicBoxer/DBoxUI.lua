@@ -300,4 +300,28 @@ function DB:HideTokenUI()
   DB.inUI = false
 end
 
+--- Options panel ---
+
+DB.optionsPanel = CreateFrame("Frame")
+DB.optionsPanel.name = "DynamicBoxer"
+
+function DB.optionsPanel:HandleOk()
+  error("testing errors")
+end
+
+function DB.optionsPanel.okay()
+  if DB.debug then
+    pcall(function() -- to get errors recorded
+      DB.optionsPanel:HandleOk()
+    end, geterrorhandler())
+  else
+    DB.optionsPanel:HandleOk()
+  end
+end
+
+-- Add the panel to the Interface Options
+InterfaceOptions_AddCategory(DB.optionsPanel)
+
+---
+
 DB:Debug("dbox ui file loaded")

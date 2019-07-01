@@ -1,5 +1,9 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+1.5.1 June 30th 2019
+- added `/dbox e[trace] s[ave]|c[clear]` to save current /etrace filters and /dbox e to start it with
+  restoring the last saved filters -- only useful for devs/debugging
+
 1.5.0 June 29th 2019
 - Bug fix: chat message filters should drop duplicate consecutive line ids
 - Make VerifySecureMessage problems only 1 instead of 2 warnings (changed signature in MoLib)

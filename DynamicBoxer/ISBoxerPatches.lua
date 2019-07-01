@@ -1,9 +1,15 @@
 -- Section of code we need to modify from original ISBoxer.lua (isb42)
 -- for behavior we can't change just with the hooks.
 -- This assumes ISBoxer is already loaded per our toc deps
---
+
 -- Created by DBoxInit
 local DB = DynBoxer
+
+if not isboxer then
+  DB:Warning("ISBoxer is not present, expect much limited/reduced functionality!")
+  isboxer = {}
+  return
+end
 
 -- We need to fix isboxer.SetMacro so it can update buttons instead
 -- of leaking some/creating new ones each call:
