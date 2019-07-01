@@ -765,6 +765,7 @@ DB.EventD = {
     dynamicBoxerSaved = {}
     dynamicBoxerSaved.configVersion = DB.configVersion
     dynamicBoxerSaved.debugLog = {}
+    dynamicBoxerSaved.addonVersion = DB.manifestVersion
   end
 }
 

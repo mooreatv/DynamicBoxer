@@ -302,12 +302,65 @@ end
 
 --- Options panel ---
 
+-- and experimentation/beginning of a UI library
+
+local placeInside = function(sf, x, y)
+  x = x or 16
+  y = y or -16
+  sf:SetPoint("TOPLEFT", x, y)
+  -- sf:SetPoint("RIGHT")
+  return sf
+end
+local placeBelow = function(sf, below, x, y)
+  x = x or 0
+  y = y or -8
+  sf:SetPoint("TOPLEFT", below, "BOTTOMLEFT", x, y)
+  -- sf:SetPoint("RIGHT")
+  return sf
+end
+
 DB.optionsPanel = CreateFrame("Frame")
 DB.optionsPanel.name = "DynamicBoxer"
+DB.optionsPanel.addText = function(self, text, font)
+  font = font or "GameFontHighlightSmall" -- different default?
+  local f = self:CreateFontString(nil, "ARTWORK", font)
+  f:SetText(text)
+  f:SetJustifyH("LEFT")
+  f:SetJustifyV("TOP")
+  -- f:ClearAllPoints() - needed? for?
+  -- place inside the parent at offset x,y from corner of parent
+  f.placeInside = placeInside
+  -- place below (previously placed item typically)
+  f.placeBelow = placeBelow
+  return f
+end
+-- DB.optionsPanel.id = 1
+
+DB.optionsPanel.addCheckBox = function(self, text, tooltip)
+  local name = nil --  "DB.cb.".. tostring(self.id) -- not needed
+  local c = CreateFrame("CheckButton", name, self, "InterfaceOptionsCheckButtonTemplate")
+  -- self.id = self.id + 1
+  -- c:ClearAllPoints()
+  c.Text:SetText(text)
+  if tooltip then
+    c.tooltipText = tooltip
+  end
+  c.placeInside = placeInside
+  c.placeBelow = placeBelow
+  return c
+end
+-- TODO: look into i18n
+
+local title = DB.optionsPanel:addText("DynamicBoxer options", "GameFontNormalLarge"):placeInside()
+local subTitle = DB.optionsPanel:addText("These options let you control the behavior of DynamicBoxer " ..
+                                           DB.manifestVersion):placeBelow(title)
+local subTitle2 = DB.optionsPanel:addText("testing 1 2 3"):placeBelow(subTitle)
+local cb1 = DB.optionsPanel:addCheckBox("A test checkbox", "A sample tooltip"):placeBelow(subTitle2, 10, -20)
+local _cb2 = DB.optionsPanel:addCheckBox("Another checkbox", "Another tooltip"):placeBelow(cb1)
 
 function DB.optionsPanel:HandleOk()
-  --DB:Warning("Generating lua error on purpose in DB.optionsPanel:HandleOk()")
-  --error("testing errors")
+  -- DB:Warning("Generating lua error on purpose in DB.optionsPanel:HandleOk()")
+  -- error("testing errors")
 end
 
 function DB.optionsPanel.okay()
