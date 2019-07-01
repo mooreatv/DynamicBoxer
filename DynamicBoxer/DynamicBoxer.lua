@@ -951,6 +951,11 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     -- if above didn't match, failed/didn't return, then fall back to showing UI
     DB:ShowTokenUI()
     -- for debug, needs exact match (of start of "debug ..."):
+  elseif cmd == "c" then
+    -- Show config panel
+    -- InterfaceOptionsList_DisplayPanel(DB.optionsPanel)
+    InterfaceOptionsFrame:Show() -- onshow will clear the category if not already displayed
+    InterfaceOptionsFrame_OpenToCategory(DB.optionsPanel) -- gets our name selected
   elseif cmd == "e" then
     UIParentLoadAddOn("Blizzard_DebugTools")
     -- hook our code, only once/if there are no other hooks

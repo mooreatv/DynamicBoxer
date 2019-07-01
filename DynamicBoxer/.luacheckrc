@@ -16,6 +16,8 @@ globals = {
     "GetChannelName",
     "GetServerTime",
     "GetTime",
+    "InterfaceOptionsFrame",
+    "InterfaceOptionsFrame_OpenToCategory",
     "JoinTemporaryChannel",
     "EMAApi",
     "GetBindingAction",

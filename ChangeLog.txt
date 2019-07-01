@@ -1,6 +1,7 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 1.5.1 June 30th 2019
+- `dbox config` shows the config panel (also in standard addon interface tab)
 - added `/dbox e[trace] s[ave]|c[clear]` to save current /etrace filters and /dbox e to start it with
   restoring the last saved filters -- only useful for devs/debugging
 
