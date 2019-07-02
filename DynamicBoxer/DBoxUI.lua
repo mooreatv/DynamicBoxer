@@ -302,7 +302,7 @@ end
 
 --- Options panel ---
 
-function DB.CreateOptionPanel()
+function DB.CreateOptionsPanel()
   if DB.optionsPanel then
     DB:Debug("Options Panel already setup")
     return
@@ -312,6 +312,12 @@ function DB.CreateOptionPanel()
   -- Options panel and experimentation/beginning of a UI library
   -- WARNING, Y axis is such as positive is down, unlike rest of the wow api which has + offset going up
   -- but all the negative numbers all over, just for Y axis, got to me
+
+  local p = CreateFrame("Frame")
+  DB.optionsPanel = p
+  p.name = "DynamicBoxer"
+  p.children = {}
+  p.numObjects = 0
 
   -- place inside the parent at offset x,y from corner of parent
   local placeInside = function(sf, x, y)
@@ -328,10 +334,26 @@ function DB.CreateOptionPanel()
     return sf
   end
 
-  local p = CreateFrame("Frame")
-  DB.optionsPanel = p
-  p.name = "DynamicBoxer"
-  p.children = {}
+  -- Place relative to previous one. optOffsetX is relative to the left margin
+  -- established by first widget placed (placeInside)
+  -- such as changing the order of widgets doesn't change the left/right offset
+  -- in other words, offsetX is absolute to the left margin instead of relative to the previously placed object
+  p.Place = function(self, object, optOffsetX, optOffsetY)
+    self.numObjects = self.numObjects + 1
+    DB:Debug(7, "called Place % n % o %", self.name, self.numObjects, self.leftMargin)
+    if self.numObjects == 1 then
+      -- first object: place inside
+      object:placeInside(optOffsetX, optOffsetY)
+      self.leftMargin = 0
+    else
+      optOffsetX = optOffsetX or 0
+      -- subsequent, place after the previous one but relative to initial left margin
+      object:placeBelow(self.lastAdded, optOffsetX - self.leftMargin, optOffsetY)
+      self.leftMargin = optOffsetX
+    end
+    self.lastAdded = object
+    return object
+  end
 
   -- to be used by the various factories/sub widget creation to add common methods to them
   function p:addMethods(widget) -- put into MoGuiLib once good enough
@@ -413,22 +435,7 @@ function DB.CreateOptionPanel()
     return s
   end
 
-  p.numObjects = 0
-
-  p.Place = function(self, object, optOffsetX, optOffsetY)
-    self.numObjects = self.numObjects + 1
-    if self.numObjects == 1 then
-      -- first object: place inside
-      object:placeInside(optOffsetX, optOffsetY)
-    else
-      object:placeBelow(self.lastAdded, optOffsetX, optOffsetY)
-      -- subsequent, place after the previous one
-    end
-    self.lastAdded = object
-    return object
-  end
-
-  -- DB.widgetDemo= true -- to show the demo (or `DB:SetSaved("widgetDemo", true)`)
+  DB.widgetDemo= true -- to show the demo (or `DB:SetSaved("widgetDemo", true)`)
 
   -- TODO: look into i18n
   -- Q: maybe should just always auto place (add&place) ?
@@ -436,20 +443,19 @@ function DB.CreateOptionPanel()
   p:addText("These options let you control the behavior of DynamicBoxer " .. DB.manifestVersion):Place()
   if DB.widgetDemo then
     p:addText("Testing 1 2 3... demo widgets:"):Place(50, 20)
-    local _cb1 = p:addCheckBox("A test checkbox", "A sample tooltip"):Place(-50, 20) -- A: not here
+    local _cb1 = p:addCheckBox("A test checkbox", "A sample tooltip"):Place(0, 20) -- A: not here
     local cb2 = p:addCheckBox("Another checkbox", "Another tooltip"):Place()
     cb2:SetChecked(true)
     local s2 = p:addSlider("Test slider", "Test slide tooltip", 1, 4, 1, "Test low", "Test high",
-                           {"Value 1", "Value 2", "Third one", "4th value"}):Place(11, 30)
+                           {"Value 1", "Value 2", "Third one", "4th value"}):Place(16, 30)
     s2:SetValue(4)
-    p:addText("Real UI:"):Place(50 - 11, 40)
-    p:addText(""):Place(-50)
+    p:addText("Real UI:"):Place(50, 40)
   end
 
   local autoInvite = p:addCheckBox("Auto invite", "Whether Slot 1 should auto invite, helps with cross realm sync")
-                       :Place()
+                       :Place(4, 30)
 
-  local invitingSlot = p:addSlider("Inviting Slot", "Sets which slot should be inviting", 1, 5):Place(11, 10) -- need more vspace
+  local invitingSlot = p:addSlider("Inviting Slot", "Sets which slot should be inviting", 1, 5):Place(16, 12) -- need more vspace
 
   autoInvite:SetScript("PostClick", function(w, button, down)
     DB:Debug(3, "ainv post click % %", button, down)
@@ -460,7 +466,7 @@ function DB.CreateOptionPanel()
     end
   end)
 
-  local debugLevel = p:addSlider("Debug level", "Sets the debug level", 0, 9, 1, "Off"):Place(0, 30)
+  local debugLevel = p:addSlider("Debug level", "Sets the debug level", 0, 9, 1, "Off"):Place(16, 40)
 
   function p:refresh()
     debugLevel:SetValue(DB.debug or 0)

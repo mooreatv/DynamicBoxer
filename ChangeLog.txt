@@ -2,6 +2,8 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 1.6.1 July 2nd 2019
 - add history of team mates so auto accepts of invite from non master works
+- UI library: the x offset for place is now relative to left margin so widget can be changed order
+  and still appear at the same horizontal offset
 1.6.0 July 2nd 2019
 - `dbox config` shows the config panel, which is also in standard addon interface tab (Issue #13)
   - Auto invite can be turned off in the UI and inviting slot can be changed

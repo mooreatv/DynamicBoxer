@@ -722,7 +722,7 @@ DB.EventD = {
     if DB.ticker then
       DB.ticker:Cancel() -- cancel previous one to resync timer
     end
-    DB.CreateOptionPanel()
+    DB.CreateOptionsPanel()
     DB.Sync() -- first one at load
     DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync) -- and one every refresh
   end,
