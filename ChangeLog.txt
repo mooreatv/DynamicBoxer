@@ -1,11 +1,23 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
-WIP 1.5.1 June 30th 2019
+1.6.0 July 1st 2019
 - `dbox config` shows the config panel, which is also in standard addon interface tab (Issue #13)
-- start of a (specialized) UI library
+  - Auto invite can be turned off in the UI and inviting slot can be changed
+  - Debug level can be set in the UI
+- New Auto Invite option/feature (from slot 1 by default)
+- New `/dbox party invite` (or you can short it as `/dbox p`) and `/dbox party disband`
+- Start of a (specialized for now, will move to MoLib UI eventually) UI library
   - Slider widget is better than stock (optional list of values/min/max labels/no wobbling (left indented))
+  - Switched to more natural positive y offsets to match x offsets
 - added `/dbox e[trace] s[ave]|c[clear]` to save current /etrace filters and /dbox e to start it with
   restoring the last saved filters -- only useful for devs/debugging
+
+Coming next:
+- More config options/features
+- Setup/use more master memory to avoid needing a `/dbox j` when when reloading just the master
+- More refinements on the above
+- Your input/suggestions welcome !
+- Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 1.5.0 June 29th 2019
 - Bug fix: chat message filters should drop duplicate consecutive line ids
@@ -22,12 +34,6 @@ WIP 1.5.1 June 30th 2019
 - lowered retry/refresh to 3s
 - don't popup the master dialog if we just did a full init `/dbox init`, take 2
 - don't reset max retries when trying to re join every 5 failures
-
-Coming next:
-- Setup/use more master memory to avoid needing a `/dbox j` when when reloading just the master
-- More refinements on the above
-- Your input/suggestions welcome !
-- Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 1.4.4 June 28th 2019
 - More checks for bad channel which seems to happen _sometimes_

@@ -75,6 +75,9 @@ DB.randomIdLen = 8 -- we generate 8 characters long random ids
 DB.tokenMinLen = DB.randomIdLen * 2 + 2 + 4
 DB.configVersion = 1 -- bump up to support conversion (and update the ADDON_LOADED handler)
 
+DB.autoInvite = 1 -- so it's discovered/useful by default
+DB.autoInviteSlot = 1
+
 DB.manual = 0 -- testing manual mode, 0 is off, number is slot id
 
 DB.EMA = _G.LibStub and _G.LibStub:GetLibrary("AceAddon-3.0", true)
@@ -169,6 +172,24 @@ function DB:SplitFullname(fullname)
     return
   end
   return fullname:match("(.+)-(.+)")
+end
+
+-- short name -> fullname
+function DB:NormalizeName(name)
+  if name:match("(.+)-(.+)") then
+    return name -- already has - so good to go
+  else
+    return name .. "-" .. DB.myRealm
+  end
+end
+-- name -> shortest working name
+function DB:ShortName(name)
+  local s, r = DB:SplitFullname(name)
+  if r == DB.myRealm then
+    DB:Debug(4, "% is on our realm, using %", name, s)
+    return s
+  end
+  return name
 end
 
 -- Reverse engineer what isboxer will hopefully be providing more directly soon
@@ -338,6 +359,7 @@ DB.firstMsg = 1
 DB.syncNum = 1
 
 -- TODO: separate / disentangle  channel and direct message sync
+-- TODO: stop using direct messages as soon as in party (with master), use party addon msgs
 function DB.Sync() -- called as ticker so no :
   local isActive = DB:IsActive()
   DB:Debug(9, "DB:Sync #% maxIter % active %", DB.syncNum, DB.maxIter, isActive)
@@ -455,6 +477,43 @@ DB.Team = {} -- TODO: save the team for caching/less waste upon reload (and/or c
 
 DB.duplicateMsg = DB:LRU(100)
 
+function DB:PartyInvite()
+  for k, v in pairs(DB.Team) do
+    DB:Debug(9, "k is %, v is %", k, v)
+    assert(k == v.slot)
+    if k == DB.ISBIndex then
+      DB:Debug("Slot %: is us, not inviting ourselves.", k)
+    elseif UnitInParty(v.new) then
+      DB:Debug("Slot %: % is already in our party/raid, won't re invite", k, v.fullName)
+    else
+      DB:PrintDefault("Inviting #%: %", k, v.fullName)
+      InviteUnit(v.fullName)
+    end
+  end
+end
+
+-- this actually either uninvite the team members (and maybe leaves guests and lead)
+-- or leaves the party if not leader.
+function DB:Disband()
+  if UnitIsGroupLeader("player") then
+    DB:Debug("We are party leader, uninvite everyone from the team")
+    for k, v in pairs(DB.Team) do
+      if k == DB.ISBIndex then
+        DB:Debug("Slot %: is us, not uninviting ourselves.", k)
+      elseif UnitInParty(v.new) then -- need to check using the shortname
+        DB:PrintDefault("Uninviting #%: %", k, v.fullName)
+        UninviteUnit(v.new) -- also need to be shortname
+      else
+        DB:Debug("Slot %: % is already not in our party/raid, won't uninvite", k, v.fullName)
+      end
+    end
+  else
+    -- just leave
+    DB:PrintDefault("Disband requested, we aren't party leader so we're just leaving")
+    LeaveParty()
+  end
+end
+
 -- Too bad addon messages don't work cross realm even through whisper
 -- (and yet they work with BN friends BUT they don't work with yourself!)
 -- TODO: refactor, this is too long / complicated for 1 function
@@ -538,12 +597,7 @@ function DB:ProcessMessage(source, from, data)
     end
     DB:Debug("P2P Send % / % slots back to %", count, DB.expectedCount, from)
   end
-  local shortName = realname
-  local s, r = DB:SplitFullname(realname)
-  if r == DB.myRealm then
-    DB:Debug(3, "% is on our realm so using %", realname, s)
-    shortName = s -- use the short name without realm when on same realm, using full name breaks (!)
-  end
+  local shortName = DB:ShortName(realname)
   -- we should do that after we joined our channel to get a chance to get completion
   if channelMessage and DB.newTeam and not DB.justInit and DB:WeAreMaster() and (DB.currentCount < DB.expectedCount) then
     DB:Warning("New (isboxer) team detected, on master, showing current token")
@@ -574,6 +628,16 @@ function DB:ProcessMessage(source, from, data)
     DB:Debug("Change of character received for slot %: was % -> now %", idx, previousMapping.fullName, realname)
   end
   DB.Team[idx] = {orig = DB.ISBTeam[idx], new = shortName, fullName = realname, slot = idx}
+  if DB.autoInvite and DB.autoInviteSlot == DB.ISBIndex and idx ~= DB.ISBIndex then
+    -- This check works for in raid too but must be short name
+    if UnitInParty(shortName) then
+      DB:Debug("Slot %: % is already in our party/raid, won't re invite", idx, realname)
+    else
+      DB:PrintDefault("Auto invite is on for our slot, inviting #%: % (turn off/configure in /dbox config if desired)",
+                      idx, realname)
+      InviteUnit(realname)
+    end
+  end
   if EMAApi then
     EMAApi.AddMember(realname)
   end
@@ -718,6 +782,23 @@ DB.EventD = {
     self:DebugEvCall(2, ...)
   end,
 
+  PARTY_INVITE_REQUEST = function(self, ev, from, ...)
+    self:DebugEvCall(1, ev, from, ...)
+    local n = DB:NormalizeName(from) -- invite from same realm will have the realm missing in from
+    if n == DB.MasterName or DB.masterHistory[DB.faction]:exists(n) then
+      DB:PrintDefault("Auto accepting invite from master % (%)", from, n)
+    elseif DB.TeamIdxByName[n] then
+      DB:PrintDefault("Auto accepting invite from % (%, slot %)", from, n, DB.TeamIdxByName[from])
+    else
+      DB:PrintDefault("Not auto accepting invite from % (%). our master is %; team is %)", from, n, DB.MasterName,
+                      DB.TeamIdxByName)
+      return
+    end
+    -- actual auto accept:
+    AcceptGroup()
+    StaticPopup_Hide("PARTY_INVITE")
+  end,
+
   ADDON_LOADED = function(self, _event, name)
     self:Debug(9, "Addon % loaded", name)
     if name ~= addon then
@@ -851,6 +932,7 @@ function DB:Help(msg)
                     "/dbox show -- shows the current token string.\n" ..
                     "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
                     "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
+                    "/dbox party inv||disband -- invites the party or disband it\n" ..
                     "/dbox config -- open addon config, dbox c works too\n" ..
                     "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
                     "/dbox reset team||token||master||all -- resets team or token or all, respectively\n" ..
@@ -905,6 +987,14 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
   elseif cmd == "i" then
     -- re do initialization
     DB:ForceInit()
+  elseif cmd == "p" then
+    if DB:StartsWith(rest, "d") or DB:StartsWith(rest, "u") then
+      -- party disband/uninvite
+      DB:Disband()
+    else
+      -- party invite
+      DB:PartyInvite()
+    end
   elseif DB:StartsWith(arg, "reset") then
     -- require reset to be spelled out (other r* are the random gen)
     if rest == "team" then

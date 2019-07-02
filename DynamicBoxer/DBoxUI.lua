@@ -310,19 +310,21 @@ function DB.CreateOptionPanel()
   DB:Debug("Creating Options Panel")
 
   -- Options panel and experimentation/beginning of a UI library
+  -- WARNING, Y axis is such as positive is down, unlike rest of the wow api which has + offset going up
+  -- but all the negative numbers all over, just for Y axis, got to me
 
   -- place inside the parent at offset x,y from corner of parent
   local placeInside = function(sf, x, y)
     x = x or 16
-    y = y or -16
-    sf:SetPoint("TOPLEFT", x, y)
+    y = y or 16
+    sf:SetPoint("TOPLEFT", x, -y)
     return sf
   end
   -- place below (previously placed item typically)
   local placeBelow = function(sf, below, x, y)
     x = x or 0
-    y = y or -8
-    sf:SetPoint("TOPLEFT", below, "BOTTOMLEFT", x, y)
+    y = y or 8
+    sf:SetPoint("TOPLEFT", below, "BOTTOMLEFT", x, -y)
     return sf
   end
 
@@ -376,6 +378,8 @@ function DB.CreateOptionPanel()
     lowL = lowL or tostring(minV)
     highL = highL or tostring(maxV)
     local s = CreateFrame("Slider", nil, self, "OptionsSliderTemplate")
+    s.DoDisable = BlizzardOptionsPanel_Slider_Disable -- what does enable/disable do ? seems we need to call these
+    s.DoEnable = BlizzardOptionsPanel_Slider_Enable
     s:SetValueStep(step)
     s:SetStepsPerPage(step)
     s:SetMinMaxValues(minV, maxV)
@@ -424,25 +428,77 @@ function DB.CreateOptionPanel()
     return object
   end
 
+  -- DB.widgetDemo= true -- to show the demo (or `DB:SetSaved("widgetDemo", true)`)
+
   -- TODO: look into i18n
   -- Q: maybe should just always auto place (add&place) ?
   p:addText("DynamicBoxer options", "GameFontNormalLarge"):Place()
   p:addText("These options let you control the behavior of DynamicBoxer " .. DB.manifestVersion):Place()
-  p:addText("testing 1 2 3"):Place()
-  local _cb1 = p:addCheckBox("A test checkbox", "A sample tooltip"):Place(0, -20) -- A: not here
-  local cb2 = p:addCheckBox("Another checkbox", "Another tooltip"):Place()
-  cb2:SetChecked(true)
-  local s1 = p:addSlider("Debug level", "Sets the debug level", 0, 9, 1, "Off"):Place(11, -22) -- need a bit more vertical space
-  s1:SetValue(3)
+  if DB.widgetDemo then
+    p:addText("Testing 1 2 3... demo widgets:"):Place(50, 20)
+    local _cb1 = p:addCheckBox("A test checkbox", "A sample tooltip"):Place(-50, 20) -- A: not here
+    local cb2 = p:addCheckBox("Another checkbox", "Another tooltip"):Place()
+    cb2:SetChecked(true)
+    local s2 = p:addSlider("Test slider", "Test slide tooltip", 1, 4, 1, "Test low", "Test high",
+                           {"Value 1", "Value 2", "Third one", "4th value"}):Place(11, 30)
+    s2:SetValue(4)
+    p:addText("Real UI:"):Place(50 - 11, 40)
+    p:addText(""):Place(-50)
+  end
 
-  local s2 = p:addSlider("Test slider", "Test slide tooltip", 1, 4, 1, "Test low", "Test high",
-                         {"Value 1", "Value 2", "Third one", "4th value"}):Place(0, -30)
-  s2:SetValue(4)
+  local autoInvite = p:addCheckBox("Auto invite", "Whether Slot 1 should auto invite, helps with cross realm sync")
+                       :Place()
+
+  local invitingSlot = p:addSlider("Inviting Slot", "Sets which slot should be inviting", 1, 5):Place(11, 10) -- need more vspace
+
+  autoInvite:SetScript("PostClick", function(w, button, down)
+    DB:Debug(3, "ainv post click % %", button, down)
+    if w:GetChecked() then
+      invitingSlot:DoEnable()
+    else
+      invitingSlot:DoDisable()
+    end
+  end)
+
+  local debugLevel = p:addSlider("Debug level", "Sets the debug level", 0, 9, 1, "Off"):Place(0, 30)
+
+  function p:refresh()
+    debugLevel:SetValue(DB.debug or 0)
+    invitingSlot:SetValue(DB.autoInviteSlot)
+    if DB.autoInvite then
+      autoInvite:SetChecked(true)
+      invitingSlot:DoEnable()
+    else
+      autoInvite:SetChecked(false)
+      invitingSlot:DoDisable()
+    end
+  end
 
   function p:HandleOk()
-    DB:Debug(2, "DB.optionsPanel.okay() internal")
+    DB:Debug(1, "DB.optionsPanel.okay() internal")
+    local sliderVal = debugLevel:GetValue()
+    if sliderVal == 0 then
+      sliderVal = nil
+      if DB.debug then
+        DB:PrintDefault("Options setting debug level changed from % to OFF.", DB.debug)
+      end
+    else
+      if DB.debug ~= sliderVal then
+        DB:PrintDefault("Options setting debug level changed from % to %.", DB.debug, sliderVal)
+      end
+    end
+    DB:SetSaved("debug", sliderVal)
+    local ainv = autoInvite:GetChecked()
+    DB:SetSaved("autoInvite", ainv)
+    local ainvSlot = invitingSlot:GetValue()
+    DB:SetSaved("autoInviteSlot", ainvSlot)
+    DB:PrintDefault("Configuration: auto invite is " .. (ainv and "ON" or "OFF") .. " for slot %", ainvSlot)
     -- DB:Warning("Generating lua error on purpose in p:HandleOk()")
     -- error("testing errors")
+  end
+
+  function p:cancel()
+    DB:Warning("Options screen cancelled, not making any changes.")
   end
 
   function p:okay()
