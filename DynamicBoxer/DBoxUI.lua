@@ -302,82 +302,114 @@ end
 
 --- Options panel ---
 
--- and experimentation/beginning of a UI library
+function DB.CreateOptionPanel()
+  if DB.optionsPanel then
+    DB:Debug("Options Panel already setup")
+    return
+  end
+  DB:Debug("Creating Options Panel")
 
-local placeInside = function(sf, x, y)
-  x = x or 16
-  y = y or -16
-  sf:SetPoint("TOPLEFT", x, y)
-  -- sf:SetPoint("RIGHT")
-  return sf
-end
-local placeBelow = function(sf, below, x, y)
-  x = x or 0
-  y = y or -8
-  sf:SetPoint("TOPLEFT", below, "BOTTOMLEFT", x, y)
-  -- sf:SetPoint("RIGHT")
-  return sf
-end
+  -- Options panel and experimentation/beginning of a UI library
 
-DB.optionsPanel = CreateFrame("Frame")
-DB.optionsPanel.name = "DynamicBoxer"
-DB.optionsPanel.addText = function(self, text, font)
-  font = font or "GameFontHighlightSmall" -- different default?
-  local f = self:CreateFontString(nil, "ARTWORK", font)
-  f:SetText(text)
-  f:SetJustifyH("LEFT")
-  f:SetJustifyV("TOP")
-  -- f:ClearAllPoints() - needed? for?
   -- place inside the parent at offset x,y from corner of parent
-  f.placeInside = placeInside
+  local placeInside = function(sf, x, y)
+    x = x or 16
+    y = y or -16
+    sf:SetPoint("TOPLEFT", x, y)
+    return sf
+  end
   -- place below (previously placed item typically)
-  f.placeBelow = placeBelow
-  return f
-end
--- DB.optionsPanel.id = 1
-
-DB.optionsPanel.addCheckBox = function(self, text, tooltip)
-  local name = nil --  "DB.cb.".. tostring(self.id) -- not needed
-  local c = CreateFrame("CheckButton", name, self, "InterfaceOptionsCheckButtonTemplate")
-  -- self.id = self.id + 1
-  -- c:ClearAllPoints()
-  c.Text:SetText(text)
-  if tooltip then
-    c.tooltipText = tooltip
+  local placeBelow = function(sf, below, x, y)
+    x = x or 0
+    y = y or -8
+    sf:SetPoint("TOPLEFT", below, "BOTTOMLEFT", x, y)
+    return sf
   end
-  c.placeInside = placeInside
-  c.placeBelow = placeBelow
-  return c
-end
--- TODO: look into i18n
 
-local title = DB.optionsPanel:addText("DynamicBoxer options", "GameFontNormalLarge"):placeInside()
-local subTitle = DB.optionsPanel:addText("These options let you control the behavior of DynamicBoxer " ..
-                                           DB.manifestVersion):placeBelow(title)
-local subTitle2 = DB.optionsPanel:addText("testing 1 2 3"):placeBelow(subTitle)
-local cb1 = DB.optionsPanel:addCheckBox("A test checkbox", "A sample tooltip"):placeBelow(subTitle2, 10, -20)
-local _cb2 = DB.optionsPanel:addCheckBox("Another checkbox", "Another tooltip"):placeBelow(cb1)
+  local p = CreateFrame("Frame")
+  DB.optionsPanel = p
+  p.name = "DynamicBoxer"
+  p.children = {}
 
-function DB.optionsPanel:HandleOk()
-  -- DB:Warning("Generating lua error on purpose in DB.optionsPanel:HandleOk()")
-  -- error("testing errors")
-end
-
-function DB.optionsPanel.okay()
-  DB:Debug("DB.optionsPanel.okay()")
-  if DB.debug then
-    -- expose errors
-    xpcall(function()
-      DB.optionsPanel:HandleOk()
-    end, geterrorhandler())
-  else
-    -- normal behavior for interface option panel: errors swallowed by caller
-    DB.optionsPanel:HandleOk()
+  -- to be used by the various factories/sub widget creation to add common methods to them
+  function p:addMethods(widget) -- put into MoGuiLib once good enough
+    widget.placeInside = placeInside
+    widget.placeBelow = placeBelow
+    widget.Place = function(...)
+      self:Place(...)
+    end -- add missing parent as first arg
+    widget.parent = self
+    table.insert(self.children, widget) -- keep track of children objects (mostly for debug)
   end
-end
 
--- Add the panel to the Interface Options
-InterfaceOptions_AddCategory(DB.optionsPanel)
+  p.addText = function(self, text, font)
+    font = font or "GameFontHighlightSmall" -- different default?
+    local f = self:CreateFontString(nil, "ARTWORK", font)
+    DB:Debug(8, "font string starts with % points", f:GetNumPoints())
+    f:SetText(text)
+    f:SetJustifyH("LEFT")
+    f:SetJustifyV("TOP")
+    self:addMethods(f)
+    return f
+  end
+
+  p.addCheckBox = function(self, text, tooltip)
+    -- local name= "DB.cb.".. tostring(self.id) -- not needed
+    local c = CreateFrame("CheckButton", nil, self, "InterfaceOptionsCheckButtonTemplate")
+    DB:Debug(8, "check box starts with % points", c:GetNumPoints())
+    c.Text:SetText(text)
+    if tooltip then
+      c.tooltipText = tooltip
+    end
+    self:addMethods(c)
+    return c
+  end
+
+  p.numObjects = 0
+
+  p.Place = function(self, object, optOffsetX, optOffsetY)
+    self.numObjects = self.numObjects + 1
+    if self.numObjects == 1 then
+      -- first object: place inside
+      object:placeInside(optOffsetX, optOffsetY)
+    else
+      object:placeBelow(self.lastAdded, optOffsetX, optOffsetY)
+      -- subsequent, place after the previous one
+    end
+    self.lastAdded = object
+    return self
+  end
+
+  -- TODO: look into i18n
+  -- Q: maybe should just always auto place (add&place) ?
+  p:addText("DynamicBoxer options", "GameFontNormalLarge"):Place()
+  p:addText("These options let you control the behavior of DynamicBoxer " .. DB.manifestVersion):Place()
+  p:addText("testing 1 2 3"):Place()
+  local _cb1 = p:addCheckBox("A test checkbox", "A sample tooltip"):Place(10, -20) -- A: not here
+  local _cb2 = p:addCheckBox("Another checkbox", "Another tooltip"):Place()
+
+  function p:HandleOk()
+    DB:Debug("DB.optionsPanel.okay() internal self is %", self)
+    -- DB:Warning("Generating lua error on purpose in p:HandleOk()")
+    -- error("testing errors")
+  end
+
+  function p:okay()
+    DB:Debug("DB.optionsPanel.okay() wrapper")
+    if DB.debug then
+      -- expose errors
+      xpcall(function()
+        self:HandleOk()
+      end, geterrorhandler())
+    else
+      -- normal behavior for interface option panel: errors swallowed by caller
+      self:HandleOk()
+    end
+  end
+
+  -- Add the panel to the Interface Options
+  InterfaceOptions_AddCategory(DB.optionsPanel)
+end
 
 ---
 
