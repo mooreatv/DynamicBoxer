@@ -1,5 +1,7 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+1.6.1 July 2nd 2019
+- add history of team mates so auto accepts of invite from non master works
 1.6.0 July 2nd 2019
 - `dbox config` shows the config panel, which is also in standard addon interface tab (Issue #13)
   - Auto invite can be turned off in the UI and inviting slot can be changed
@@ -7,7 +9,7 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 - New Auto Invite option/feature (from slot 1 by default)
 - New `/dbox party invite` (or you can short it as `/dbox p`) and `/dbox party disband`
 - Start of a (specialized for now, will move to MoLib UI eventually) UI library
-  - Slider widget is better than stock (optional list of values/min/max labels/no wobbling (left indented))
+  - Slider widget is better than st ock (optional list of values/min/max labels/no wobbling (left indented))
   - Switched to more natural positive y offsets to match x offsets
   - Sliders have a nice looking effect on DoDisable DoEnable
 - added `/dbox e[trace] s[ave]|c[clear]` to save current /etrace filters and /dbox e to start it with

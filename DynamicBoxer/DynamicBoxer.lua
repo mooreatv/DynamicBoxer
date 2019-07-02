@@ -52,8 +52,10 @@ DB.MasterToken = nil -- Nil will force UI/dialog setup (unless already saved in 
 DB.teamHistory = {}
 
 DB.masterHistory = {}
+DB.memberHistory = {}
 for _, faction in ipairs(DB.Factions) do
   DB.masterHistory[faction] = DB:LRU(50)
+  DB.memberHistory[faction] = DB:LRU(200)
 end
 
 DB.currentCount = 0 -- how many characters from the team have been mapped (ie size of sorted team)
@@ -426,13 +428,22 @@ function DB.Sync() -- called as ticker so no :
   end
 end
 
-function DB:AddMaster(masterName)
+function DB:AddToMasterHistory(masterName)
   DB.masterHistory[DB.faction]:add(masterName)
   if not dynamicBoxerSaved.serializedMasterHistory then
     dynamicBoxerSaved.serializedMasterHistory = {}
   end
   dynamicBoxerSaved.serializedMasterHistory[DB.faction] = DB.masterHistory[DB.faction]:toTable()
-  self:Debug(1, "New master % list newest at the end: %", masterName, dynamicBoxerSaved.serializedMasterHistory)
+  self:Debug(5, "New master % list newest at the end: %", masterName, dynamicBoxerSaved.serializedMasterHistory)
+end
+
+function DB:AddToMemberrHistory(memberName)
+  DB.memberHistory[DB.faction]:add(memberName)
+  if not dynamicBoxerSaved.serializedMemberHistory then
+    dynamicBoxerSaved.serializedMemberHistory = {}
+  end
+  dynamicBoxerSaved.serializedMemberHistory[DB.faction] = DB.memberHistory[DB.faction]:toTable()
+  self:Debug(5, "New member % list newest at the end: %", memberName, dynamicBoxerSaved.serializedMemberHistory)
 end
 
 -- Deal with issue#10 by sorting by inverse of length, to replace most specific first (step 1/2)
@@ -659,7 +670,9 @@ function DB:ProcessMessage(source, from, data)
     DB:PrintInfo("New mapping for slot %, dynamically set ISBoxer character to % (%)", idx, shortName, realname)
   end
   if idx == 1 then
-    DB:AddMaster(realname)
+    DB:AddToMasterHistory(realname)
+  else
+    DB:AddToMemberrHistory(realname)
   end
   if teamComplete then
     DB:PrintInfo("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!", DB.currentCount)
@@ -785,10 +798,14 @@ DB.EventD = {
   PARTY_INVITE_REQUEST = function(self, ev, from, ...)
     self:DebugEvCall(1, ev, from, ...)
     local n = DB:NormalizeName(from) -- invite from same realm will have the realm missing in from
-    if n == DB.MasterName or DB.masterHistory[DB.faction]:exists(n) then
-      DB:PrintDefault("Auto accepting invite from master % (%)", from, n)
+    if n == DB.MasterName then
+      DB:PrintDefault("Auto accepting invite from current master % (%)", from, n)
+    elseif DB.masterHistory[DB.faction]:exists(n) then
+      DB:PrintDefault("Auto accepting invite from past master % (%)", from, n)
     elseif DB.TeamIdxByName[n] then
-      DB:PrintDefault("Auto accepting invite from % (%, slot %)", from, n, DB.TeamIdxByName[from])
+      DB:PrintDefault("Auto accepting invite from current team member % (%, slot %)", from, n, DB.TeamIdxByName[n])
+    elseif DB.memberHistory[DB.faction]:exists(n) then
+      DB:PrintDefault("Auto accepting invite from past team member % (%)", from, n)
     else
       DB:PrintDefault("Not auto accepting invite from % (%). our master is %; team is %)", from, n, DB.MasterName,
                       DB.TeamIdxByName)
@@ -836,6 +853,12 @@ DB.EventD = {
           end
           for _, faction in ipairs(DB.Factions) do
             DB.masterHistory[faction]:fromTable(dynamicBoxerSaved.serializedMasterHistory[faction])
+          end
+          if not dynamicBoxerSaved.serializedMemberHistory then
+            dynamicBoxerSaved.serializedMemberHistory = {}
+          end
+          for _, faction in ipairs(DB.Factions) do
+            DB.memberHistory[faction]:fromTable(dynamicBoxerSaved.serializedMemberHistory[faction])
           end
           self:Debug(3, "Loaded valid saved vars %", dynamicBoxerSaved)
           return
@@ -935,7 +958,7 @@ function DB:Help(msg)
                     "/dbox party inv||disband -- invites the party or disband it\n" ..
                     "/dbox config -- open addon config, dbox c works too\n" ..
                     "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
-                    "/dbox reset team||token||master||all -- resets team or token or all, respectively\n" ..
+                    "/dbox reset team||token||master||members||all -- resets one part of saved variables or all, respectively\n" ..
                     "/dbox version -- shows addon version")
 end
 
@@ -1009,6 +1032,15 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
         DB:Warning("Master history for % cleared per request, will likely need manual /dbox show next login", DB.faction)
       else
         DB:Warning("No master history to clear")
+      end
+    elseif rest == "member" then
+      if dynamicBoxerSaved.serializedMemberHistory then
+        dynamicBoxerSaved.serializedMemberHistory[DB.faction] = {}
+        DB:Warning(
+          "Members history for % cleared per request, auto accept invite from non master may not work next login",
+          DB.faction)
+      else
+        DB:Warning("No member history to clear")
       end
     elseif rest == "all" then
       dynamicBoxerSaved = nil -- any subsequent DB:SetSaved will fail...
