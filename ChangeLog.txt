@@ -9,8 +9,10 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 - Start of a (specialized for now, will move to MoLib UI eventually) UI library
   - Slider widget is better than stock (optional list of values/min/max labels/no wobbling (left indented))
   - Switched to more natural positive y offsets to match x offsets
+  - Sliders have a nice looking effect on DoDisable DoEnable
 - added `/dbox e[trace] s[ave]|c[clear]` to save current /etrace filters and /dbox e to start it with
   restoring the last saved filters -- only useful for devs/debugging
+- Bug fix: the dbox show dialog wasn't properly auto hiding when team is complete
 
 Coming next:
 - More config options/features

@@ -295,7 +295,7 @@ function DB:HideTokenUI()
   if DB:WeAreMaster() then
     StaticPopup_Hide("DYNBOXER_MASTER")
   else
-    StaticPopup_Hide("DYNBOXER_MASTER")
+    StaticPopup_Hide("DYNBOXER_SLAVE")
   end
   DB.inUI = false
 end
