@@ -1,6 +1,6 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
-1.6.0 July 1st 2019
+1.6.0 July 2nd 2019
 - `dbox config` shows the config panel, which is also in standard addon interface tab (Issue #13)
   - Auto invite can be turned off in the UI and inviting slot can be changed
   - Debug level can be set in the UI
