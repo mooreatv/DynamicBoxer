@@ -335,10 +335,12 @@ function DB.CreateOptionPanel()
   function p:addMethods(widget) -- put into MoGuiLib once good enough
     widget.placeInside = placeInside
     widget.placeBelow = placeBelow
-    widget.Place = function(...)
-      self:Place(...)
-    end -- add missing parent as first arg
     widget.parent = self
+    widget.Place = function(...)
+      -- add missing parent as first arg
+      widget.parent:Place(...)
+      return widget -- because :Place is typically last, so don't return parent/self but the widget
+    end
     table.insert(self.children, widget) -- keep track of children objects (mostly for debug)
   end
 
@@ -365,6 +367,48 @@ function DB.CreateOptionPanel()
     return c
   end
 
+  -- create a slider with the range [minV...maxV] and optional step, low/high labels and optional
+  -- strings to print in parenthesis after the text title
+  p.addSlider = function(self, text, tooltip, minV, maxV, step, lowL, highL, valueLabels)
+    minV = minV or 0
+    maxV = maxV or 10
+    step = step or 1
+    lowL = lowL or tostring(minV)
+    highL = highL or tostring(maxV)
+    local s = CreateFrame("Slider", nil, self, "OptionsSliderTemplate")
+    s:SetValueStep(step)
+    s:SetStepsPerPage(step)
+    s:SetMinMaxValues(minV, maxV)
+    s:SetObeyStepOnDrag(true)
+    s.Text:SetFontObject(GameFontNormal)
+    -- not centered, so changing (value) doesn't wobble the whole thing
+    -- (justifyH left alone didn't work because the point is also centered)
+    s.Text:SetPoint("LEFT", s, "TOPLEFT", 6, 0)
+    s.Text:SetJustifyH("LEFT")
+    s.Text:SetText(text)
+    if tooltip then
+      s.tooltipText = tooltip
+    end
+    s.Low:SetText(lowL)
+    s.High:SetText(highL)
+    s:SetScript("OnValueChanged", function(w, value)
+      local sVal
+      if valueLabels and valueLabels[value] then
+        sVal = valueLabels[value]
+      else
+        sVal = tostring(value)
+        if value == minV then
+          sVal = lowL
+        elseif value == maxV then
+          sVal = highL
+        end
+      end
+      w.Text:SetText(text .. " (" .. sVal .. ")")
+    end)
+    self:addMethods(s)
+    return s
+  end
+
   p.numObjects = 0
 
   p.Place = function(self, object, optOffsetX, optOffsetY)
@@ -377,7 +421,7 @@ function DB.CreateOptionPanel()
       -- subsequent, place after the previous one
     end
     self.lastAdded = object
-    return self
+    return object
   end
 
   -- TODO: look into i18n
@@ -385,17 +429,24 @@ function DB.CreateOptionPanel()
   p:addText("DynamicBoxer options", "GameFontNormalLarge"):Place()
   p:addText("These options let you control the behavior of DynamicBoxer " .. DB.manifestVersion):Place()
   p:addText("testing 1 2 3"):Place()
-  local _cb1 = p:addCheckBox("A test checkbox", "A sample tooltip"):Place(10, -20) -- A: not here
-  local _cb2 = p:addCheckBox("Another checkbox", "Another tooltip"):Place()
+  local _cb1 = p:addCheckBox("A test checkbox", "A sample tooltip"):Place(0, -20) -- A: not here
+  local cb2 = p:addCheckBox("Another checkbox", "Another tooltip"):Place()
+  cb2:SetChecked(true)
+  local s1 = p:addSlider("Debug level", "Sets the debug level", 0, 9, 1, "Off"):Place(11, -22) -- need a bit more vertical space
+  s1:SetValue(3)
+
+  local s2 = p:addSlider("Test slider", "Test slide tooltip", 1, 4, 1, "Test low", "Test high",
+                         {"Value 1", "Value 2", "Third one", "4th value"}):Place(0, -30)
+  s2:SetValue(4)
 
   function p:HandleOk()
-    DB:Debug("DB.optionsPanel.okay() internal self is %", self)
+    DB:Debug(2, "DB.optionsPanel.okay() internal")
     -- DB:Warning("Generating lua error on purpose in p:HandleOk()")
     -- error("testing errors")
   end
 
   function p:okay()
-    DB:Debug("DB.optionsPanel.okay() wrapper")
+    DB:Debug(3, "DB.optionsPanel.okay() wrapper")
     if DB.debug then
       -- expose errors
       xpcall(function()

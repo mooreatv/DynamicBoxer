@@ -13,6 +13,7 @@ globals = {
     "EventTraceFrame_HandleSlashCmd",
     "EventTraceFrame_OnShow",
     "geterrorhandler",
+    "GameFontNormal",
     "GetChannelName",
     "GetServerTime",
     "GetTime",
