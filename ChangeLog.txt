@@ -6,7 +6,7 @@ Coming next:
 - Your input/suggestions welcome !
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-1.7.1 July 3rd 2019
+1.8.0 July 3rd 2019
 - Adding optional key bindings for `/dbox show`, `/dbox party invite`, `/dbox party disband` and more (Issue #32)
 - GUI library now supports dropdowns too; used for `/dbox reset` options/UI
 - Changed tooltip color for `/dbox` commands to steel blue (same as the "Team complete" and other PrintInfo color)
