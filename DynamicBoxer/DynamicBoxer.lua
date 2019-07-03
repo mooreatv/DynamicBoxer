@@ -65,7 +65,7 @@ DB.expectedCount = 0 -- how many slots we expect to see/map
 -- DB.debug = 9
 
 DB.maxIter = 1 -- We really only need to send the message once (and resend when seeing join from others, batched)
-DB.refresh = 3
+DB.refresh = 2
 DB.totalRetries = 0
 DB.maxRetries = 20 -- after 20s we stop/give up
 
@@ -326,17 +326,45 @@ function DB:DebugLogWrite(what)
   table.insert(dynamicBoxerSaved.debugLog, ts .. what)
 end
 
+function DB:InPartyWith(name)
+  local shortName = DB:ShortName(name)
+  return UnitInParty(shortName)
+end
+
 DB.sentMessageCount = 0
 
 function DB:SendDirectMessage(to, payload)
   DB.sentMessageCount = DB.sentMessageCount + 1
+  if to == DB.fullName then
+    local msg = "Trying to send message to ourselves !"
+    DB:Error(msg)
+    return
+  end
+  if DB.sentMessageCount > 200 then
+    DB:Error("Sent too many messages (loop?) - stopping now")
+    return
+  end
   local secureMessage, messageId = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
-  DB:DebugLogWrite(messageId .. " :        To: " .. to .. " : " .. payload)
+  local inParty = DB:InPartyWith(to)
+  local inPartyMarker
+  if inParty then
+    inPartyMarker = "*P*"
+  else
+    inPartyMarker = "   "
+  end
+  DB:DebugLogWrite(messageId .. " :   " .. inPartyMarker .. "    To: " .. to .. " : " .. payload)
   local toSend = DB.whisperPrefix .. secureMessage
   -- must stay under 255 bytes, we are around 96 bytes atm (depends on character name (accentuated characters count double)
   -- and realm length, the hash alone is 16 bytes)
   DB:Debug(2, "About to send message #% id % to % len % msg=%", DB.sentMessageCount, messageId, to, #toSend, toSend)
-  -- local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", DB.MasterName) -- doesn't work cross realm
+  if inParty then
+    local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "RAID")
+    DB:Debug("we are in party with %, used party/raid msg, ret=%", to, ret)
+    if ret then
+      return messageId -- mission accomplished
+    end
+    DB:Warning("Can't send party/raid addon message #%, reverting to whisper", DB.sentMessageCount)
+  end
   SendChatMessage(toSend, "WHISPER", nil, to) -- returns nothing even if successful (!)
   -- We would need to watch (asynchronously, for how long ?) for CHAT_MSG_WHISPER_INFORM for success or CHAT_MSG_SYSTEM for errors
   -- instead we'll expect to get a reply from the master and if we don't then we'll try another/not have mapping
@@ -400,8 +428,8 @@ function DB.Sync() -- called as ticker so no :
       DB:SendDirectMessage(DB.MasterName, payload)
       if DB.firstMsg == 1 and DB.maxIter <= 0 then
         DB:Debug("Cross realm sync, first time, increasing msg sync to 2 more")
-        -- we have to sync twice to complete the team (if all goes well)
-        DB.maxIter = 2 -- give it an extra attempt in case 1 slave is slow
+        -- we have to sync twice to complete the team (if all goes well, but it's faster with party invite)
+        DB.maxIter = 3 -- give it a couple extra attempts in case 1 slave is slow
       end
     end
   end
@@ -531,12 +559,17 @@ end
 function DB:ProcessMessage(source, from, data)
   local doForward = nil
   local channelMessage = (source == "CHANNEL")
+  local directMessage = (source == "WHISPER" or source == "CHAT_FILTER")
+  if from == DB.fullName then
+    DB:Debug(2, "Skipping our own message on %: %", source, data)
+    return
+  end
   if not channelMessage then
     -- check authenticity (channel sends unsigned messages)
     local valid, msg, lag, msgId = DB:VerifySecureMessage(data, DB.Channel, DB.Secret)
     if valid then
-      DB:Debug(2, "Received valid secure message from % lag is %s, msg id is % part of full message %", from, lag,
-               msgId, data)
+      DB:Debug(2, "Received valid secure direct=% message from % lag is %s, msg id is % part of full message %",
+               directMessage, from, lag, msgId, data)
       local isDup = false
       if DB.duplicateMsg:exists(msgId) then
         DB:Warning("!!!Received % duplicate msg from %, will ignore: %", source, from, data)
@@ -586,7 +619,7 @@ function DB:ProcessMessage(source, from, data)
                realname)
       return
     end
-    -- TODO: count how many msg we sent to who so we don't get tricked (or bugged) into flood
+    -- TODO: we count direct messages now but maybe also count channel messages to detect possible loop/dup msg issues
     if DB:CheckChannelOk("Msg Fwd") then
       local payload = DB:SlotCommand(idx, realname, 0) -- drop/patch the force flag out
       local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
@@ -648,6 +681,9 @@ function DB:ProcessMessage(source, from, data)
                       idx, realname)
       InviteUnit(realname)
     end
+  else
+    DB:Debug("Slot % not inviting slot % - auto inv slot is %, auto invite is %", DB.ISBIndex, idx, DB.autoInviteSlot,
+             DB.autoInvite)
   end
   if EMAApi then
     EMAApi.AddMember(realname)
@@ -704,7 +740,8 @@ end
 function DB:ChatAddonMsg(event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
   DB:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", self:GetName(),
            event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
-  if prefix == DB.chatPrefix and ((channel == "CHANNEL" and instanceID == DB.joinedChannel) or channel == "WHISPER") then
+  if prefix == DB.chatPrefix and
+    ((channel == "CHANNEL" and instanceID == DB.joinedChannel) or channel == "WHISPER" or channel == "PARTY") then
     DB:ProcessMessage(channel, sender, data)
     return
   end

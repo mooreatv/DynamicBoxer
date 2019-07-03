@@ -466,7 +466,9 @@ function DB.CreateOptionsPanel()
     end
   end)
 
-  local debugLevel = p:addSlider("Debug level", "Sets the debug level", 0, 9, 1, "Off"):Place(16, 40)
+  p:addText("Development, troubleshooting and advanced options:"):Place(40,40)
+
+  local debugLevel = p:addSlider("Debug level", "Sets the debug level", 0, 9, 1, "Off"):Place(16, 30)
 
   function p:refresh()
     debugLevel:SetValue(DB.debug or 0)
