@@ -684,10 +684,12 @@ end
 --- Bindings settings (i18n/l10n)
 _G.DYNAMICBOXER = "DynamicBoxer"
 _G.BINDING_HEADER_DYNAMICBOXER = "DynamicBoxer addon key bindings"
-_G.BINDING_NAME_DBOX_SHOW = "Show token  ( |cFF99E5FF/dbox show|r )"
-_G.BINDING_NAME_DBOX_PING = "Send ping  ( |cFF99E5FF/dbox m|r )"
 _G.BINDING_NAME_DBOX_INVITE = "Invite team  ( |cFF99E5FF/dbox party invite|r )"
 _G.BINDING_NAME_DBOX_DISBAND = "Disband  ( |cFF99E5FF/dbox party disband|r )"
+_G.BINDING_NAME_DBOX_SHOW = "Show token  ( |cFF99E5FF/dbox show|r )"
+_G.BINDING_NAME_DBOX_PING = "Send ping  ( |cFF99E5FF/dbox m|r )"
+_G.BINDING_NAME_DBOX_JOIN = "Send join  ( |cFF99E5FF/dbox j|r )"
+_G.BINDING_NAME_DBOX_CONFIG = "Config  ( |cFF99E5FF/dbox config|r )"
 
 ---
 

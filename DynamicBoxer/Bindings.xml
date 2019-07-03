@@ -16,4 +16,10 @@
     <Binding name="DBOX_PING" category="DYNAMICBOXER">
         DynBoxer.Slash("message")
     </Binding>
+    <Binding name="DBOX_JOIN" category="DYNAMICBOXER">
+        DynBoxer.Slash("join")
+    </Binding>
+    <Binding name="DBOX_CONFIG" category="DYNAMICBOXER">
+        DynBoxer.Slash("config")
+    </Binding>
 </Bindings>
