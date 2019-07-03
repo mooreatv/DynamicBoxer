@@ -1,0 +1,19 @@
+<!--
+   DynamicBoxer: Dynamic Team Multiboxing by MooreaTV moorea@ymail.com (c) 2019 All rights reserved
+   Licensed under LGPLv3 - No Warranty
+   (contact the author if you need a different license)
+-->
+<Bindings>
+    <Binding name="DBOX_INVITE" header="DYNAMICBOXER" category="DYNAMICBOXER">
+        DynBoxer.Slash("party invite")
+    </Binding>
+    <Binding name="DBOX_DISBAND" category="DYNAMICBOXER">
+        DynBoxer.Slash("party disband")
+    </Binding>
+    <Binding name="DBOX_SHOW" category="DYNAMICBOXER">
+        DynBoxer.Slash("show")
+    </Binding>
+    <Binding name="DBOX_PING" category="DYNAMICBOXER">
+        DynBoxer.Slash("message")
+    </Binding>
+</Bindings>

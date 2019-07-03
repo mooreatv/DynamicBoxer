@@ -994,8 +994,8 @@ function DB:Help(msg)
                     "/dbox party inv||disband -- invites the party or disband it\n" ..
                     "/dbox config -- open addon config, dbox c works too\n" ..
                     "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
-                    "/dbox reset teams||token||masters||members||all -- resets one part of saved variables or all, respectively\n" ..
-                    "/dbox version -- shows addon version")
+                    "/dbox reset teams||token||masters||members||all -- resets one part of saved variables or all, respectively" ..
+                    "\n/dbox version -- shows addon version")
 end
 
 function DB:SetSaved(name, value)

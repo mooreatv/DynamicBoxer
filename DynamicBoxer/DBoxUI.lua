@@ -315,7 +315,7 @@ function DB.CreateOptionsPanel()
 
   local p = CreateFrame("Frame")
   DB.optionsPanel = p
-  p.name = "DynamicBoxer"
+  p.name = _G.DYNAMICBOXER
   p.children = {}
   p.numObjects = 0
 
@@ -544,12 +544,11 @@ function DB.CreateOptionsPanel()
 
   -- TODO tooltip formatting and maybe auto add the /dbox command
 
-  p:addButton("Invite Team",
-              "Invites to the party the team members\ndetected so far and not already in party\n|cFF99E5FF/dbox p|r",
-              "party invite"):PlaceRight()
+  p:addButton("Invite Team", "Invites to the party the team members\ndetected so far and not already in party\n" ..
+                "|cFF99E5FF/dbox p|r or Key Binding", "party invite"):PlaceRight()
 
   p:addButton("Disband", "If party leader, Uninvite the members of the team,\npossibly leaving guests." ..
-                "Otherwise, leave the party\n|cFF99E5FF/dbox p disband|r", "party disband"):PlaceRight()
+                "Otherwise, leave the party\n|cFF99E5FF/dbox p disband|r or Key Binding", "party disband"):PlaceRight()
 
   local invitingSlot = p:addSlider("Party leader Slot", "Sets which slot should be doing the party inviting", 1, 5)
                          :Place(16, 12) -- need more vspace
@@ -564,7 +563,8 @@ function DB.CreateOptionsPanel()
   end)
 
   p:addButton("Show/Set Token", "Shows the UI to show or set the current token string\n" ..
-                "(shows on master for copying or to paste it on slaves)\n|cFF99E5FF/dbox show|r", "show"):Place(0, 20)
+                "(shows on master for copying or to paste it on slaves)\n|cFF99E5FF/dbox show|r or Key Binding", "show")
+    :Place(0, 20)
 
   p:addText("Development, troubleshooting and advanced options:"):Place(40, 20)
 
@@ -679,6 +679,15 @@ function DB.CreateOptionsPanel()
   -- Add the panel to the Interface Options
   InterfaceOptions_AddCategory(DB.optionsPanel)
 end
+
+---
+--- Bindings settings (i18n/l10n)
+_G.DYNAMICBOXER = "DynamicBoxer"
+_G.BINDING_HEADER_DYNAMICBOXER = "DynamicBoxer addon key bindings"
+_G.BINDING_NAME_DBOX_SHOW = "Show token  ( |cFF99E5FF/dbox show|r )"
+_G.BINDING_NAME_DBOX_PING = "Send ping  ( |cFF99E5FF/dbox m|r )"
+_G.BINDING_NAME_DBOX_INVITE = "Invite team  ( |cFF99E5FF/dbox party invite|r )"
+_G.BINDING_NAME_DBOX_DISBAND = "Disband  ( |cFF99E5FF/dbox party disband|r )"
 
 ---
 
