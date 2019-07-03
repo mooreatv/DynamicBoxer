@@ -1,5 +1,11 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
+Coming next:
+- Setup/use more master memory to avoid needing a `/dbox j` when when reloading just the master
+- More refinements on options panel and other features
+- Your input/suggestions welcome !
+- Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
+
 1.7.0 July 2nd 2019
 - Now uses raid/party addon chat when possible to speed up cross realm team synchronization
 - Added some anti-loop/flood protections
@@ -24,13 +30,6 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 - added `/dbox e[trace] s[ave]|c[clear]` to save current /etrace filters and /dbox e to start it with
   restoring the last saved filters -- only useful for devs/debugging
 - Bug fix: the dbox show dialog wasn't properly auto hiding when team is complete
-
-Coming next:
-- More config options/features
-- Setup/use more master memory to avoid needing a `/dbox j` when when reloading just the master
-- More refinements on the above
-- Your input/suggestions welcome !
-- Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 1.5.0 June 29th 2019
 - Bug fix: chat message filters should drop duplicate consecutive line ids
