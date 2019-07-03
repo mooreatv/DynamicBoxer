@@ -389,7 +389,6 @@ DB.firstMsg = 1
 DB.syncNum = 1
 
 -- TODO: separate / disentangle  channel and direct message sync
--- TODO: stop using direct messages as soon as in party (with master), use party addon msgs
 function DB.Sync() -- called as ticker so no :
   local isActive = DB:IsActive()
   DB:Debug(9, "DB:Sync #% maxIter % active %", DB.syncNum, DB.maxIter, isActive)
