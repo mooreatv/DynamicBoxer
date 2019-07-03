@@ -333,6 +333,13 @@ function DB.CreateOptionsPanel()
     sf:SetPoint("TOPLEFT", below, "BOTTOMLEFT", x, -y)
     return sf
   end
+  -- place to the right of last widget
+  local placeRight = function(sf, nextTo, x, y)
+    x = x or 16
+    y = y or 0
+    sf:SetPoint("TOPLEFT", nextTo, "TOPRIGHT", x, -y)
+    return sf
+  end
 
   -- Place (below) relative to previous one. optOffsetX is relative to the left margin
   -- established by first widget placed (placeInside)
@@ -352,20 +359,20 @@ function DB.CreateOptionsPanel()
       self.leftMargin = optOffsetX
     end
     self.lastAdded = object
+    self.lastLeft = object
     return object
   end
 
   p.PlaceRight = function(self, object, optOffsetX, optOffsetY)
     self.numObjects = self.numObjects + 1
-    DB:Debug(7, "called PlaceRight % n % o %", self.name, self.numObjects, self.leftMargin)
     if self.numObjects == 1 then
       error("PlaceRight() should not be the first call, Place() should")
     end
-    optOffsetX = optOffsetX or 0
-    -- subsequent, place after the previous one but relative to initial left margin
-    object:placeBelow(self.lastAdded, optOffsetX - self.leftMargin, optOffsetY)
-    self.leftMargin = optOffsetX
-    self.lastAdded = object
+    -- place to the right of previous one on the left
+    -- if the previous widget has text, add the text length (eg for check buttons)
+    local x = (optOffsetX or 16) + (self.lastLeft.extraWidth or 0)
+    object:placeRight(self.lastLeft, x, optOffsetY)
+    self.lastLeft = object
     return object
   end
 
@@ -373,11 +380,16 @@ function DB.CreateOptionsPanel()
   function p:addMethods(widget) -- put into MoGuiLib once good enough
     widget.placeInside = placeInside
     widget.placeBelow = placeBelow
+    widget.placeRight = placeRight
     widget.parent = self
     widget.Place = function(...)
       -- add missing parent as first arg
       widget.parent:Place(...)
       return widget -- because :Place is typically last, so don't return parent/self but the widget
+    end
+    widget.PlaceRight = function(...)
+      widget.parent:PlaceRight(...)
+      return widget
     end
     table.insert(self.children, widget) -- keep track of children objects (mostly for debug)
   end
@@ -402,6 +414,7 @@ function DB.CreateOptionsPanel()
       c.tooltipText = tooltip
     end
     self:addMethods(c)
+    c.extraWidth = c.Text:GetWidth()
     return c
   end
 
@@ -443,26 +456,36 @@ function DB.CreateOptionsPanel()
           sVal = highL
         end
       end
-      w.Text:SetText(text .. " (" .. sVal .. ")")
+      w.Text:SetText(text .. ": " .. sVal)
     end)
     self:addMethods(s)
     return s
   end
 
-  p.addButton = function(self, text, tooltip, callback)
+  -- the call back is either a function or a command to send to DB.Slash
+  p.addButton = function(self, text, tooltip, cb)
     -- local name= "DB.cb.".. tostring(self.id) -- not needed
     local c = CreateFrame("Button", nil, self, "UIPanelButtonTemplate")
     c.Text:SetText(text)
     c:SetWidth(c.Text:GetStringWidth() + 20) -- need some extra spaces for corners
     if tooltip then
-      c.tooltipText = tooltip
+      c.tooltipText = tooltip -- TODO: style/font is wrong
     end
     self:addMethods(c)
+    local callback = cb
+    if type(cb) == "string" then
+      DB:Debug("Setting callback for % to call Slash(%)", text, cb)
+      callback = function()
+        DB.Slash(cb)
+      end
+    else
+      DB:Debug("Keeping original function for %", text)
+    end
     c:SetScript("OnClick", callback)
     return c
   end
 
-  DB.widgetDemo = true -- to show the demo (or `DB:SetSaved("widgetDemo", true)`)
+  --  DB.widgetDemo = true -- to show the demo (or `DB:SetSaved("widgetDemo", true)`)
 
   -- TODO: look into i18n
   -- Q: maybe should just always auto place (add&place) ?
@@ -479,10 +502,20 @@ function DB.CreateOptionsPanel()
     p:addText("Real UI:"):Place(50, 40)
   end
 
-  local autoInvite = p:addCheckBox("Auto invite", "Whether Slot 1 should auto invite, helps with cross realm sync")
-                       :Place(4, 30)
+  local autoInvite = p:addCheckBox("Auto invite", "Whether one of the slot should auto invite the others\n" ..
+                                     "it also helps with cross realm teams sync"):Place(4, 30)
 
-  local invitingSlot = p:addSlider("Inviting Slot", "Sets which slot should be inviting", 1, 5):Place(16, 12) -- need more vspace
+  -- TODO tooltip formatting and maybe auto add the /dbox command
+
+  p:addButton("Invite Team",
+              "Invites to the party the team members\ndetected so far and not already in party\n|cFFFFFF00/dbox p|r",
+              "party invite"):PlaceRight()
+
+  p:addButton("Disband", "If party leader, Uninvite the members of the team,\npossibly leaving guests." ..
+                "Otherwise, leave the party\n|cFFFFFF00/dbox p disband|r", "party disband"):PlaceRight()
+
+  local invitingSlot = p:addSlider("Party leader Slot", "Sets which slot should be doing the party inviting", 1, 5)
+                         :Place(16, 12) -- need more vspace
 
   autoInvite:SetScript("PostClick", function(w, button, down)
     DB:Debug(3, "ainv post click % %", button, down)
@@ -493,13 +526,64 @@ function DB.CreateOptionsPanel()
     end
   end)
 
-  p:addText("Development, troubleshooting and advanced options:"):Place(40, 40)
+  p:addButton("Show/Set Token",
+              "Shows the UI to show or set the current token string\n(shows on master for copying or to paste it on slaves)\n|cFFFFFF00/dbox show|r",
+              "show"):Place(0, 20)
 
-  local debugLevel = p:addSlider("Debug level", "Sets the debug level", 0, 9, 1, "Off"):Place(16, 30)
+  p:addText("Development, troubleshooting and advanced options:"):Place(40, 20)
 
-  p:addButton("Event Trace", "Starts the blizzard Event Trace with DynamicBoxer saved filters", function()
-    DB.Slash("e")
-  end):Place(0, 20)
+  p:addButton("Re Init", "Re initializes like the first time setup.\n|cFFFFFF00/dbox init|r", "init"):Place(0, 20)
+  p:addButton("Join", "Attempts to resync the team by\nsending a message requiring reply\n|cFFFFFF00/dbox j|r", "join")
+    :PlaceRight()
+  p:addButton("Ping", "Attempts to resync the team by\nsending a message\n|cFFFFFF00/dbox m|r", "message"):PlaceRight()
+
+  local debugLevel = p:addSlider("Debug level", "Sets the debug level\n|cFFFFFF00/dbox debug X|r", 0, 9, 1, "Off")
+                       :Place(16, 30)
+
+  p:addButton("Event Trace", "Starts the blizzard Event Trace with DynamicBoxer saved filters\n|cFFFFFF00/dbox event|r",
+              "event"):Place(0, 20)
+
+  p:addButton("Save Filters", "Saves the set of currently filtered Events\n|cFFFFFF00/dbox event save|r", "event save")
+    :PlaceRight()
+
+  p:addButton("Clear Filters", "Clear saved filtered Events\n|cFFFFFF00/dbox event clear|r", "event clear"):PlaceRight()
+
+  local adv = p:addCheckBox("Show reset options", "Show dev/advanced only dangerous options"):Place(0, 20)
+
+  -- TODO add confirmation before reset all and a dropdown widget
+  p:addButton("Reset All",
+              "Resets all the DynamicBoxer saved variables\n(reload needed after this)\n|cFFFFFF00/dbox reset all|r",
+              "reset all"):Place()
+
+  local rx = 30
+  local ry = -1
+  p:addButton("Reset Team", "Reset the isboxer team detection\n(for next login)\n|cFFFFFF00/dbox reset team|r",
+              "reset team"):Place(rx, ry)
+
+  p:addButton("Reset Token",
+              "Forgets the secure token,\nwill cause the Show/Set dialog for next login\n|cFFFFFF00/dbox reset token|r",
+              "reset team"):Place(rx, ry)
+
+  p:addButton("Reset Master History",
+              "Resets the master history for this faction\n(will require setting next login)\n|cFFFFFF00/dbox reset master|r",
+              "reset masters"):Place(rx, ry)
+
+  p:addButton("Reset Members History",
+              "Resets the team members history for this faction\n|cFFFFFF00/dbox reset members|r", "reset members")
+    :Place(rx, ry)
+
+  local advPostClick = function(w, button, down)
+    DB:Debug(3, "advanced reset show/hide post click % %", button, down)
+    for i = p.numObjects - 4, p.numObjects do
+      if w:GetChecked() then
+        p.children[i]:Show()
+      else
+        p.children[i]:Hide()
+      end
+    end
+  end
+  adv:SetScript("PostClick", advPostClick)
+  advPostClick(adv)
 
   function p:refresh()
     debugLevel:SetValue(DB.debug or 0)

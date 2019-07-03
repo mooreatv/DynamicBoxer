@@ -1025,11 +1025,11 @@ function DB:ForceInit()
 end
 
 function DB.Slash(arg) -- can't be a : because used directly as slash command
+  DB:Debug("Got slash cmd: %", arg)
   if #arg == 0 then
     DB:Help("commands")
     return
   end
-  DB:Debug("Got slash cmd: %", arg)
   local cmd = string.lower(string.sub(arg, 1, 1))
   local posRest = string.find(arg, " ")
   local rest = ""

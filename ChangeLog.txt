@@ -3,6 +3,9 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 1.7.0 July 2nd 2019
 - Now uses raid/party addon chat when possible to speed up cross realm team synchronization
 - Added some anti-loop/flood protections
+- DynamicBoxer options panel is more complete and better UI (mouse over show the slash command too)
+- Added :PlaceRight() to the UI library to place an widget on the right of the previous one.
+  Place() is still "place below previous"
 
 1.6.1 July 2nd 2019
 - add history of team mates so auto accepts of invite from non master works
