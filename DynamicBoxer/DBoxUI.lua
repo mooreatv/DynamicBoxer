@@ -65,7 +65,7 @@ function DB.OnSetupUIAccept(widget, data, data2)
   DB.Secret = tok2
   DB.MasterName = masterName
   DB:Debug("Current master is %", masterName) -- we'll send it a message so it's box stops showing
-  DB:AddMaster(masterName)
+  DB:AddToMasterHistory(masterName)
   DB:SetupChange() -- joining just after leaving seems to break so we need to wait next sync
   DB.enabled = true -- must be after the previous line which sets it off
   if DB.maxIter <= 0 then
@@ -334,7 +334,7 @@ function DB.CreateOptionsPanel()
     return sf
   end
 
-  -- Place relative to previous one. optOffsetX is relative to the left margin
+  -- Place (below) relative to previous one. optOffsetX is relative to the left margin
   -- established by first widget placed (placeInside)
   -- such as changing the order of widgets doesn't change the left/right offset
   -- in other words, offsetX is absolute to the left margin instead of relative to the previously placed object
@@ -351,6 +351,20 @@ function DB.CreateOptionsPanel()
       object:placeBelow(self.lastAdded, optOffsetX - self.leftMargin, optOffsetY)
       self.leftMargin = optOffsetX
     end
+    self.lastAdded = object
+    return object
+  end
+
+  p.PlaceRight = function(self, object, optOffsetX, optOffsetY)
+    self.numObjects = self.numObjects + 1
+    DB:Debug(7, "called PlaceRight % n % o %", self.name, self.numObjects, self.leftMargin)
+    if self.numObjects == 1 then
+      error("PlaceRight() should not be the first call, Place() should")
+    end
+    optOffsetX = optOffsetX or 0
+    -- subsequent, place after the previous one but relative to initial left margin
+    object:placeBelow(self.lastAdded, optOffsetX - self.leftMargin, optOffsetY)
+    self.leftMargin = optOffsetX
     self.lastAdded = object
     return object
   end
@@ -435,7 +449,20 @@ function DB.CreateOptionsPanel()
     return s
   end
 
-  DB.widgetDemo= true -- to show the demo (or `DB:SetSaved("widgetDemo", true)`)
+  p.addButton = function(self, text, tooltip, callback)
+    -- local name= "DB.cb.".. tostring(self.id) -- not needed
+    local c = CreateFrame("Button", nil, self, "UIPanelButtonTemplate")
+    c.Text:SetText(text)
+    c:SetWidth(c.Text:GetStringWidth() + 20) -- need some extra spaces for corners
+    if tooltip then
+      c.tooltipText = tooltip
+    end
+    self:addMethods(c)
+    c:SetScript("OnClick", callback)
+    return c
+  end
+
+  DB.widgetDemo = true -- to show the demo (or `DB:SetSaved("widgetDemo", true)`)
 
   -- TODO: look into i18n
   -- Q: maybe should just always auto place (add&place) ?
@@ -466,9 +493,13 @@ function DB.CreateOptionsPanel()
     end
   end)
 
-  p:addText("Development, troubleshooting and advanced options:"):Place(40,40)
+  p:addText("Development, troubleshooting and advanced options:"):Place(40, 40)
 
   local debugLevel = p:addSlider("Debug level", "Sets the debug level", 0, 9, 1, "Off"):Place(16, 30)
+
+  p:addButton("Event Trace", "Starts the blizzard Event Trace with DynamicBoxer saved filters", function()
+    DB.Slash("e")
+  end):Place(0, 20)
 
   function p:refresh()
     debugLevel:SetValue(DB.debug or 0)
