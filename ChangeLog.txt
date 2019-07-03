@@ -7,7 +7,7 @@ Coming next:
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 1.7.0 July 2nd 2019
-- Now uses raid/party addon chat when possible to speed up cross realm team synchronization
+- Now uses raid/party addon chat when possible to speed up cross realm team synchronization (Issue #28)
 - Added some anti-loop/flood protections
 - DynamicBoxer options panel is more complete and better UI (mouse over show the slash command too)
 - Added :PlaceRight() to the UI library to place an widget on the right of the previous one.
@@ -21,7 +21,7 @@ Coming next:
 - `dbox config` shows the config panel, which is also in standard addon interface tab (Issue #13)
   - Auto invite can be turned off in the UI and inviting slot can be changed
   - Debug level can be set in the UI
-- New Auto Invite option/feature (from slot 1 by default)
+- New Auto Invite option/feature (from slot 1 by default, changeable) (Issue #20)
 - New `/dbox party invite` (or you can short it as `/dbox p`) and `/dbox party disband`
 - Start of a (specialized for now, will move to MoLib UI eventually) UI library
   - Slider widget is better than st ock (optional list of values/min/max labels/no wobbling (left indented))
