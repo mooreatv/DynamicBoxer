@@ -6,6 +6,10 @@ Coming next:
 - Your input/suggestions welcome !
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+1.7.1 July 3rd 2019
+- GUI library now supports dropdowns too; used for `/dbox reset` options/UI
+- Changed tooltip color for `/dbox` commands to steel blue (same as the "Team complete" and other PrintInfo color)
+
 1.7.0 July 2nd 2019
 - Now uses raid/party addon chat when possible to speed up cross realm team synchronization (Issue #28)
 - Added some anti-loop/flood protections

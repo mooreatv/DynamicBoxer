@@ -474,15 +474,52 @@ function DB.CreateOptionsPanel()
     self:addMethods(c)
     local callback = cb
     if type(cb) == "string" then
-      DB:Debug("Setting callback for % to call Slash(%)", text, cb)
+      DB:Debug(4, "Setting callback for % to call Slash(%)", text, cb)
       callback = function()
         DB.Slash(cb)
       end
     else
-      DB:Debug("Keeping original function for %", text)
+      DB:Debug(4, "Keeping original function for %", text)
     end
     c:SetScript("OnClick", callback)
     return c
+  end
+
+  p.addDrop = function(self, text, tooltip, cb, options)
+    -- local name = self.name .. "drop" .. self.numObjects
+    local d = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
+    d.tooltipTitle = "Testing tooltip 1" -- not working/showing (so far)
+    d.tooltipText = tooltip
+    d.tooltipOnButton = true
+    -- d.value = "none"
+    UIDropDownMenu_JustifyText(d, "CENTER")
+    UIDropDownMenu_Initialize(d, function(_w, _level, _menuList)
+      for _, v in ipairs(options) do
+        DB:Debug(5, "Creating dropdown entry %", v)
+        local info = UIDropDownMenu_CreateInfo() -- don't put it outside the loop!
+        info.tooltipOnButton = true
+        info.text = v.text
+        info.tooltipTitle = v.text
+        info.tooltipText = v.tooltip
+        info.value = v.value
+        info.func = function(entry)
+          if cb then
+            cb(entry.value)
+          end
+          UIDropDownMenu_SetSelectedID(d, entry:GetID())
+        end
+        UIDropDownMenu_AddButton(info)
+      end
+    end)
+    UIDropDownMenu_SetText(d, text)
+    -- Uh? one global for all dropdowns?? also possible taint issues
+    local width = _G["DropDownList1"] and _G["DropDownList1"].maxWidth or 0
+    DB:Debug("Found dropdown width to be %", width)
+    if width > 0 then
+      UIDropDownMenu_SetWidth(d, width)
+    end
+    self:addMethods(d)
+    return d
   end
 
   --  DB.widgetDemo = true -- to show the demo (or `DB:SetSaved("widgetDemo", true)`)
@@ -508,11 +545,11 @@ function DB.CreateOptionsPanel()
   -- TODO tooltip formatting and maybe auto add the /dbox command
 
   p:addButton("Invite Team",
-              "Invites to the party the team members\ndetected so far and not already in party\n|cFFFFFF00/dbox p|r",
+              "Invites to the party the team members\ndetected so far and not already in party\n|cFF99E5FF/dbox p|r",
               "party invite"):PlaceRight()
 
   p:addButton("Disband", "If party leader, Uninvite the members of the team,\npossibly leaving guests." ..
-                "Otherwise, leave the party\n|cFFFFFF00/dbox p disband|r", "party disband"):PlaceRight()
+                "Otherwise, leave the party\n|cFF99E5FF/dbox p disband|r", "party disband"):PlaceRight()
 
   local invitingSlot = p:addSlider("Party leader Slot", "Sets which slot should be doing the party inviting", 1, 5)
                          :Place(16, 12) -- need more vspace
@@ -526,64 +563,66 @@ function DB.CreateOptionsPanel()
     end
   end)
 
-  p:addButton("Show/Set Token",
-              "Shows the UI to show or set the current token string\n(shows on master for copying or to paste it on slaves)\n|cFFFFFF00/dbox show|r",
-              "show"):Place(0, 20)
+  p:addButton("Show/Set Token", "Shows the UI to show or set the current token string\n" ..
+                "(shows on master for copying or to paste it on slaves)\n|cFF99E5FF/dbox show|r", "show"):Place(0, 20)
 
   p:addText("Development, troubleshooting and advanced options:"):Place(40, 20)
 
-  p:addButton("Re Init", "Re initializes like the first time setup.\n|cFFFFFF00/dbox init|r", "init"):Place(0, 20)
-  p:addButton("Join", "Attempts to resync the team by\nsending a message requiring reply\n|cFFFFFF00/dbox j|r", "join")
+  p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):Place(0, 20)
+  p:addButton("Join", "Attempts to resync the team by\nsending a message requiring reply\n|cFF99E5FF/dbox j|r", "join")
     :PlaceRight()
-  p:addButton("Ping", "Attempts to resync the team by\nsending a message\n|cFFFFFF00/dbox m|r", "message"):PlaceRight()
+  p:addButton("Ping", "Attempts to resync the team by\nsending a message\n|cFF99E5FF/dbox m|r", "message"):PlaceRight()
 
-  local debugLevel = p:addSlider("Debug level", "Sets the debug level\n|cFFFFFF00/dbox debug X|r", 0, 9, 1, "Off")
+  local debugLevel = p:addSlider("Debug level", "Sets the debug level\n|cFF99E5FF/dbox debug X|r", 0, 9, 1, "Off")
                        :Place(16, 30)
 
-  p:addButton("Event Trace", "Starts the blizzard Event Trace with DynamicBoxer saved filters\n|cFFFFFF00/dbox event|r",
+  p:addButton("Event Trace", "Starts the blizzard Event Trace with DynamicBoxer saved filters\n|cFF99E5FF/dbox event|r",
               "event"):Place(0, 20)
 
-  p:addButton("Save Filters", "Saves the set of currently filtered Events\n|cFFFFFF00/dbox event save|r", "event save")
+  p:addButton("Save Filters", "Saves the set of currently filtered Events\n|cFF99E5FF/dbox event save|r", "event save")
     :PlaceRight()
 
-  p:addButton("Clear Filters", "Clear saved filtered Events\n|cFFFFFF00/dbox event clear|r", "event clear"):PlaceRight()
+  p:addButton("Clear Filters", "Clear saved filtered Events\n|cFF99E5FF/dbox event clear|r", "event clear"):PlaceRight()
 
-  local adv = p:addCheckBox("Show reset options", "Show dev/advanced only dangerous options"):Place(0, 20)
+  p:addText("Choose a |cFFFF1010reset|r option:"):Place(0, 30)
 
-  -- TODO add confirmation before reset all and a dropdown widget
-  p:addButton("Reset All",
-              "Resets all the DynamicBoxer saved variables\n(reload needed after this)\n|cFFFFFF00/dbox reset all|r",
-              "reset all"):Place()
+  -- TODO add confirmation before reset all
+  local bReset = p:addButton("Reset!", "Choose what to reset in the drop down...", function(self)
+    DB.Slash(self.resetCmd)
+  end)
 
-  local rx = 30
-  local ry = -1
-  p:addButton("Reset Team", "Reset the isboxer team detection\n(for next login)\n|cFFFFFF00/dbox reset team|r",
-              "reset team"):Place(rx, ry)
-
-  p:addButton("Reset Token",
-              "Forgets the secure token,\nwill cause the Show/Set dialog for next login\n|cFFFFFF00/dbox reset token|r",
-              "reset team"):Place(rx, ry)
-
-  p:addButton("Reset Master History",
-              "Resets the master history for this faction\n(will require setting next login)\n|cFFFFFF00/dbox reset master|r",
-              "reset masters"):Place(rx, ry)
-
-  p:addButton("Reset Members History",
-              "Resets the team members history for this faction\n|cFFFFFF00/dbox reset members|r", "reset members")
-    :Place(rx, ry)
-
-  local advPostClick = function(w, button, down)
-    DB:Debug(3, "advanced reset show/hide post click % %", button, down)
-    for i = p.numObjects - 4, p.numObjects do
-      if w:GetChecked() then
-        p.children[i]:Show()
-      else
-        p.children[i]:Hide()
-      end
-    end
+  local cb = function(value)
+    DB:Debug("drop down call back called with %", value)
+    bReset:Enable()
+    bReset.resetCmd = value
   end
-  adv:SetScript("PostClick", advPostClick)
-  advPostClick(adv)
+
+  p:addDrop("...select...", "dropdown tool tip", cb, {
+    {
+      text = "Reset All",
+      tooltip = "Resets all the DynamicBoxer saved variables\n(reload needed after this)\n|cFF99E5FF/dbox reset all|r",
+      value = "reset all"
+    }, {
+      text = "Reset Team",
+      tooltip = "Reset the isboxer team detection\n(for next login)\n|cFF99E5FF/dbox reset teams|r",
+      value = "reset teams"
+    }, {
+      text = "Reset Token",
+      tooltip = "Forgets the secure token,\nwill cause the Show/Set dialog for next login\n|cFF99E5FF/dbox reset token|r",
+      value = "reset token"
+    }, {
+      text = "Reset Master History",
+      tooltip = "Resets the master history for this faction\n(will require setting next login)\n|cFF99E5FF/dbox reset masters|r",
+      value = "reset masters"
+    }, {
+      text = "Reset Members History",
+      tooltip = "Resets the team members history for this faction\n|cFF99E5FF/dbox reset members|r",
+      value = "reset members"
+    }
+  }):PlaceRight(-10, -7.5)
+
+  bReset:PlaceRight(0, 2.5)
+  bReset:Disable()
 
   function p:refresh()
     debugLevel:SetValue(DB.debug or 0)

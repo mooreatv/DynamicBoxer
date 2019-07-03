@@ -994,7 +994,7 @@ function DB:Help(msg)
                     "/dbox party inv||disband -- invites the party or disband it\n" ..
                     "/dbox config -- open addon config, dbox c works too\n" ..
                     "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
-                    "/dbox reset team||token||master||members||all -- resets one part of saved variables or all, respectively\n" ..
+                    "/dbox reset teams||token||masters||members||all -- resets one part of saved variables or all, respectively\n" ..
                     "/dbox version -- shows addon version")
 end
 
@@ -1056,20 +1056,20 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     end
   elseif DB:StartsWith(arg, "reset") then
     -- require reset to be spelled out (other r* are the random gen)
-    if rest == "team" then
+    if rest == "teams" then
       dynamicBoxerSaved.teamHistory = {}
       DB:Warning("Team history reset per request (next login will popup the token window until team is complete)")
     elseif rest == "token" then
       dynamicBoxerSaved.MasterToken = nil
       DB:Warning("Token cleared per request, will prompt for it at next login")
-    elseif rest == "master" then
+    elseif rest == "masters" then
       if dynamicBoxerSaved.serializedMasterHistory then
         dynamicBoxerSaved.serializedMasterHistory[DB.faction] = {}
         DB:Warning("Master history for % cleared per request, will likely need manual /dbox show next login", DB.faction)
       else
         DB:Warning("No master history to clear")
       end
-    elseif rest == "member" then
+    elseif rest == "members" then
       if dynamicBoxerSaved.serializedMemberHistory then
         dynamicBoxerSaved.serializedMemberHistory[DB.faction] = {}
         DB:Warning(
@@ -1083,7 +1083,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
       DB:Warning("State all reset per request, please /reload !")
       -- C_UI.Reload() -- in theory we could reload for them but that seems bad form
     else
-      DB:Error("Use /dbox reset x -- where x is one of team, token, master, all")
+      DB:Error("Use /dbox reset x -- where x is one of teams, token, masters, members, all")
     end
   elseif cmd == "m" then
     -- message again
