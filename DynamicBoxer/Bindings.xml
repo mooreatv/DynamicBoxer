@@ -22,7 +22,7 @@
     <Binding name="DBOX_JOIN" category="DYNAMICBOXER">
         DynBoxer.Slash("join")
     </Binding>
-    <Binding name="DBOX_AUTOINV" category="DYNAMICBOXER">
+    <Binding name="DBOX_AUTOINV" category="DYNAMICBOXER" default="CTRL-SHIFT-T">
         DynBoxer.Slash("autoinvite toggle")
     </Binding>
     <Binding name="DBOX_CONFIG" category="DYNAMICBOXER">

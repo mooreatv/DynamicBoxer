@@ -10,8 +10,7 @@
 ## Globe: check-classic
 MoLib/MoLib.lua
 MoLib/MoLibUI.lua
-MoLib/Realms_us.lua
-MoLib/Realms_eu.lua
+MoLib/Realms.lua
 DBoxInit.lua
 ISBoxerPatches.lua
 DynamicBoxer.lua
