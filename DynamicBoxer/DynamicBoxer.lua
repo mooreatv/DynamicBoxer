@@ -293,8 +293,8 @@ function DB:CheckMasterFaction()
     if DB.masterHistory[faction]:exists(DB.MasterName) then
       DB:Debug(1, "Master % is wrong faction % vs ours %", DB.MasterName, faction, DB.faction)
       if master then
-        DB:Warning("Detected other faction (%) master %, will use ours (%) instead: %", faction, DB.MasterName,
-                   DB.faction, master)
+        DB:PrintInfo("Detected other faction (%) master %, will use ours (%) instead: %", faction, DB.MasterName,
+                     DB.faction, master)
         DB.MasterName = master
         return false
       end
