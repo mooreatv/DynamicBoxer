@@ -79,13 +79,17 @@ function DB.OnUICancel(widget, _data)
   DB.inUI = false
   widget:Hide()
   widget.editBox:SetMaxLetters(0)
-  DB:Error("User cancelled. Will not use DynamicBoxer until /reload or /dbox i")
+  if DB.MasterToken and #DB.MasterToken > 0 then
+    DB:Warning("Escaped/cancelled from exchange token UI (use <return> key to close normally when done copy pasting)")
+  else
+    DB:Error("User cancelled. Will not use DynamicBoxer until /reload or /dbox i")
+  end
 end
 
 function DB.OnShowUICancel(widget, _data)
   DB.inUI = false
   widget:Hide()
-  DB:Warning("Escaped/cancelled from UI show (use <return> key to close normally when done copy pasting)")
+  DB:Warning("Escaped/cancelled from show token UI (use <return> key to close normally when done copy pasting)")
 end
 
 function DB.OnMasterUIShow(widget, data)
@@ -287,6 +291,21 @@ function DB:ShowTokenUI()
   end
 end
 
+function DB:ExchangeTokenUI()
+  if DB.inUI then
+    DB:Debug(1, "ExchangeTokenUI(): Already in UI, skipping")
+    return
+  end
+  DB:Debug("ExchangeTokenUI %", DB.MasterToken)
+  if DB:WeAreMaster() then
+    return DB:ShowTokenUI()
+  end
+  DB.inUI = true
+  -- start empty on slaves so copy copies the right one
+  DB.uiTextLen = DB:CalcUITextLen(DB.fullName)
+  StaticPopup_Show("DYNBOXER_SLAVE")
+end
+
 function DB:HideTokenUI()
   if not DB.inUI then
     DB:Debug(1, "HideTokenUI(): Already in not UI, skipping")
@@ -318,8 +337,10 @@ function DB.CreateOptionsPanel()
   -- Q: maybe should just always auto place (add&place) ?
   p:addText("DynamicBoxer options", "GameFontNormalLarge"):Place()
   p:addText("These options let you control the behavior of DynamicBoxer " .. DB.manifestVersion):Place()
-  local autoInvite = p:addCheckBox("Auto invite", "Whether one of the slot should auto invite the others\n" ..
-                                     "it also helps with cross realm teams sync"):Place(4, 30)
+  local autoInvite = p:addCheckBox("Auto invite",
+                                   "Whether one of the slot should auto invite the others\n" ..
+                                     "it also helps with cross realm teams sync\n" ..
+                                     "|cFF99E5FF/dbox autoinvite|r to toggle or set slot"):Place(4, 30)
 
   -- TODO tooltip formatting and maybe auto add the /dbox command
 
@@ -341,9 +362,13 @@ function DB.CreateOptionsPanel()
     end
   end)
 
-  p:addButton("Show/Set Token", "Shows the UI to show or set the current token string\n" ..
-                "(shows on master for copying or to paste it on slaves)\n|cFF99E5FF/dbox show|r or Key Binding", "show")
-    :Place(0, 20)
+  p:addButton("Exchange Token", "Shows the token on master and empty ready to paste on slaves\n" ..
+                "Allows for very fast broadcast Ctrl-Shift-X Ctrl-C (copy) Ctrl-V (paste) Return, 4 keys and done!\n" ..
+                "|cFF99E5FF/dbox xchg|r or Ctrl-X Key Binding", "xchg"):Place(0, 20)
+
+  p:addButton("Show Token", "Shows the UI to show or set the current token string\n" ..
+                "(if you need to copy from slave to brand new master, otherwise use xchg)\n" ..
+                "|cFF99E5FF/dbox show|r or Key Binding", "show"):PlaceRight(20)
 
   p:addText("Development, troubleshooting and advanced options:"):Place(40, 20)
 
@@ -464,9 +489,11 @@ _G.DYNAMICBOXER = "DynamicBoxer"
 _G.BINDING_HEADER_DYNAMICBOXER = "DynamicBoxer addon key bindings"
 _G.BINDING_NAME_DBOX_INVITE = "Invite team  ( |cFF99E5FF/dbox party invite|r )"
 _G.BINDING_NAME_DBOX_DISBAND = "Disband  ( |cFF99E5FF/dbox party disband|r )"
+_G.BINDING_NAME_DBOX_XCHG = "Exchange token  ( |cFF99E5FF/dbox xchg|r )"
 _G.BINDING_NAME_DBOX_SHOW = "Show token  ( |cFF99E5FF/dbox show|r )"
 _G.BINDING_NAME_DBOX_PING = "Send ping  ( |cFF99E5FF/dbox m|r )"
 _G.BINDING_NAME_DBOX_JOIN = "Send join  ( |cFF99E5FF/dbox join|r )"
+_G.BINDING_NAME_DBOX_AUTOINV = "Toggle AutoInv ( |cFF99E5FF/dbox autoinv|r )"
 _G.BINDING_NAME_DBOX_CONFIG = "Config  ( |cFF99E5FF/dbox config|r )"
 
 ---

@@ -300,7 +300,7 @@ function DB:CheckMasterFaction()
       end
       DB:Warning("Wrong master faction % and first time in this faction %, please paste the token from slot 1", faction,
                  DB.faction)
-      DB:ShowTokenUI()
+      DB:ExchangeTokenUI()
       return false
     end
   end
@@ -464,7 +464,7 @@ function DB:AddToMasterHistory(masterName)
   self:Debug(5, "New master % list newest at the end: %", masterName, dynamicBoxerSaved.serializedMasterHistory)
 end
 
-function DB:AddToMemberrHistory(memberName)
+function DB:AddToMembersHistory(memberName)
   DB.memberHistory[DB.faction]:add(memberName)
   if not dynamicBoxerSaved.serializedMemberHistory then
     dynamicBoxerSaved.serializedMemberHistory = {}
@@ -707,7 +707,7 @@ function DB:ProcessMessage(source, from, data)
   if idx == 1 then
     DB:AddToMasterHistory(realname)
   else
-    DB:AddToMemberrHistory(realname)
+    DB:AddToMembersHistory(realname)
   end
   if teamComplete then
     DB:PrintInfo("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!", DB.currentCount)
@@ -992,6 +992,7 @@ function DB:Help(msg)
                     "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
                     "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
                     "/dbox party inv||disband -- invites the party or disband it\n" ..
+                    "/dbox autoinv toggle||off||n -- toggles, turns off or turns on for slot n the autoinvite\n" ..
                     "/dbox config -- open addon config, dbox c works too\n" ..
                     "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
                     "/dbox reset teams||token||masters||members||all -- resets one part of saved variables or all, respectively" ..
@@ -1090,6 +1091,26 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     DB.maxIter = 1
     DB.totalRetries = 0
     DB.Sync()
+  elseif cmd == "x" then
+    DB:ExchangeTokenUI()
+  elseif cmd == "a" then
+    if DB:StartsWith(rest, "t") then
+      DB.autoInvite = not DB.autoInvite
+    elseif DB:StartsWith(rest, "o") then
+      DB.autoInvite = false
+    else
+      local x = tonumber(rest)
+      if x then
+        DB.autoInvite = true
+        DB.autoInviteSlot = x
+      else
+        DB:Error("Use /dbox autoinvite x -- where x is one of toggle, off, or the slot number that should invite.")
+        return
+      end
+    end
+    DB:SetSaved("autoInvite", DB.autoInvite)
+    DB:SetSaved("autoInviteSlot", DB.autoInviteSlot)
+    DB:PrintDefault("Auto invite is now " .. (DB.autoInvite and "ON" or "OFF") .. " for slot %", DB.autoInviteSlot)
   elseif cmd == "s" then
     -- show ui or set token depending on argument
     if #rest >= DB.tokenMinLen then
