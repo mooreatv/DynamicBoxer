@@ -309,218 +309,8 @@ function DB.CreateOptionsPanel()
   end
   DB:Debug("Creating Options Panel")
 
-  -- Options panel and experimentation/beginning of a UI library
-  -- WARNING, Y axis is such as positive is down, unlike rest of the wow api which has + offset going up
-  -- but all the negative numbers all over, just for Y axis, got to me
-
-  local p = CreateFrame("Frame")
+  local p = DB:Frame(_G.DYNAMICBOXER)
   DB.optionsPanel = p
-  p.name = _G.DYNAMICBOXER
-  p.children = {}
-  p.numObjects = 0
-
-  -- place inside the parent at offset x,y from corner of parent
-  local placeInside = function(sf, x, y)
-    x = x or 16
-    y = y or 16
-    sf:SetPoint("TOPLEFT", x, -y)
-    return sf
-  end
-  -- place below (previously placed item typically)
-  local placeBelow = function(sf, below, x, y)
-    x = x or 0
-    y = y or 8
-    sf:SetPoint("TOPLEFT", below, "BOTTOMLEFT", x, -y)
-    return sf
-  end
-  -- place to the right of last widget
-  local placeRight = function(sf, nextTo, x, y)
-    x = x or 16
-    y = y or 0
-    sf:SetPoint("TOPLEFT", nextTo, "TOPRIGHT", x, -y)
-    return sf
-  end
-
-  -- Place (below) relative to previous one. optOffsetX is relative to the left margin
-  -- established by first widget placed (placeInside)
-  -- such as changing the order of widgets doesn't change the left/right offset
-  -- in other words, offsetX is absolute to the left margin instead of relative to the previously placed object
-  p.Place = function(self, object, optOffsetX, optOffsetY)
-    self.numObjects = self.numObjects + 1
-    DB:Debug(7, "called Place % n % o %", self.name, self.numObjects, self.leftMargin)
-    if self.numObjects == 1 then
-      -- first object: place inside
-      object:placeInside(optOffsetX, optOffsetY)
-      self.leftMargin = 0
-    else
-      optOffsetX = optOffsetX or 0
-      -- subsequent, place after the previous one but relative to initial left margin
-      object:placeBelow(self.lastAdded, optOffsetX - self.leftMargin, optOffsetY)
-      self.leftMargin = optOffsetX
-    end
-    self.lastAdded = object
-    self.lastLeft = object
-    return object
-  end
-
-  p.PlaceRight = function(self, object, optOffsetX, optOffsetY)
-    self.numObjects = self.numObjects + 1
-    if self.numObjects == 1 then
-      error("PlaceRight() should not be the first call, Place() should")
-    end
-    -- place to the right of previous one on the left
-    -- if the previous widget has text, add the text length (eg for check buttons)
-    local x = (optOffsetX or 16) + (self.lastLeft.extraWidth or 0)
-    object:placeRight(self.lastLeft, x, optOffsetY)
-    self.lastLeft = object
-    return object
-  end
-
-  -- to be used by the various factories/sub widget creation to add common methods to them
-  function p:addMethods(widget) -- put into MoGuiLib once good enough
-    widget.placeInside = placeInside
-    widget.placeBelow = placeBelow
-    widget.placeRight = placeRight
-    widget.parent = self
-    widget.Place = function(...)
-      -- add missing parent as first arg
-      widget.parent:Place(...)
-      return widget -- because :Place is typically last, so don't return parent/self but the widget
-    end
-    widget.PlaceRight = function(...)
-      widget.parent:PlaceRight(...)
-      return widget
-    end
-    table.insert(self.children, widget) -- keep track of children objects (mostly for debug)
-  end
-
-  p.addText = function(self, text, font)
-    font = font or "GameFontHighlightSmall" -- different default?
-    local f = self:CreateFontString(nil, "ARTWORK", font)
-    DB:Debug(8, "font string starts with % points", f:GetNumPoints())
-    f:SetText(text)
-    f:SetJustifyH("LEFT")
-    f:SetJustifyV("TOP")
-    self:addMethods(f)
-    return f
-  end
-
-  p.addCheckBox = function(self, text, tooltip)
-    -- local name= "DB.cb.".. tostring(self.id) -- not needed
-    local c = CreateFrame("CheckButton", nil, self, "InterfaceOptionsCheckButtonTemplate")
-    DB:Debug(8, "check box starts with % points", c:GetNumPoints())
-    c.Text:SetText(text)
-    if tooltip then
-      c.tooltipText = tooltip
-    end
-    self:addMethods(c)
-    c.extraWidth = c.Text:GetWidth()
-    return c
-  end
-
-  -- create a slider with the range [minV...maxV] and optional step, low/high labels and optional
-  -- strings to print in parenthesis after the text title
-  p.addSlider = function(self, text, tooltip, minV, maxV, step, lowL, highL, valueLabels)
-    minV = minV or 0
-    maxV = maxV or 10
-    step = step or 1
-    lowL = lowL or tostring(minV)
-    highL = highL or tostring(maxV)
-    local s = CreateFrame("Slider", nil, self, "OptionsSliderTemplate")
-    s.DoDisable = BlizzardOptionsPanel_Slider_Disable -- what does enable/disable do ? seems we need to call these
-    s.DoEnable = BlizzardOptionsPanel_Slider_Enable
-    s:SetValueStep(step)
-    s:SetStepsPerPage(step)
-    s:SetMinMaxValues(minV, maxV)
-    s:SetObeyStepOnDrag(true)
-    s.Text:SetFontObject(GameFontNormal)
-    -- not centered, so changing (value) doesn't wobble the whole thing
-    -- (justifyH left alone didn't work because the point is also centered)
-    s.Text:SetPoint("LEFT", s, "TOPLEFT", 6, 0)
-    s.Text:SetJustifyH("LEFT")
-    s.Text:SetText(text)
-    if tooltip then
-      s.tooltipText = tooltip
-    end
-    s.Low:SetText(lowL)
-    s.High:SetText(highL)
-    s:SetScript("OnValueChanged", function(w, value)
-      local sVal
-      if valueLabels and valueLabels[value] then
-        sVal = valueLabels[value]
-      else
-        sVal = tostring(value)
-        if value == minV then
-          sVal = lowL
-        elseif value == maxV then
-          sVal = highL
-        end
-      end
-      w.Text:SetText(text .. ": " .. sVal)
-    end)
-    self:addMethods(s)
-    return s
-  end
-
-  -- the call back is either a function or a command to send to DB.Slash
-  p.addButton = function(self, text, tooltip, cb)
-    -- local name= "DB.cb.".. tostring(self.id) -- not needed
-    local c = CreateFrame("Button", nil, self, "UIPanelButtonTemplate")
-    c.Text:SetText(text)
-    c:SetWidth(c.Text:GetStringWidth() + 20) -- need some extra spaces for corners
-    if tooltip then
-      c.tooltipText = tooltip -- TODO: style/font is wrong
-    end
-    self:addMethods(c)
-    local callback = cb
-    if type(cb) == "string" then
-      DB:Debug(4, "Setting callback for % to call Slash(%)", text, cb)
-      callback = function()
-        DB.Slash(cb)
-      end
-    else
-      DB:Debug(4, "Keeping original function for %", text)
-    end
-    c:SetScript("OnClick", callback)
-    return c
-  end
-
-  p.addDrop = function(self, text, tooltip, cb, options)
-    -- local name = self.name .. "drop" .. self.numObjects
-    local d = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
-    d.tooltipTitle = "Testing tooltip 1" -- not working/showing (so far)
-    d.tooltipText = tooltip
-    d.tooltipOnButton = true
-    -- d.value = "none"
-    UIDropDownMenu_JustifyText(d, "CENTER")
-    UIDropDownMenu_Initialize(d, function(_w, _level, _menuList)
-      for _, v in ipairs(options) do
-        DB:Debug(5, "Creating dropdown entry %", v)
-        local info = UIDropDownMenu_CreateInfo() -- don't put it outside the loop!
-        info.tooltipOnButton = true
-        info.text = v.text
-        info.tooltipTitle = v.text
-        info.tooltipText = v.tooltip
-        info.value = v.value
-        info.func = function(entry)
-          if cb then
-            cb(entry.value)
-          end
-          UIDropDownMenu_SetSelectedID(d, entry:GetID())
-        end
-        UIDropDownMenu_AddButton(info)
-      end
-    end)
-    UIDropDownMenu_SetText(d, text)
-    -- Uh? one global for all dropdowns?? also possible taint issues
-    local width = _G["DropDownList1"] and _G["DropDownList1"].maxWidth or 0
-    DB:Debug("Found dropdown width to be %", width)
-    if width > 0 then
-      UIDropDownMenu_SetWidth(d, width)
-    end
-    self:addMethods(d)
-    return d
-  end
 
   --  DB.widgetDemo = true -- to show the demo (or `DB:SetSaved("widgetDemo", true)`)
 
@@ -528,17 +318,6 @@ function DB.CreateOptionsPanel()
   -- Q: maybe should just always auto place (add&place) ?
   p:addText("DynamicBoxer options", "GameFontNormalLarge"):Place()
   p:addText("These options let you control the behavior of DynamicBoxer " .. DB.manifestVersion):Place()
-  if DB.widgetDemo then
-    p:addText("Testing 1 2 3... demo widgets:"):Place(50, 20)
-    local _cb1 = p:addCheckBox("A test checkbox", "A sample tooltip"):Place(0, 20) -- A: not here
-    local cb2 = p:addCheckBox("Another checkbox", "Another tooltip"):Place()
-    cb2:SetChecked(true)
-    local s2 = p:addSlider("Test slider", "Test slide tooltip", 1, 4, 1, "Test low", "Test high",
-                           {"Value 1", "Value 2", "Third one", "4th value"}):Place(16, 30)
-    s2:SetValue(4)
-    p:addText("Real UI:"):Place(50, 40)
-  end
-
   local autoInvite = p:addCheckBox("Auto invite", "Whether one of the slot should auto invite the others\n" ..
                                      "it also helps with cross realm teams sync"):Place(4, 30)
 
@@ -675,7 +454,6 @@ function DB.CreateOptionsPanel()
       self:HandleOk()
     end
   end
-
   -- Add the panel to the Interface Options
   InterfaceOptions_AddCategory(DB.optionsPanel)
 end
@@ -688,7 +466,7 @@ _G.BINDING_NAME_DBOX_INVITE = "Invite team  ( |cFF99E5FF/dbox party invite|r )"
 _G.BINDING_NAME_DBOX_DISBAND = "Disband  ( |cFF99E5FF/dbox party disband|r )"
 _G.BINDING_NAME_DBOX_SHOW = "Show token  ( |cFF99E5FF/dbox show|r )"
 _G.BINDING_NAME_DBOX_PING = "Send ping  ( |cFF99E5FF/dbox m|r )"
-_G.BINDING_NAME_DBOX_JOIN = "Send join  ( |cFF99E5FF/dbox j|r )"
+_G.BINDING_NAME_DBOX_JOIN = "Send join  ( |cFF99E5FF/dbox join|r )"
 _G.BINDING_NAME_DBOX_CONFIG = "Config  ( |cFF99E5FF/dbox config|r )"
 
 ---

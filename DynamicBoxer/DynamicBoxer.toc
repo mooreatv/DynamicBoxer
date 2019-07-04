@@ -9,6 +9,7 @@
 ## SavedVariables: dynamicBoxerSaved
 ## Globe: check-classic
 MoLib/MoLib.lua
+MoLib/MoLibUI.lua
 DBoxInit.lua
 ISBoxerPatches.lua
 DynamicBoxer.lua
