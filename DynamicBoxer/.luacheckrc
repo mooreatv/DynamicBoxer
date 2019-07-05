@@ -4,8 +4,6 @@ globals = {
     "DynBoxer",
     "dynamicBoxerSaved",
     "AcceptGroup",
-    "BlizzardOptionsPanel_Slider_Disable",
-    "BlizzardOptionsPanel_Slider_Enable",
     "BNGetInfo",
     "ChatFrame_AddMessageEventFilter",
     "SendChatMessage",
