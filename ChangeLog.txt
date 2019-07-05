@@ -6,7 +6,7 @@ Coming next:
 - Your input/suggestions welcome !
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-1.8.1 July 3rd 2019
+1.8.1 July 4th 2019
 - new `/dbox autoinvite x` where x is toggle to toggle, off to turn off, N to turn on for slot N (Issue #35)
 - new `/dbox xchg` command and keybindings (please set a binding, like Ctrl-Shift-X) so you can broadcast
   Ctrl-Shift-X Ctrl-C Ctrl-V return   for any new team that doesn't auto sync
