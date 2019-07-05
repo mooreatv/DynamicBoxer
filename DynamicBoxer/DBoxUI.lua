@@ -487,14 +487,14 @@ end
 --- Bindings settings (i18n/l10n)
 _G.DYNAMICBOXER = "DynamicBoxer"
 _G.BINDING_HEADER_DYNAMICBOXER = "DynamicBoxer addon key bindings"
-_G.BINDING_NAME_DBOX_INVITE = "Invite team  ( |cFF99E5FF/dbox party invite|r )"
-_G.BINDING_NAME_DBOX_DISBAND = "Disband  ( |cFF99E5FF/dbox party disband|r )"
-_G.BINDING_NAME_DBOX_XCHG = "Exchange token  ( |cFF99E5FF/dbox xchg|r )"
-_G.BINDING_NAME_DBOX_SHOW = "Show token  ( |cFF99E5FF/dbox show|r )"
-_G.BINDING_NAME_DBOX_PING = "Send ping  ( |cFF99E5FF/dbox m|r )"
-_G.BINDING_NAME_DBOX_JOIN = "Send join  ( |cFF99E5FF/dbox join|r )"
-_G.BINDING_NAME_DBOX_AUTOINV = "Toggle AutoInv ( |cFF99E5FF/dbox autoinv|r )"
-_G.BINDING_NAME_DBOX_CONFIG = "Config  ( |cFF99E5FF/dbox config|r )"
+_G.BINDING_NAME_DBOX_INVITE = "Invite team  |cFF99E5FF/dbox party invite|r"
+_G.BINDING_NAME_DBOX_DISBAND = "Disband  |cFF99E5FF/dbox party disband|r"
+_G.BINDING_NAME_DBOX_XCHG = "Exchange token  |cFF99E5FF/dbox xchg|r"
+_G.BINDING_NAME_DBOX_AUTOINV = "Toggle AutoInvite |cFF99E5FF/dbox autoi|r"
+_G.BINDING_NAME_DBOX_SHOW = "Show token  |cFF99E5FF/dbox show|r"
+_G.BINDING_NAME_DBOX_PING = "Send ping  |cFF99E5FF/dbox m|r"
+_G.BINDING_NAME_DBOX_JOIN = "Send join  |cFF99E5FF/dbox join|r"
+_G.BINDING_NAME_DBOX_CONFIG = "Config  |cFF99E5FF/dbox config|r"
 
 ---
 

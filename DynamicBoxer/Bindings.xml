@@ -15,6 +15,9 @@
     <Binding name="DBOX_XCHG" category="DYNAMICBOXER">
         DynBoxer.Slash("xchg")
     </Binding>
+    <Binding name="DBOX_AUTOINV" category="DYNAMICBOXER">
+        DynBoxer.Slash("autoinvite toggle")
+    </Binding>
     <Binding name="DBOX_SHOW" category="DYNAMICBOXER">
         DynBoxer.Slash("show")
     </Binding>
@@ -23,9 +26,6 @@
     </Binding>
     <Binding name="DBOX_JOIN" category="DYNAMICBOXER">
         DynBoxer.Slash("join")
-    </Binding>
-    <Binding name="DBOX_AUTOINV" category="DYNAMICBOXER">
-        DynBoxer.Slash("autoinvite toggle")
     </Binding>
     <Binding name="DBOX_CONFIG" category="DYNAMICBOXER">
         DynBoxer.Slash("config")

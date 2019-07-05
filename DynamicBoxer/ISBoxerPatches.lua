@@ -58,5 +58,6 @@ end
 -- This event triggers too early and the realm isn't available yet
 -- causing nil error trying to get the fully qualified name so we remove
 -- it from what isboxer listens too (it anyways even in standard version is
--- ready to act on the better PLAYER_ENTERING_WORLD)
+-- ready to act on the better PLAYER_ENTERING_WORLD after which we put it
+-- back in case of binding changes from UI later (Issue #19)
 isboxer.frame:UnregisterEvent("UPDATE_BINDINGS")

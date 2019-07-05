@@ -113,10 +113,14 @@ function DB:Replace(macro)
     local o = v.orig
     local n = v.new
     local s = v.slot
-    local c
-    self:Debug(9, "#%: for s=% i=% -> n=% (o=%)", k, s, v.slotStr, n, o)
-    macro, c = DB:ReplaceAll(macro, v.slotStr, n)
-    count = count + c
+    if n then
+      local c
+      self:Debug(9, "#%: for s=% i=% -> n=% (o=%)", k, s, v.slotStr, n, o)
+      macro, c = DB:ReplaceAll(macro, v.slotStr, n)
+      count = count + c
+    else
+      self:Warning("Trying to replace slot #% with nil name!", k)
+    end
   end
   if count > 0 then
     self:Debug(8, "macro after %: %", count, macro)
@@ -761,6 +765,8 @@ DB.EventD = {
     DB.CreateOptionsPanel()
     DB.Sync() -- first one at load
     DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync) -- and one every refresh
+    -- re register for later UPDATE_BINDINGS now that we got to initialize (Issue #19)
+    isboxer.frame:RegisterEvent("UPDATE_BINDINGS")
   end,
 
   CHANNEL_COUNT_UPDATE = function(self, _event, displayIndex, count) -- Note: never seem to fire
