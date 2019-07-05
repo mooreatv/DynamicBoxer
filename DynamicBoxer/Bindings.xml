@@ -2,15 +2,17 @@
    DynamicBoxer: Dynamic Team Multiboxing by MooreaTV moorea@ymail.com (c) 2019 All rights reserved
    Licensed under LGPLv3 - No Warranty
    (contact the author if you need a different license)
+
+   defaults don't work (https://github.com/Stanzilla/WoWUIBugs/issues/12) so removed them for now
 -->
 <Bindings>
-    <Binding name="DBOX_INVITE" header="DYNAMICBOXER" category="DYNAMICBOXER" default="CTRL-SHIFT-I">
+    <Binding name="DBOX_INVITE" header="DYNAMICBOXER" category="DYNAMICBOXER">
         DynBoxer.Slash("party invite")
     </Binding>
-    <Binding name="DBOX_DISBAND" category="DYNAMICBOXER" default="CTRL-SHIFT-U">
+    <Binding name="DBOX_DISBAND" category="DYNAMICBOXER">
         DynBoxer.Slash("party disband")
     </Binding>
-    <Binding name="DBOX_XCHG" category="DYNAMICBOXER" default="CTRL-SHIFT-X">
+    <Binding name="DBOX_XCHG" category="DYNAMICBOXER">
         DynBoxer.Slash("xchg")
     </Binding>
     <Binding name="DBOX_SHOW" category="DYNAMICBOXER">
@@ -22,7 +24,7 @@
     <Binding name="DBOX_JOIN" category="DYNAMICBOXER">
         DynBoxer.Slash("join")
     </Binding>
-    <Binding name="DBOX_AUTOINV" category="DYNAMICBOXER" default="CTRL-SHIFT-T">
+    <Binding name="DBOX_AUTOINV" category="DYNAMICBOXER">
         DynBoxer.Slash("autoinvite toggle")
     </Binding>
     <Binding name="DBOX_CONFIG" category="DYNAMICBOXER">

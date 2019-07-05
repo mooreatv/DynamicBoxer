@@ -363,8 +363,8 @@ function DB.CreateOptionsPanel()
   end)
 
   p:addButton("Exchange Token", "Shows the token on master and empty ready to paste on slaves\n" ..
-                "Allows for very fast broadcast Ctrl-Shift-X Ctrl-C (copy) Ctrl-V (paste) Return, 4 keys and done!\n" ..
-                "|cFF99E5FF/dbox xchg|r or Ctrl-X Key Binding", "xchg"):Place(0, 20)
+                "Allows for very fast broadcast KeyBind, Ctrl-C (copy) Ctrl-V (paste) Return, 4 keys and done!\n" ..
+                "|cFF99E5FF/dbox xchg|r or better, set a Key Binding", "xchg"):Place(0, 20)
 
   p:addButton("Show Token", "Shows the UI to show or set the current token string\n" ..
                 "(if you need to copy from slave to brand new master, otherwise use xchg)\n" ..
