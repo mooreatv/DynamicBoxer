@@ -6,6 +6,10 @@ Coming next:
 - Your input/suggestions welcome !
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+1.8.3 TBD
+- manual mode improvements
+
+
 1.8.2 July 5th 2019
 - fix for lua error when isboxer isn't loaded (the fix for #19 broke it in 1.8.1)
 

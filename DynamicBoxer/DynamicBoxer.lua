@@ -62,7 +62,7 @@ DB.currentCount = 0 -- how many characters from the team have been mapped (ie si
 DB.expectedCount = 0 -- how many slots we expect to see/map
 
 -- to force all debugging on even before saved vars are loaded
--- DB.debug = 9
+-- DB.debug = 8
 
 DB.maxIter = 1 -- We really only need to send the message once (and resend when seeing join from others, batched)
 DB.refresh = 2
@@ -81,6 +81,8 @@ DB.autoInvite = 1 -- so it's discovered/useful by default
 DB.autoInviteSlot = 1
 
 DB.manual = 0 -- testing manual mode, 0 is off, number is slot id
+-- Set to actual expected size, or we'll start with 2 and extend as we get messages from higher slots
+DB.manualTeamSize = 0
 
 DB.EMA = _G.LibStub and _G.LibStub:GetLibrary("AceAddon-3.0", true)
 DB.EMA = DB.EMA and DB.EMA:GetAddon("Team", true)
@@ -198,12 +200,42 @@ function DB:ShortName(name)
   return name
 end
 
+-- Potentially grow the manual team size (called with received idx which may be bigger than the default manual team size of 2)
+function DB:ManualExtendTeam(oldSize, newSize)
+  DB:Debug("Extending manual team from size % to %", oldSize, newSize)
+  if newSize <= oldSize then
+    return -- nothing to extend
+  end
+  for i = oldSize + 1, newSize do
+    DB.ISBTeam[i] = DB:format("Slot%", i)
+  end
+  DB.manualTeamSize = newSize
+  DB.expectedCount = newSize
+end
+
+function DB:ManualSetup()
+  DB:Debug("ManualSetup called with DB.manual=% DB.manualTeamSize=%", DB.manual, DB.manualTeamSize)
+  if not DB.manual or DB.manual < 1 then
+    return
+  end
+  if DB.manualTeamSize == 0 then
+    DB.manualTeamSize = math.max(2, DB.manual)
+    DB:Debug("Guessing manual team size = %", DB.manualTeamSize)
+  end
+  DB:Warning("Manual mode, no isboxer binding, simulating slot % / %", DB.manual, DB.manualTeamSize)
+  DB.ISBIndex = DB.manual
+  if DB.manual == 1 then
+    DB.MasterName = DB.fullName
+  end
+  DB:ManualExtendTeam(0, DB.manualTeamSize)
+end
+
 -- Reverse engineer what isboxer will hopefully be providing more directly soon
 -- (isboxer.CharacterSet.Members isn't always set when making teams without realm)
 function DB:ReconstructTeam()
   if DB.ISBTeam then
     DB:Debug(3, "Already know team to be % and my index % (isb members %)", DB.ISBTeam, DB.ISBIndex,
-             isboxer.CharacterSet.Members)
+             isboxer.CharacterSet and isboxer.CharacterSet.Members)
     return
   end
   DB.fullName = DB:GetMyFQN()
@@ -239,9 +271,7 @@ function DB:ReconstructTeam()
   if isboxer.Character_LoadBinds then
     isboxer.Character_LoadBinds()
   else
-    DB:Warning("Manual mode, no isboxer binding, simulating slot %", DB.manual)
-    DB.ISBIndex = DB.manual
-    DB.ISBTeam[DB.ISBIndex] = DB:format("Slot%", DB.ISBIndex)
+    DB:ManualSetup()
   end
   isboxer.SetMacro = prev
   if not DB.ISBIndex or DB.ISBIndex <= 0 then
@@ -249,7 +279,7 @@ function DB:ReconstructTeam()
              isboxer.Character.ActualName, DB.ISBAssistMacro)
   end
   DB:Debug("Found isbteam to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
-           isboxer.CharacterSet.Members)
+           isboxer.CharacterSet and isboxer.CharacterSet.Members)
   DB.Team[DB.ISBIndex] = {
     orig = DB.ISBTeam[DB.ISBIndex],
     new = DB.shortName,
@@ -275,7 +305,7 @@ function DB:ReconstructTeam()
   if DB.EMA then
     DB.EMA.db.newTeamList = {}
     EMAApi.AddMember(DB.fullName)
-    DB:Debug("Cleared EMA team")
+    DB:Debug("Cleared EMA team, set team to %", DB.fullName)
   end
 end
 
@@ -560,6 +590,9 @@ end
 -- (and yet they work with BN friends BUT they don't work with yourself!)
 -- TODO: refactor, this is too long / complicated for 1 function
 function DB:ProcessMessage(source, from, data)
+  if not DB.ISBTeam then
+    DB:ReconstructTeam() -- we can get messages events before the normal reconstruct team flow
+  end
   local doForward = nil
   local channelMessage = (source == "CHANNEL")
   local directMessage = (source == "WHISPER" or source == "CHAT_FILTER")
@@ -674,6 +707,9 @@ function DB:ProcessMessage(source, from, data)
     end
     DB:Debug("Change of character received for slot %: was % -> now %", idx, previousMapping.fullName, realname)
   end
+  if DB.manual > 0 then
+    DB:ManualExtendTeam(DB.manualTeamSize, idx)
+  end
   DB.Team[idx] = {orig = DB.ISBTeam[idx], new = shortName, fullName = realname, slot = idx}
   if DB.autoInvite and DB.autoInviteSlot == DB.ISBIndex and idx ~= DB.ISBIndex then
     -- This check works for in raid too but must be short name
@@ -689,6 +725,7 @@ function DB:ProcessMessage(source, from, data)
              DB.autoInvite)
   end
   if EMAApi then
+    DB:Debug(">>>Calling ema AddMember %", realname)
     EMAApi.AddMember(realname)
   end
   local oldCount = DB.currentCount
@@ -701,7 +738,9 @@ function DB:ProcessMessage(source, from, data)
   end
   isboxer.NextButton = 1 -- reset the buttons
   -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
-  self.ISBO.LoadBinds()
+  if DB.manual == 0 then
+    self.ISBO.LoadBinds()
+  end
   if previousMapping then
     DB:PrintInfo("Change of mapping for slot %, dynamically set ISBoxer character to % (%, was % before)", idx,
                  shortName, realname, previousMapping.fullName)
@@ -726,7 +765,7 @@ function DB:ProcessMessage(source, from, data)
         info[1].order = i
       else
         -- remove toons not in our list
-        DB:Debug("Removing % (%) from EMA team", name, info)
+        DB:Debug(">>> Removing % (%) from EMA team", name, info)
         DB.EMA.db.newTeamList[name] = nil
       end
     end
@@ -1026,8 +1065,7 @@ end
 
 function DB:ForceInit()
   DB:SetupChange()
-  DB.fullName = DB:GetMyFQN() -- usually set in reconstruct team but we can call /dbox i for testing without isboxer on
-  DB.faction = UnitFactionGroup("player")
+  DB:ReconstructTeam()
   DB:SetupUI()
   DB.justInit = true
 end
