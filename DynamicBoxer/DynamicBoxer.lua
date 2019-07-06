@@ -766,7 +766,9 @@ DB.EventD = {
     DB.Sync() -- first one at load
     DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync) -- and one every refresh
     -- re register for later UPDATE_BINDINGS now that we got to initialize (Issue #19)
-    isboxer.frame:RegisterEvent("UPDATE_BINDINGS")
+    if isboxer.frame then
+      isboxer.frame:RegisterEvent("UPDATE_BINDINGS")
+    end
   end,
 
   CHANNEL_COUNT_UPDATE = function(self, _event, displayIndex, count) -- Note: never seem to fire

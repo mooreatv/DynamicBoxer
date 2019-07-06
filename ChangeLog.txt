@@ -6,6 +6,9 @@ Coming next:
 - Your input/suggestions welcome !
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+1.8.2 July 4th 2019
+- fix for lua error when isboxer isn't loaded (the fix for #19 broke it in 1.8.1)
+
 1.8.1 July 4th 2019
 - new `/dbox autoinvite x` where x is toggle to toggle, off to turn off, N to turn on for slot N (Issue #35)
 - new `/dbox xchg` command and keybindings (please set a binding, like Ctrl-Shift-X) so you can broadcast
