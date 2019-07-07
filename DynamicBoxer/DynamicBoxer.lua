@@ -83,6 +83,8 @@ DB.autoInviteSlot = 1
 DB.manual = 0 -- testing manual mode, 0 is off, number is slot id
 -- Set to actual expected size, or we'll start with 2 and extend as we get messages from higher slots
 DB.manualTeamSize = 0
+-- will be true when we find the isboxer character configured
+DB.isboxerTeam  = false
 
 DB.EMA = _G.LibStub and _G.LibStub:GetLibrary("AceAddon-3.0", true)
 DB.EMA = DB.EMA and DB.EMA:GetAddon("Team", true)
@@ -202,7 +204,7 @@ end
 
 -- Potentially grow the manual team size (called with received idx which may be bigger than the default manual team size of 2)
 function DB:ManualExtendTeam(oldSize, newSize)
-  DB:Debug("Extending manual team from size % to %", oldSize, newSize)
+  DB:Debug("Extending manual team from size % to %, isbt=%", oldSize, newSize, DB.isboxerTeam)
   if newSize <= oldSize then
     return -- nothing to extend
   end
@@ -270,7 +272,9 @@ function DB:ReconstructTeam()
   end
   if isboxer.Character_LoadBinds then
     isboxer.Character_LoadBinds()
+    DB.isboxerTeam = true
   else
+    DB.isboxerTeam = false
     DB:ManualSetup()
   end
   isboxer.SetMacro = prev
@@ -707,7 +711,7 @@ function DB:ProcessMessage(source, from, data)
     end
     DB:Debug("Change of character received for slot %: was % -> now %", idx, previousMapping.fullName, realname)
   end
-  if DB.manual > 0 then
+  if not DB.isboxerTeam and DB.manual > 0 then
     DB:ManualExtendTeam(DB.manualTeamSize, idx)
   end
   DB.Team[idx] = {orig = DB.ISBTeam[idx], new = shortName, fullName = realname, slot = idx}
@@ -738,7 +742,7 @@ function DB:ProcessMessage(source, from, data)
   end
   isboxer.NextButton = 1 -- reset the buttons
   -- call normal LoadBinds (with output/warning hooked). TODO: maybe wait/batch/don't do it 5 times in small amount of time
-  if DB.manual == 0 then
+  if DB.isboxerTeam then
     self.ISBO.LoadBinds()
   end
   if previousMapping then

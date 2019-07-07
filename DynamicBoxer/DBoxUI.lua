@@ -429,6 +429,20 @@ function DB.CreateOptionsPanel()
   bReset:Disable()
 
   function p:refresh()
+    DB:Debug("Options Panel refresh!")
+    if DB.debug then
+      -- expose errors
+      xpcall(function()
+        self:HandleRefresh()
+      end, geterrorhandler())
+    else
+      -- normal behavior for interface option panel: errors swallowed by caller
+      self:HandleRefresh()
+    end
+  end
+
+  function p:HandleRefresh()
+    p:Init()
     debugLevel:SetValue(DB.debug or 0)
     invitingSlot:SetValue(DB.autoInviteSlot)
     if DB.autoInvite then
