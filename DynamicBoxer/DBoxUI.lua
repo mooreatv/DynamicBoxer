@@ -8,6 +8,7 @@
 -- local _addon, _ns = ...
 -- Created by DBoxInit
 local DB = DynBoxer
+local L = DB.L
 
 DB.fontString = DB:CreateFontString() -- used for width calculations
 
@@ -350,15 +351,22 @@ function DB.CreateOptionsPanel()
   p:addButton("Disband", "If party leader, Uninvite the members of the team,\npossibly leaving guests." ..
                 "Otherwise, leave the party\n|cFF99E5FF/dbox p disband|r or Key Binding", "party disband"):PlaceRight()
 
-  local invitingSlot = p:addSlider("Party leader Slot", "Sets which slot should be doing the party inviting", 1, 5)
-                         :Place(16, 12) -- need more vspace
+  local invitingSlot = p:addSlider("Party leader slot", "Sets which slot should be doing the party inviting\n" ..
+                                     "or e.g |cFF99E5FF/dbox autoinv 5|r for invites from slot 5", 1,
+                                   math.max(5, DB.expectedCount)):Place(16, 12) -- need more vspace
+
+  local autoRaid = p:addCheckBox("Auto convert to raid",
+                                 "Whether to auto convert to raid before inviting the 6th party member\n" ..
+                                   "|cFF99E5FF/dbox raid|r"):Place(4, 6)
 
   autoInvite:SetScript("PostClick", function(w, button, down)
     DB:Debug(3, "ainv post click % %", button, down)
     if w:GetChecked() then
       invitingSlot:DoEnable()
+      autoRaid:DoEnable()
     else
       invitingSlot:DoDisable()
+      autoRaid:DoDisable()
     end
   end)
 
@@ -448,10 +456,13 @@ function DB.CreateOptionsPanel()
     if DB.autoInvite then
       autoInvite:SetChecked(true)
       invitingSlot:DoEnable()
+      autoRaid:DoEnable()
     else
       autoInvite:SetChecked(false)
       invitingSlot:DoDisable()
+      autoRaid:DoDisable()
     end
+    autoRaid:SetChecked(DB.autoRaid)
   end
 
   function p:HandleOk()
@@ -472,7 +483,10 @@ function DB.CreateOptionsPanel()
     DB:SetSaved("autoInvite", ainv)
     local ainvSlot = invitingSlot:GetValue()
     DB:SetSaved("autoInviteSlot", ainvSlot)
-    DB:PrintDefault("Configuration: auto invite is " .. (ainv and "ON" or "OFF") .. " for slot %", ainvSlot)
+    local raid = autoRaid:GetChecked()
+    DB:SetSaved("autoRaid", raid)
+    DB:PrintDefault("Configuration: auto invite is " .. (ainv and "ON" or "OFF") .. " for slot %, auto raid is " ..
+                      (raid and "ON" or "OFF"), ainvSlot)
     -- DB:Warning("Generating lua error on purpose in p:HandleOk()")
     -- error("testing errors")
   end
@@ -500,7 +514,7 @@ end
 ---
 --- Bindings settings (i18n/l10n)
 _G.DYNAMICBOXER = "DynamicBoxer"
-_G.BINDING_HEADER_DYNAMICBOXER = "DynamicBoxer addon key bindings"
+_G.BINDING_HEADER_DYNAMICBOXER = L["DynamicBoxer addon key bindings"]
 _G.BINDING_NAME_DBOX_INVITE = "Invite team  |cFF99E5FF/dbox party invite|r"
 _G.BINDING_NAME_DBOX_DISBAND = "Disband  |cFF99E5FF/dbox party disband|r"
 _G.BINDING_NAME_DBOX_XCHG = "Exchange token  |cFF99E5FF/dbox xchg|r"

@@ -6,8 +6,12 @@ Coming next:
 - Your input/suggestions welcome !
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+1.8.4 July 7th 2019
+- new Auto Raid option (Issue #40)
+- start of Localization support (mostly initial tiny infrastructure in MoLib)
+
 1.8.3 July 6th 2019
-- fix for tainting (Issue #38) by delaying init
+- fix for tainting (Issue #38) by delaying init  (most of the fix in MoLib)
 - manual mode improvements
 
 1.8.2 July 5th 2019

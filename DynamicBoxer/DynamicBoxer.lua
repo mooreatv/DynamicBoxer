@@ -38,6 +38,7 @@ local addon, _ns = ...
 
 -- Created by DBoxInit
 local DB = DynBoxer
+local L = DB.L
 
 -- We considered using bnet communication as a common case is all characters are from same bnet
 -- See Issue #5, unfortunately seems impossible to see self logged in characters (even though you can see all your friends)
@@ -79,12 +80,13 @@ DB.configVersion = 1 -- bump up to support conversion (and update the ADDON_LOAD
 
 DB.autoInvite = 1 -- so it's discovered/useful by default
 DB.autoInviteSlot = 1
+DB.autoRaid = true
 
 DB.manual = 0 -- testing manual mode, 0 is off, number is slot id
 -- Set to actual expected size, or we'll start with 2 and extend as we get messages from higher slots
 DB.manualTeamSize = 0
 -- will be true when we find the isboxer character configured
-DB.isboxerTeam  = false
+DB.isboxerTeam = false
 
 DB.EMA = _G.LibStub and _G.LibStub:GetLibrary("AceAddon-3.0", true)
 DB.EMA = DB.EMA and DB.EMA:GetAddon("Team", true)
@@ -553,7 +555,27 @@ DB.Team = {} -- TODO: save the team for caching/less waste upon reload (and/or c
 
 DB.duplicateMsg = DB:LRU(100)
 
+DB.numInvites = 1
+DB.needRaid = false
+
+function DB:Invite(fullName)
+  local num = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) -- this lags/doesn't include not yet accepted invites
+  DB:Debug("Currently % in party/raid, oustanding/done invites %", num, DB.numInvites)
+  if DB.numInvites == 5 then -- add and not already in raid
+    if DB.autoRaid then
+      DB:PrintDefault("Auto converting to raid")
+      ConvertToRaid()
+      DB.needRaid = true
+    else
+      DB:Warning("Set Auto raid on to avoid upcoming Party full error")
+    end
+  end
+  DB.numInvites = DB.numInvites + 1
+  InviteUnit(fullName)
+end
+
 function DB:PartyInvite()
+  DB.numInvites = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME)
   for k, v in pairs(DB.Team) do
     DB:Debug(9, "k is %, v is %", k, v)
     assert(k == v.slot)
@@ -563,7 +585,7 @@ function DB:PartyInvite()
       DB:Debug("Slot %: % is already in our party/raid, won't re invite", k, v.fullName)
     else
       DB:PrintDefault("Inviting #%: %", k, v.fullName)
-      InviteUnit(v.fullName)
+      DB:Invite(v.fullName)
     end
   end
 end
@@ -571,6 +593,7 @@ end
 -- this actually either uninvite the team members (and maybe leaves guests and lead)
 -- or leaves the party if not leader.
 function DB:Disband()
+  DB.needRaid = false
   if UnitIsGroupLeader("player") then
     DB:Debug("We are party leader, uninvite everyone from the team")
     for k, v in pairs(DB.Team) do
@@ -579,13 +602,14 @@ function DB:Disband()
       elseif UnitInParty(v.new) then -- need to check using the shortname
         DB:PrintDefault("Uninviting #%: %", k, v.fullName)
         UninviteUnit(v.new) -- also need to be shortname
+        DB.numInvites = DB.numInvites - 1
       else
         DB:Debug("Slot %: % is already not in our party/raid, won't uninvite", k, v.fullName)
       end
     end
   else
     -- just leave
-    DB:PrintDefault("Disband requested, we aren't party leader so we're just leaving")
+    DB:PrintDefault(L["Disband requested, we aren't party leader so we're just leaving"])
     LeaveParty()
   end
 end
@@ -722,7 +746,7 @@ function DB:ProcessMessage(source, from, data)
     else
       DB:PrintDefault("Auto invite is on for our slot, inviting #%: % (turn off/configure in /dbox config if desired)",
                       idx, realname)
-      InviteUnit(realname)
+      DB:Invite(realname)
     end
   else
     DB:Debug("Slot % not inviting slot % - auto inv slot is %, auto invite is %", DB.ISBIndex, idx, DB.autoInviteSlot,
@@ -805,13 +829,15 @@ DB.EventD = {
     if DB.ticker then
       DB.ticker:Cancel() -- cancel previous one to resync timer
     end
-    DB.CreateOptionsPanel()
     DB.Sync() -- first one at load
     DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync) -- and one every refresh
     -- re register for later UPDATE_BINDINGS now that we got to initialize (Issue #19)
     if isboxer.frame then
       isboxer.frame:RegisterEvent("UPDATE_BINDINGS")
     end
+    DB.numInvites = math.max(GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1)
+    DB:Debug("Set initial inv count to %", DB.numInvites)
+    DB.CreateOptionsPanel() -- after sync so we get teamsize for invite slider
   end,
 
   CHANNEL_COUNT_UPDATE = function(self, _event, displayIndex, count) -- Note: never seem to fire
@@ -879,6 +905,9 @@ DB.EventD = {
   end,
 
   GROUP_ROSTER_UPDATE = function(self, ...)
+    if DB.needRaid and DB.autoRaid then -- in case it got turned off
+      ConvertToRaid()
+    end
     self:DebugEvCall(2, ...)
   end,
 
