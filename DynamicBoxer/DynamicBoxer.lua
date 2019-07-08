@@ -1019,16 +1019,32 @@ end
 
 DB.joinDone = false -- because we reschedule the join from multiple place, lets do that only once
 
+DB.maxStdChannelCheck = 10
+
 -- note: 2 sources of retry, the dynamic init and
 function DB:Join()
   -- First check if we have joined the last std channel and reschedule if not
   -- (so our channel doesn't end up as first one, and /1, /2 etc are normal)
-  local id, name, instanceID = GetChannelName(1)
-  DB:Debug("Checking std channel, res % name % instanceId %", id, name, instanceID)
-  if id <= 0 then
-    DB:Debug("Not yet in std channel, retry later")
-    return
+  local stdOk = false
+  for i = 1, 3 do -- check any of 1,2,3
+    local id, name, instanceID = GetChannelName(i)
+    DB:Debug("Checking std channel %, res % name % instanceId %", i, id, name, instanceID)
+    if id > 0 then
+      stdOk = true
+      break
+    end
   end
+  if not stdOk then
+    DB:Debug("Not yet in std channel 1,2 nor 3, we'll retry later")
+    DB.maxStdChannelCheck = DB.maxStdChannelCheck - 1
+    if DB.maxStdChannelCheck < 0 then
+      DB:Warning(
+        "Didn't find expected standard channels 1,2,3 after 10 tries, giving up/joining anyway, please report your setup")
+    else
+      return
+    end
+  end
+  DB.maxStdChannelCheck = 10
   if DB.joinDone and DB.joinedChannel and GetChannelName(DB.joinedChannel) then
     DB:Debug("Join already done and channel id still valid. skipping this one") -- Sync will retry
     return

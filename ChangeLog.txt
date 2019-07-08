@@ -6,6 +6,10 @@ Coming next:
 - Your input/suggestions welcome !
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+1.8.5 July 7th 2019
+- Fix issue #36: if you deleted /1, dynamic boxer would wait forever for it to show up. Now checks either 1,2,3
+and gives up after 10 tries with a warning, please report it if you see that warning
+
 1.8.4 July 7th 2019
 - new Auto Raid option (Issue #40)
 - start of Localization support (mostly initial tiny infrastructure in MoLib)
