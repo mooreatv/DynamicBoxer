@@ -7,8 +7,9 @@ Coming next:
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 1.8.5 July 7th 2019
-- Fix issue #36: if you deleted /1, dynamic boxer would wait forever for it to show up. Now checks either 1,2,3
-and gives up after 10 tries with a warning, please report it if you see that warning
+- Fix issue #36: if an addon took /1 (like elvui) or you deleted /1, dynamic boxer would wait forever
+for it to show up. Now we use a better check for std channels and give up after 1 minute 
+(to let new characters cinematic end) with an error, please report it if you see that warning
 
 1.8.4 July 7th 2019
 - new Auto Raid option (Issue #40)

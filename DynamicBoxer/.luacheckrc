@@ -17,6 +17,7 @@ globals = {
     "EventTraceFrame_OnShow",
     "geterrorhandler",
     "GameFontNormal",
+    "GetChannelList",
     "GetChannelName",
     "GetServerTime",
     "GetTime",

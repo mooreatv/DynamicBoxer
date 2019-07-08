@@ -1019,32 +1019,35 @@ end
 
 DB.joinDone = false -- because we reschedule the join from multiple place, lets do that only once
 
-DB.maxStdChannelCheck = 10
+-- wait up to 1min 10s for channels to show upcharacter creation cinematic to end (dwarf one is ~ 1min)
+DB.maxStdChannelCheck = 70 / DB.refresh + 1
+DB.stdChannelChecks = 0
 
 -- note: 2 sources of retry, the dynamic init and
 function DB:Join()
-  -- First check if we have joined the last std channel and reschedule if not
+  -- First check if we have the std channel and reschedule if not
   -- (so our channel doesn't end up as first one, and /1, /2 etc are normal)
-  local stdOk = false
-  for i = 1, 3 do -- check any of 1,2,3
-    local id, name, instanceID = GetChannelName(i)
-    DB:Debug("Checking std channel %, res % name % instanceId %", i, id, name, instanceID)
-    if id > 0 then
-      stdOk = true
-      break
-    end
+  if DB.stdChannelChecks == 0 then
+    DB.Slash("etrace")
   end
-  if not stdOk then
-    DB:Debug("Not yet in std channel 1,2 nor 3, we'll retry later")
-    DB.maxStdChannelCheck = DB.maxStdChannelCheck - 1
-    if DB.maxStdChannelCheck < 0 then
-      DB:Warning(
-        "Didn't find expected standard channels 1,2,3 after 10 tries, giving up/joining anyway, please report your setup")
+  -- GetChannelList() is used by chatconfigchanelsettings, but  C_ChatInfo.GetNumActiveChannels() is
+  -- same cardinality at all times (that I tested) and much simpler, so using it:
+  local numChans = C_ChatInfo.GetNumActiveChannels() -- {GetChannelList()}
+  DB:Debug("Checking std channel (active %) list: %", numChans)
+  if numChans <= 1 then -- we want /1 General and /2 Trade (or /3 Local Defense) at least
+    DB:Debug("Not having std channels, we'll retry later- check %/%, numChans=%", DB.stdChannelChecks,
+             DB.maxStdChannelCheck, numChans)
+    DB.stdChannelChecks = DB.stdChannelChecks + 1
+    if DB.stdChannelChecks > DB.maxStdChannelCheck then
+      DB:Error("Didn't find expected standard channels 1,2,3 after > 1 minute (% checks, % channels found)," ..
+                 " giving up/joining anyway, please report this", numChans, DB.stdChannelChecks)
     else
+      -- keep trying for now
       return
     end
   end
-  DB.maxStdChannelCheck = 10
+  DB.Slash("etrace stop")
+  DB.stdChannelChecks = 0
   if DB.joinDone and DB.joinedChannel and GetChannelName(DB.joinedChannel) then
     DB:Debug("Join already done and channel id still valid. skipping this one") -- Sync will retry
     return
