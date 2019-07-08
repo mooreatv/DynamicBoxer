@@ -558,32 +558,66 @@ DB.duplicateMsg = DB:LRU(100)
 DB.numInvites = 1
 DB.needRaid = false
 
-function DB:Invite(fullName)
+-- raid logic is kinda ugly and too tricky - refactor?
+
+function DB:Invite(fullName, rescheduled)
   local num = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) -- this lags/doesn't include not yet accepted invites
-  DB:Debug("Currently % in party/raid, oustanding/done invites %", num, DB.numInvites)
+  local inRaid = IsInRaid(LE_PARTY_CATEGORY_HOME)
+  DB:Debug("Currently % in party/raid, in raid is %, oustanding/done invites %", num, inRaid, DB.numInvites)
   if DB.numInvites == 5 then -- add and not already in raid
-    if DB.autoRaid then
-      DB:PrintDefault("Auto converting to raid")
-      ConvertToRaid()
-      DB.needRaid = true
-    else
-      DB:Warning("Set Auto raid on to avoid upcoming Party full error")
+    if not DB.autoRaid then
+      if not inRaid then
+        DB:Warning("Set Auto raid on to avoid upcoming Party full error")
+      end
+    elseif not inRaid then
+      if not rescheduled then
+        DB:PrintDefault("Auto converting to raid")
+        ConvertToRaid()
+      end
+      -- retest in case conversion to raid just worked
+      if not IsInRaid(LE_PARTY_CATEGORY_HOME) then
+        DB:Debug("Not yet in raid, rescheduling the invite...")
+        DB.needRaid = true
+        C_Timer.After(0.2, function()
+          DB:Invite(fullName, true)
+        end)
+        return
+      end
     end
   end
   DB.numInvites = DB.numInvites + 1
   InviteUnit(fullName)
 end
 
-function DB:PartyInvite()
-  DB.numInvites = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME)
+function DB:PartyInvite(continueFrom)
+  DB.numInvites = math.max(1, GetNumGroupMembers(LE_PARTY_CATEGORY_HOME))
+  local pauseBetweenPartyAndRaid = false
+  if DB.numInvites == 1 then
+    -- we don't even have a party yet, so we can't make a raid so we'll stop at 5 and reschedule
+    pauseBetweenPartyAndRaid = true
+  end
+  if IsInRaid(LE_PARTY_CATEGORY_HOME) then
+    pauseBetweenPartyAndRaid = false
+  end
+  continueFrom = continueFrom or 0
   for k, v in pairs(DB.Team) do
     DB:Debug(9, "k is %, v is %", k, v)
     assert(k == v.slot)
-    if k == DB.ISBIndex then
+    if k < continueFrom then
+      DB:Debug("skipping % as we are continuing from %", k, continueFrom)
+    elseif k == DB.ISBIndex then
       DB:Debug("Slot %: is us, not inviting ourselves.", k)
     elseif UnitInParty(v.new) then
       DB:Debug("Slot %: % is already in our party/raid, won't re invite", k, v.fullName)
     else
+      if DB.autoRaid and pauseBetweenPartyAndRaid and k >= 6 then
+        DB:PrintDefault("Small pause between party to raid transition...")
+        DB.needRaid = true
+        C_Timer.After(0.5, function()
+          DB:PartyInvite(k)
+        end)
+        return
+      end
       DB:PrintDefault("Inviting #%: %", k, v.fullName)
       DB:Invite(v.fullName)
     end
@@ -782,6 +816,7 @@ function DB:ProcessMessage(source, from, data)
   end
   if teamComplete then
     DB:PrintInfo("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!", DB.currentCount)
+    DB.needRaid = false
   end
   -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
   if DB.currentCount == DB.expectedCount and DB.EMA then
@@ -905,7 +940,9 @@ DB.EventD = {
   end,
 
   GROUP_ROSTER_UPDATE = function(self, ...)
-    if DB.needRaid and DB.autoRaid then -- in case it got turned off
+    DB:Debug("Rooster udate, num party %, needRaid %", GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), DB.needRaid)
+    if DB.needRaid and DB.autoRaid and not IsInRaid(LE_PARTY_CATEGORY_HOME) then -- in case it got turned off
+      DB:Debug("(Re) converting to raid")
       ConvertToRaid()
     end
     self:DebugEvCall(2, ...)

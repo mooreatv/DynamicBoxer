@@ -6,6 +6,9 @@ Coming next:
 - Your input/suggestions welcome !
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+1.8.6 July 8th 2019
+- Automatic conversion to Raid when needed is now very solid and very fast (fastest raid forming ever?)
+
 1.8.5 July 7th 2019
 - Fix issue #36: if an addon took /1 (like elvui) or you deleted /1, dynamic boxer would wait forever
 for it to show up. Now we use a better check for std channels and give up after 1 minute 

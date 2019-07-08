@@ -24,6 +24,7 @@ globals = {
     "InterfaceOptionsFrame",
     "InterfaceOptionsFrame_OpenToCategory",
     "InviteUnit",
+    "IsInRaid",
     "JoinTemporaryChannel",
     "GetBindingAction",
     "GetNumGroupMembers",
