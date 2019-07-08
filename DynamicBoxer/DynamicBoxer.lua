@@ -1027,13 +1027,13 @@ DB.stdChannelChecks = 0
 function DB:Join()
   -- First check if we have the std channel and reschedule if not
   -- (so our channel doesn't end up as first one, and /1, /2 etc are normal)
-  --if DB.stdChannelChecks == 0 then
+  -- if DB.stdChannelChecks == 0 then
   --  DB.Slash("etrace")
-  --end
+  -- end
   -- GetChannelList() is used by chatconfigchanelsettings, but  C_ChatInfo.GetNumActiveChannels() is
   -- same cardinality at all times (that I tested) and much simpler, so using it:
   local numChans = C_ChatInfo.GetNumActiveChannels() -- {GetChannelList()}
-  DB:Debug("Checking std channel (active %) list: %", numChans)
+  DB:Debug("Checking std channel: num is %", numChans)
   if numChans <= 1 then -- we want /1 General and /2 Trade (or /3 Local Defense) at least
     DB:Debug("Not having std channels, we'll retry later- check %/%, numChans=%", DB.stdChannelChecks,
              DB.maxStdChannelCheck, numChans)
@@ -1046,7 +1046,7 @@ function DB:Join()
       return
     end
   end
-  --DB.Slash("etrace stop")
+  -- DB.Slash("etrace stop")
   DB.stdChannelChecks = 0
   if DB.joinDone and DB.joinedChannel and GetChannelName(DB.joinedChannel) then
     DB:Debug("Join already done and channel id still valid. skipping this one") -- Sync will retry
