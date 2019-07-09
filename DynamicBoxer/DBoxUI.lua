@@ -534,6 +534,9 @@ end
 DB.statusUp = false
 
 function DB:AddStatusLine(f)
+  if not f then
+    return
+  end
   if DB.expectedCount <= 0 or DB.statusUp then
     f:setSizeToChildren(0, 2)
     return -- already done
