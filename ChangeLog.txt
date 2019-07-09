@@ -2,9 +2,9 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 Coming next:
 - Setup/use more master memory to avoid needing a `/dbox j` when when reloading just the master
-- More refinements on options panel and other features
+- More refinements on the new status UI, options panel and other features
 - Your input/suggestions welcome !
-- Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
+- See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 1.9.0 July 9th 2019
 - Initial moveable, position saved, status frame, shows connected slots

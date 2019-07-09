@@ -1100,7 +1100,7 @@ function DB:Join()
     DB:Debug("Not having std channels, we'll retry later- check %/%, numChans=%", DB.stdChannelChecks,
              DB.maxStdChannelCheck, numChans)
     DB.stdChannelChecks = DB.stdChannelChecks + 1
-    if DB.stdChannelChecks % 5 then
+    if DB.stdChannelChecks % 5 == 0 then
       DB:PrintInfo("DynamicBoxer still waiting for standard channels to appear... retry #%", DB.stdChannelChecks)
     end
     if DB.stdChannelChecks > DB.maxStdChannelCheck then

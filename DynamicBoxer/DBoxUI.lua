@@ -518,14 +518,14 @@ local slotToText = function(self, slot)
   DB:Debug("Called slotToText %", slot)
   if not slot then
     self:SetText("?")
-    self:SetTextColor(0.96, 0.63, 0.26)
+    self:SetTextColor(1, 0.3, 0.2)
     return
   end
   self:SetText(string.format("%d", slot))
   if slot <= 0 then
     self:SetTextColor(0.96, 0.63, 0.26)
   else
-    self:SetTextColor(.15, .85, .15)
+    self:SetTextColor(.2, .9, .15)
   end
 end
 
@@ -538,7 +538,7 @@ function DB:AddStatusLine(f)
     return
   end
   if DB.expectedCount <= 0 or DB.statusUp then
-    f:setSizeToChildren(0, 2)
+    f:setSizeToChildren(0, 3)
     return -- already done
   end
   DB.statusUp = true
@@ -555,7 +555,7 @@ function DB:AddStatusLine(f)
       f:addText(">"):PlaceRight(x):SetTextColor(0.7, 0.7, 0.7)
       x = 0
     end
-    local status = f:addText("?"):PlaceRight(x)
+    local status = f:addText("?", f.fontName):PlaceRight(x)
     if i == DB.watched.slot then
       f:addText("<"):PlaceRight(0):SetTextColor(0.7, 0.7, 0.7)
     end
@@ -564,8 +564,8 @@ function DB:AddStatusLine(f)
     end)
     slotToText(status, DB.watched[i])
   end
-  local partySize = f:addText("(" .. tostring(DB.expectedCount) .. ")"):PlaceRight(2, 0)
-  partySize:SetTextColor(0, 0, 0)
+  local partySize = f:addText("(" .. tostring(DB.expectedCount) .. ")"):PlaceRight(4, 0)
+  partySize:SetTextColor(.95, .85, .05)
   f:SetScript("OnMouseUp", function(_w, mod)
     DB:Debug("Clicked on party size %", mod)
     if mod == "LeftButton" then
@@ -576,7 +576,7 @@ function DB:AddStatusLine(f)
       DB.Slash("party disband")
     end
   end)
-  f:setSizeToChildren(0, 2)
+  f:setSizeToChildren(0, 3)
 end
 
 function DB:SetupStatusUI()
@@ -585,8 +585,9 @@ function DB:SetupStatusUI()
     return
   end
   DB:Debug(1, "Creating Status frame")
-  local f = DB:Frame(DynBoxer, "DynamicBoxer_Status")
+  local f = DB:Frame(DynBoxer, "DynamicBoxer_Status", "DynamicBoxer_Status")
   DB.statusFrame = f
+  f.fontName = "GameFontHighlightLeft"
   f:SetMovable(true)
   f:RegisterForDrag("LeftButton")
   f:SetScript("OnDragStart", f.StartMoving)
@@ -606,10 +607,10 @@ function DB:SetupStatusUI()
   f:SetHeight(1) -- will recalc below
   f.bg = f:CreateTexture(nil, "BACKGROUND")
   f.bg:SetAllPoints()
-  f.bg:SetColorTexture(.1, .3, .75, 0.6)
+  f.bg:SetColorTexture(.1, .2, .7, 0.7)
   f:SetAlpha(.9)
-  f:addText("DynamicBoxer on "):Place(1, 1):SetTextColor(0.7, 0.7, 0.7)
-  f.slotNum = f:addText("?"):PlaceRight(0, 0)
+  f:addText("DynamicBoxer on ", f.fontName):Place(1, 1):SetTextColor(0.7, 0.7, 0.7)
+  f.slotNum = f:addText("?", f.fontName):PlaceRight(0, 0)
   f.slotNum.slotToText = slotToText
   f.slotNum:slotToText(self.watched.slot)
   DB.watched:AddWatch("slot", function(_k, v, _oldVal)
