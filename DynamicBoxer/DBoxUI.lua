@@ -321,7 +321,7 @@ end
 
 --- Options panel ---
 
-function DB.CreateOptionsPanel()
+function DB:CreateOptionsPanel()
   if DB.optionsPanel then
     DB:Debug("Options Panel already setup")
     return
@@ -398,8 +398,8 @@ function DB.CreateOptionsPanel()
   p:addText("Choose a |cFFFF1010reset|r option:"):Place(0, 30)
 
   -- TODO add confirmation before reset all
-  local bReset = p:addButton("Reset!", "Choose what to reset in the drop down...", function(self)
-    DB.Slash(self.resetCmd)
+  local bReset = p:addButton("Reset!", "Choose what to reset in the drop down...", function(w)
+    DB.Slash(w.resetCmd)
   end)
 
   local cb = function(value)
@@ -429,6 +429,10 @@ function DB.CreateOptionsPanel()
       text = "Reset Members History",
       tooltip = "Resets the team members history for this faction\n|cFF99E5FF/dbox reset members|r",
       value = "reset members"
+    }, {
+      text = "Reset Status Position",
+      tooltip = "Resets the status window position\n|cFF99E5FF/dbox reset status|r",
+      value = "reset status"
     }
   }):PlaceRight(-10, -7.5)
 
@@ -510,7 +514,107 @@ function DB.CreateOptionsPanel()
   InterfaceOptions_AddCategory(DB.optionsPanel)
 end
 
----
+local slotToText = function(self, slot)
+  DB:Debug("Called slotToText %", slot)
+  if not slot then
+    self:SetText("?")
+    self:SetTextColor(0.96, 0.63, 0.26)
+    return
+  end
+  self:SetText(string.format("%d", slot))
+  if slot <= 0 then
+    self:SetTextColor(0.96, 0.63, 0.26)
+  else
+    self:SetTextColor(.15, .85, .15)
+  end
+end
+
+--- Status and runtime frame
+
+DB.statusUp = false
+
+function DB:AddStatusLine(f)
+  if DB.expectedCount <= 0 or DB.statusUp then
+    f:setSizeToChildren(0, 2)
+    return -- already done
+  end
+  DB.statusUp = true
+  DB:Debug("Adding team line! %", DB.expectedCount)
+  -- should center instead of this
+  local offset = 29 - 4 * DB.expectedCount
+  if offset < -3 then
+    offset = -3
+  end
+  f:addText(""):Place(offset, 0)
+  for i = 1, DB.expectedCount do
+    local x = 3
+    if i == DB.watched.slot then
+      f:addText(">"):PlaceRight(x):SetTextColor(0.7, 0.7, 0.7)
+      x = 0
+    end
+    local status = f:addText("?"):PlaceRight(x)
+    if i == DB.watched.slot then
+      f:addText("<"):PlaceRight(0):SetTextColor(0.7, 0.7, 0.7)
+    end
+    DB.watched:AddWatch(i, function(_k, v, _oldVal)
+      slotToText(status, v)
+    end)
+    slotToText(status, DB.watched[i])
+  end
+  local partySize = f:addText("(" .. tostring(DB.expectedCount) .. ")"):PlaceRight(2, 0)
+  partySize:SetTextColor(0, 0, 0)
+  f:SetScript("OnMouseUp", function(_w, mod)
+    DB:Debug("Clicked on party size %", mod)
+    if mod == "LeftButton" then
+      DB.Slash("party invite")
+    elseif mod == "RightButton" then
+      DB.Slash("config")
+    else
+      DB.Slash("party disband")
+    end
+  end)
+  f:setSizeToChildren(0, 2)
+end
+
+function DB:SetupStatusUI()
+  if DB.statusFrame then
+    DB:Debug(1, "Status frame already created")
+    return
+  end
+  DB:Debug(1, "Creating Status frame")
+  local f = DB:Frame(DynBoxer, "DynamicBoxer_Status")
+  DB.statusFrame = f
+  f:SetMovable(true)
+  f:RegisterForDrag("LeftButton")
+  f:SetScript("OnDragStart", f.StartMoving)
+  f:SetScript("OnDragStop", function(w, ...)
+    f.StopMovingOrSizing(w, ...)
+    local point, _, relativePoint, xOfs, yOfs = w:GetPoint()
+    DB:Debug("Stopped moving status widget % % % %", point, relativePoint, xOfs, yOfs)
+    local statusPos = {point, xOfs, yOfs} -- relativePoint seems to always be same as point
+    DB:SetSaved("statusPos", statusPos)
+  end)
+  f:EnableMouse(true)
+  if not DB.statusPos then
+    DB.statusPos = {"TOP", 0, 0} -- attach to top of the screen by default
+  end
+  f:SetPoint(unpack(DB.statusPos))
+  f:SetWidth(1)
+  f:SetHeight(1) -- will recalc below
+  f.bg = f:CreateTexture(nil, "BACKGROUND")
+  f.bg:SetAllPoints()
+  f.bg:SetColorTexture(.1, .3, .75, 0.6)
+  f:SetAlpha(.9)
+  f:addText("DynamicBoxer on "):Place(1, 1):SetTextColor(0.7, 0.7, 0.7)
+  f.slotNum = f:addText("?"):PlaceRight(0, 0)
+  f.slotNum.slotToText = slotToText
+  f.slotNum:slotToText(self.watched.slot)
+  DB.watched:AddWatch("slot", function(_k, v, _oldVal)
+    f.slotNum:slotToText(v)
+  end)
+  DB:AddStatusLine(DB.statusFrame)
+end
+
 --- Bindings settings (i18n/l10n)
 _G.DYNAMICBOXER = "DynamicBoxer"
 _G.BINDING_HEADER_DYNAMICBOXER = L["DynamicBoxer addon key bindings"]

@@ -58,6 +58,7 @@ for _, faction in ipairs(DB.Factions) do
   DB.masterHistory[faction] = DB:LRU(50)
   DB.memberHistory[faction] = DB:LRU(200)
 end
+DB.watched = DB:WatchedTable()
 
 DB.currentCount = 0 -- how many characters from the team have been mapped (ie size of sorted team)
 DB.expectedCount = 0 -- how many slots we expect to see/map
@@ -215,6 +216,7 @@ function DB:ManualExtendTeam(oldSize, newSize)
   end
   DB.manualTeamSize = newSize
   DB.expectedCount = newSize
+  DB:AddStatusLine(DB.statusFrame)
 end
 
 function DB:ManualSetup()
@@ -228,6 +230,7 @@ function DB:ManualSetup()
   end
   DB:Warning("Manual mode, no isboxer binding, simulating slot % / %", DB.manual, DB.manualTeamSize)
   DB.ISBIndex = DB.manual
+  DB.watched.slot = DB.ISBIndex
   if DB.manual == 1 then
     DB.MasterName = DB.fullName
   end
@@ -252,7 +255,11 @@ function DB:ReconstructTeam()
   end
   local searchingFor = isboxer.Character.ActualName
   if not searchingFor or #searchingFor == 0 then
-    DB:Error("Your isboxer.Character.ActualName is not set. please report your config/setup/how to reproduce.")
+    if DB.manual > 0 then
+      DB:Warning("No isboxer.Character.ActualName but we have manual override for slot %", DB.manual)
+    else
+      DB:Error("Your isboxer.Character.ActualName is not set. please report your config/setup/how to reproduce.")
+    end
     return
   end
   local prev = isboxer.SetMacro
@@ -273,6 +280,7 @@ function DB:ReconstructTeam()
           DB:Warning("Duplicate entry for % found in %!", searchingFor, text)
         else
           DB.ISBIndex = #DB.ISBTeam
+          DB.watched.slot = DB.ISBIndex
         end
       end
     end
@@ -300,6 +308,7 @@ function DB:ReconstructTeam()
     fullName = DB.fullName,
     slot = DB.ISBIndex
   }
+  DB.watched[DB.ISBIndex] = DB.ISBIndex
   if DB.ISBIndex == 1 then
     DB.MasterName = DB.fullName
   end
@@ -315,6 +324,7 @@ function DB:ReconstructTeam()
   dynamicBoxerSaved.teamHistory = DB.teamHistory
   DB.currentCount = DB:SortTeam() -- will be 1
   DB.expectedCount = #DB.ISBTeam
+  DB:AddStatusLine(DB.statusFrame)
   DB:Debug("Unique team string key is %, updated in history, expecting a team of size #%", teamStr, DB.expectedCount)
   if DB.EMA then
     DB.EMA.db.newTeamList = {}
@@ -821,6 +831,7 @@ function DB:ProcessMessage(source, from, data)
   else
     DB:PrintInfo("New mapping for slot %, dynamically set ISBoxer character to % (%)", idx, shortName, realname)
   end
+  DB.watched[idx] = idx
   if idx == 1 then
     DB:AddToMasterHistory(realname)
   else
@@ -873,6 +884,7 @@ DB.EventD = {
 
   PLAYER_ENTERING_WORLD = function(self, ...)
     self:Debug("OnPlayerEnteringWorld " .. DB:Dump(...))
+    DB:SetupStatusUI()
     if DB.ticker then
       DB.ticker:Cancel() -- cancel previous one to resync timer
     end
@@ -884,7 +896,7 @@ DB.EventD = {
     end
     DB.numInvites = math.max(GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1)
     DB:Debug("Set initial inv count to %", DB.numInvites)
-    DB.CreateOptionsPanel() -- after sync so we get teamsize for invite slider
+    DB:CreateOptionsPanel() -- after sync so we get teamsize for invite slider
   end,
 
   CHANNEL_COUNT_UPDATE = function(self, _event, displayIndex, count) -- Note: never seem to fire
@@ -1147,7 +1159,7 @@ function DB:Help(msg)
                     "/dbox autoinv toggle||off||n -- toggles, turns off or turns on for slot n the autoinvite\n" ..
                     "/dbox config -- open addon config, dbox c works too\n" ..
                     "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
-                    "/dbox reset teams||token||masters||members||all -- resets one part of saved variables or all, respectively" ..
+                    "/dbox reset teams||token||masters||members||status||all -- resets one part of saved variables or all" ..
                     "\n/dbox version -- shows addon version")
 end
 
@@ -1214,6 +1226,9 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     elseif rest == "token" then
       dynamicBoxerSaved.MasterToken = nil
       DB:Warning("Token cleared per request, will prompt for it at next login")
+    elseif rest == "status" then
+      dynamicBoxerSaved.statusPos = nil
+      DB:Warning("Saved window status position cleared per request, will reset at next login")
     elseif rest == "masters" then
       if dynamicBoxerSaved.serializedMasterHistory then
         dynamicBoxerSaved.serializedMasterHistory[DB.faction] = {}
