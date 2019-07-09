@@ -250,9 +250,14 @@ function DB:ReconstructTeam()
       "DynamicBoxer skipping team reconstruction as there is no isboxer team (not running under innerspace).")
     return
   end
+  local searchingFor = isboxer.Character.ActualName
+  if not searchingFor or #searchingFor == 0 then
+    DB:Error("Your isboxer.Character.ActualName is not set. please report your config/setup/how to reproduce.")
+    return
+  end
   local prev = isboxer.SetMacro
   DB.ISBTeam = {}
-  DB.ISBIndex = -1
+  DB.ISBIndex = -1 -- temp value to check for already set/dups/found below
   DB.IsbAssistMacro = "<not found>"
   -- parse the text which looks like (note the ]xxx; delimiters for most but \n at the end)
   -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt...,mod:lctrl]LAST\n""
@@ -263,9 +268,9 @@ function DB:ReconstructTeam()
     DB.ISBAssistMacro = text
     for x in text:gmatch("%]([^;]+)[;\n]") do
       table.insert(DB.ISBTeam, x)
-      if x == isboxer.Character.ActualName then
+      if x == searchingFor then
         if DB.ISBIndex > 0 then
-          DB:Warning("Duplicate entry for % found in %!", isboxer.Character.ActualName, text)
+          DB:Warning("Duplicate entry for % found in %!", searchingFor, text)
         else
           DB.ISBIndex = #DB.ISBTeam
         end
@@ -280,9 +285,12 @@ function DB:ReconstructTeam()
     DB:ManualSetup()
   end
   isboxer.SetMacro = prev
-  if not DB.ISBIndex or DB.ISBIndex <= 0 then
-    DB:Error("Problem identifying this character isboxer.Character.ActualName=% in the isboxer macro FTLAssist=%",
-             isboxer.Character.ActualName, DB.ISBAssistMacro)
+  if DB.ISBIndex <= 0 then
+    DB.ISBIndex = nil -- set if back to unset
+    DB:Error("Problem identifying this character isboxer.Character.ActualName=% " ..
+               "in the isboxer macro FTLAssist=% - please report this problem/how to reproduce it", searchingFor,
+             DB.ISBAssistMacro)
+    return
   end
   DB:Debug("Found isbteam to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
            isboxer.CharacterSet and isboxer.CharacterSet.Members)
@@ -697,6 +705,10 @@ function DB:ProcessMessage(source, from, data)
     DB:Error("invalid non numerical idx %", idxStr)
     return
   end
+  if idx <= 0 then
+    DB:Error("Received invalid slot # on % from % in payload %", source, from, data)
+    return
+  end
   local force = tonumber(forceStr)
   if not force then
     DB:Error("invalid non numerical first/force flag %", forceStr)
@@ -1071,7 +1083,8 @@ function DB:Join()
   -- same cardinality at all times (that I tested) and much simpler, so using it:
   local numChans = C_ChatInfo.GetNumActiveChannels() -- {GetChannelList()}
   DB:Debug("Checking std channel: num is %", numChans)
-  if numChans <= 1 then -- we want /1 General and /2 Trade (or /3 Local Defense) at least
+  -- we want /1 General and /2 Trade (or /3 Local Defense) at least; if using a non en locale on en server you only get lfg
+  if numChans < 1 then
     DB:Debug("Not having std channels, we'll retry later- check %/%, numChans=%", DB.stdChannelChecks,
              DB.maxStdChannelCheck, numChans)
     DB.stdChannelChecks = DB.stdChannelChecks + 1
