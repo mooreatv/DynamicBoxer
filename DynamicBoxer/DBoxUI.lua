@@ -96,7 +96,6 @@ end
 function DB.OnMasterUIShow(widget, data)
   DB:Debug("Master UI Show/Regen data is %", data)
   local e = widget.editBox
-  DB.randomEditBox = e
   local masterName, tok1, tok2
   widget.button3:Enable()
   if data and data.masterName and data.token1 and data.token2 then
