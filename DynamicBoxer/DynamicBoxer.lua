@@ -1088,8 +1088,11 @@ function DB:Join()
     DB:Debug("Not having std channels, we'll retry later- check %/%, numChans=%", DB.stdChannelChecks,
              DB.maxStdChannelCheck, numChans)
     DB.stdChannelChecks = DB.stdChannelChecks + 1
+    if DB.stdChannelChecks % 5 then
+      DB:PrintInfo("DynamicBoxer still waiting for standard channels to appear... retry #%", DB.stdChannelChecks)
+    end
     if DB.stdChannelChecks > DB.maxStdChannelCheck then
-      DB:Error("Didn't find expected standard channels 1,2,3 after > 1 minute (% checks, % channels found)," ..
+      DB:Error("Didn't find expected standard channels after > 1 minute (% channels found. % checks done)," ..
                  " giving up/joining anyway, please report this", numChans, DB.stdChannelChecks)
     else
       -- keep trying for now

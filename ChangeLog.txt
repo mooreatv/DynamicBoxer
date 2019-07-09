@@ -6,6 +6,9 @@ Coming next:
 - Your input/suggestions welcome !
 - Possibly: Simple status UI (see open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+TBD TBD
+- Print a message while we wait for standard channels (Issue #43)
+
 1.8.7 July 8th 2019
 - Better detection of character not found / unexpected isboxer config. (Fix for #42)
 - Only test for 1 channel (from 2 before) before joining ours (as non en locale client 
