@@ -354,7 +354,7 @@ function DB:CheckMasterFaction()
         DB:PrintInfo("Detected other faction (%) master %, will use ours (%) instead: %", faction, DB.MasterName,
                      DB.faction, master)
         DB.MasterName = master
-        return false
+        return true
       end
       DB:Warning("Wrong master faction % and first time in this faction %, please paste the token from slot 1", faction,
                  DB.faction)
@@ -487,6 +487,25 @@ function DB.Sync() -- called as ticker so no :
         DB:Debug("Cross realm sync, first time, increasing msg sync to 2 more")
         -- we have to sync twice to complete the team (if all goes well, but it's faster with party invite)
         DB.maxIter = 3 -- give it a couple extra attempts in case 1 slave is slow
+      end
+      -- on last attempt, also ping some older/previous masters for our faction
+      if DB.maxIter == 0 then
+        local maxOthers = 3
+        local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
+        for v in DB.masterHistory[DB.faction]:iterateNewest() do
+          if v ~= DB.MasterName then
+            DB:Warning("Also trying %s from master history as attempt to find our cross realm master", v)
+            DB:SendDirectMessage(v, firstPayload)
+            maxOthers = maxOthers - 1
+            if maxOthers <= 0 then
+              break
+            end
+          end
+        end
+        -- done attempting older masters
+        DB:PrintDefault(
+          "Showing the exchange token UI as we still haven't reached a master (will hide if found in this last attempt)")
+        DB:ExchangeTokenUI()
       end
     end
   end
@@ -834,6 +853,8 @@ function DB:ProcessMessage(source, from, data)
   DB.watched[idx] = idx
   if idx == 1 then
     DB:AddToMasterHistory(realname)
+    DB:Debug(1, "Master found, hiding current token dialog")
+    DB:HideTokenUI()
   else
     DB:AddToMembersHistory(realname)
   end

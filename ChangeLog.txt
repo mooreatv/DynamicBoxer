@@ -1,10 +1,14 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 Coming next:
-- Setup/use more master memory to avoid needing a `/dbox j` when when reloading just the master
 - More refinements on the new status UI, options panel and other features
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
+
+1.9.1 July 9th 2019
+- Now try the 4 most recent masters per faction for cross realm syncing, 
+  this should all but eliminate the need for `/dbox xchg` (Issue #23)
+  Also fixed case where on /reload the cross realm masters weren't tried.
 
 1.9.0 July 9th 2019
 - Initial moveable, position saved, status frame, shows connected slots
