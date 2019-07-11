@@ -532,7 +532,7 @@ local slotToText = function(self, slot)
   end
 end
 
---- Status and runtime frame
+--- *** Status and runtime frame *** ---
 
 DB.statusUp = false
 
@@ -541,7 +541,7 @@ function DB:AddStatusLine(f)
     return
   end
   if DB.expectedCount <= 0 or DB.statusUp then
-    f:setSizeToChildren(0, 3)
+    f:Snap()
     return -- already done
   end
   DB.statusUp = true
@@ -579,7 +579,7 @@ function DB:AddStatusLine(f)
       DB.Slash("party disband")
     end
   end)
-  f:setSizeToChildren(0, 3)
+  f:Snap()
 end
 
 -- attach to top of the screen by default but not right in the middle to not cover blizzard headings
@@ -610,6 +610,7 @@ function DB:SetupStatusUI()
   f:SetScript("OnDragStart", f.StartMoving)
   f:SetScript("OnDragStop", function(w, ...)
     f.StopMovingOrSizing(w, ...)
+    f:Snap()
     local point, _, relativePoint, xOfs, yOfs = w:GetPoint()
     DB:Debug("Stopped moving status widget % % % %", point, relativePoint, xOfs, yOfs)
     local statusPos = {point, xOfs, yOfs} -- relativePoint seems to always be same as point
@@ -626,7 +627,7 @@ function DB:SetupStatusUI()
   f.bg:SetAllPoints()
   f.bg:SetColorTexture(.1, .2, .7, 0.7)
   f:SetAlpha(.9)
-  f:addText("DynamicBoxer on ", f.fontName):Place(1, 1):SetTextColor(0.9, 0.9, 0.9)
+  f:addText("DynamicBoxer on ", f.fontName):Place(4, 4):SetTextColor(0.9, 0.9, 0.9) -- that also defines the bottom right padding
   f.slotNum = f:addText("?", f.fontName):PlaceRight(0, 0)
   f.slotNum.slotToText = slotToText
   f.slotNum:slotToText(self.watched.slot)

@@ -607,7 +607,7 @@ function DB:Invite(fullName, rescheduled)
       end
     elseif not inRaid then
       if not rescheduled then
-        DB:PrintDefault("Auto converting to raid")
+        DB:PrintDefault("Auto converting to raid because we have 5 outstanding invites already")
         ConvertToRaid()
       end
       -- retest in case conversion to raid just worked
@@ -859,6 +859,7 @@ function DB:ProcessMessage(source, from, data)
   end
   if teamComplete then
     DB:PrintInfo("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!", DB.currentCount)
+    DB.sentMessageCount = 0
     DB.needRaid = false
   end
   -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
@@ -985,7 +986,10 @@ DB.EventD = {
 
   GROUP_ROSTER_UPDATE = function(self, ...)
     DB:Debug("Rooster udate, num party %, needRaid %", GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), DB.needRaid)
-    if DB.needRaid and DB.autoRaid and not IsInRaid(LE_PARTY_CATEGORY_HOME) then -- in case it got turned off
+    local inRaid = IsInRaid(LE_PARTY_CATEGORY_HOME)
+    if inRaid then
+      DB.needRaid = false
+    elseif DB.needRaid and DB.autoRaid then -- in case it got turned off
       DB:Debug("(Re) converting to raid")
       ConvertToRaid()
     end
@@ -1270,7 +1274,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
       DB:Warning("State all reset per request, please /reload !")
       -- C_UI.Reload() -- in theory we could reload for them but that seems bad form
     else
-      DB:Error("Use /dbox reset x -- where x is one of teams, token, masters, members, all")
+      DB:Error("Use /dbox reset x -- where x is one of status, teams, token, masters, members, all")
     end
   elseif cmd == "m" then
     -- message again
