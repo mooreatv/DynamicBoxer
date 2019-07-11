@@ -334,6 +334,20 @@ end
 
 DB.crossRealmMaster = nil
 
+function DB:NewestCrossRealmMaster()
+  local maxOthers = 10
+  for v in DB.masterHistory[DB.faction]:iterateNewest() do
+    maxOthers = maxOthers - 1
+    if maxOthers <= 0 then
+      break
+    end
+    if not DB:SameRealmAsUs(v) then
+      return v
+    end
+  end
+  return ""
+end
+
 function DB:CheckMasterFaction()
   if DB:WeAreMaster() then
     DB:Debug(3, "Not checking master history on master slot")
@@ -344,28 +358,41 @@ function DB:CheckMasterFaction()
     return true
   end
   DB.crossRealmMaster = "" -- so we don't print stuff again
-  local master = DB.masterHistory[DB.faction]:newest()
-  if not master then
-    DB:PrintDefault("There is no master history in our faction %, showing token exchange dialog", DB.faction)
-    DB:ExchangeTokenUI()
-    return false
-  end
-  -- if any of the top N are crossrealm we need to send msgs
-  local maxOthers = 10
-  for v in DB.masterHistory[DB.faction]:iterateNewest() do
-    maxOthers = maxOthers - 1
-    if maxOthers <= 0 then
-      break
-    end
-    if not DB:SameRealmAsUs(v) then
-      DB:Warning("Trying crossrealm master %s from master history as attempt to find our cross realm master", v)
-      DB.MasterName = v
-      DB.crossRealmMaster = v
+  local master = DB:NewestCrossRealmMaster()
+  if DB:SameRealmAsUs(DB.MasterName) then
+    if master then
+      DB:Warning("Trying crossrealm master %s from master history as attempt to find our cross realm master", master)
+      DB.MasterName = master
+      DB.crossRealmMaster = master
       return true
     end
+    DB:PrintDefault("All recent masters, and the current token, are from same realm, will not try direct messages.")
+    return false
   end
-  DB:PrintDefault("All recent masters are from same realm, will not try direct messages.")
-  return false
+  if DB.masterHistory[DB.faction]:exists(DB.masterName) then
+    DB:PrintDefault("Using previously seen cross realm master token as is.")
+    DB.crossRealmMaster = DB.masterName
+    return true
+  end
+  for _, faction in ipairs(DB.Factions) do
+    if DB.masterHistory[faction]:exists(DB.MasterName) then
+      DB:Debug(1, "Master % is wrong faction % vs ours %", DB.MasterName, faction, DB.faction)
+      if master then
+        DB:PrintInfo("Detected other faction (%) master %, will use ours (%) instead: %", faction, DB.MasterName,
+                     DB.faction, master)
+        DB.MasterName = master
+        DB.crossRealmMaster = master
+        return true
+      end
+      DB:Warning("Wrong master faction % and first time in this faction %, please paste the token from slot 1", faction,
+                 DB.faction)
+      DB:ExchangeTokenUI()
+      return false
+    end
+  end
+  DB:PrintDefault("Never seen before master %, will try it...", DB.MasterName)
+  DB.crossRealmMaster = DB.masterName
+  return true
 end
 
 function DB:SameRealmAsUs(fullName)
@@ -393,7 +420,9 @@ end
 
 function DB:InPartyWith(name)
   local shortName = DB:ShortName(name)
-  return UnitInParty(shortName)
+  local res = UnitInParty(shortName)
+  DB:Debug("Checking in party with % -> % : %", name, shortName, res)
+  return res
 end
 
 DB.sentMessageCount = 0

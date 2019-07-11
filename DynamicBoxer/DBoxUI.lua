@@ -73,6 +73,7 @@ function DB.OnSetupUIAccept(widget, data, data2)
     DB.maxIter = 1
   end
   DB.noMoreExtra = nil
+  DB.crossRealmMaster = nil
   DB.firstMsg = 1 -- force resync of master
 end
 

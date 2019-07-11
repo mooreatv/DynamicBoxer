@@ -5,7 +5,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-1.9.2 July 11th 2019
+1.9.3 July 11th 2019 - aka 3rd time's the charm
+- All the cross realm master memory refactoring was broken for the 
+  simple case of entering a token for a new master (!) (need automated test case/regression testing!)
+1.9.2 July 11th 2019 - bad release
 - Put our frame higher on the stack, and about midway to the right instead of just centered
   to not cover blizzard headings like in the order hall and some other topbar addons
 - Fix the padding around frame to be precisely the same in each corner and using
@@ -17,8 +20,7 @@ Coming next:
 - Fix: don't try to cross realm contact [older] master[s] if we already know Slot 1
   (unless it's the first msg) and don't show the xchgUI in that case
 - Changes to cross realm retry/sync/master attempts
-
-1.9.1 July 9th 2019
+1.9.1 July 9th 2019 - bad release
 - Now try the 4 most recent masters per faction for cross realm syncing, 
   this should all but eliminate the need for `/dbox xchg` (Issue #23)
   Also fixed case where on /reload the cross realm masters weren't tried.
