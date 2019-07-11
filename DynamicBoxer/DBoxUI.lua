@@ -548,26 +548,30 @@ function DB:AddStatusLine(f)
   DB:Debug("Adding team line! %", DB.expectedCount)
   -- should center instead of this
   local offset = 29 - 4 * DB.expectedCount
-  if offset < -3 then
-    offset = -3
+  if offset < -4 then
+    offset = -4
   end
-  f:addText(""):Place(offset, 0)
+  f:addText(""):Place(offset, 2)
+  local y = 0
   for i = 1, DB.expectedCount do
-    local x = 3
+    local x = 4
     if i == DB.watched.slot then
-      f:addText(">"):PlaceRight(x):SetTextColor(0.7, 0.7, 0.7)
+      f:addText(">"):PlaceRight(x, 2):SetTextColor(0.7, 0.7, 0.7)
       x = 0
+      y = -2
     end
-    local status = f:addText("?", f.fontName):PlaceRight(x)
+    local status = f:addText("?", f.fontName):PlaceRight(x, y)
     if i == DB.watched.slot then
-      f:addText("<"):PlaceRight(0):SetTextColor(0.7, 0.7, 0.7)
+      f:addText("<"):PlaceRight(0, 2):SetTextColor(0.7, 0.7, 0.7)
+    else
+      y = 0
     end
     DB.watched:AddWatch(i, function(_k, v, _oldVal)
       slotToText(status, v)
     end)
     slotToText(status, DB.watched[i])
   end
-  local partySize = f:addText("(" .. tostring(DB.expectedCount) .. ")"):PlaceRight(4, 0)
+  local partySize = f:addText("(" .. tostring(DB.expectedCount) .. ")"):PlaceRight(4, y + 1)
   partySize:SetTextColor(.95, .85, .05)
   f:SetScript("OnMouseUp", function(_w, mod)
     DB:Debug("Clicked on party size %", mod)
