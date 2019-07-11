@@ -369,7 +369,7 @@ function DB:CheckMasterFaction()
     DB:PrintDefault("All recent masters, and the current token, are from same realm, will not try direct messages.")
     return false
   end
-  if DB.masterHistory[DB.faction]:exists(DB.masterName) then
+  if DB.masterHistory[DB.faction]:exists(DB.MasterName) then
     DB:PrintDefault("Using previously seen cross realm master token as is.")
     DB.crossRealmMaster = DB.masterName
     return true
@@ -587,7 +587,7 @@ function DB.Sync() -- called as ticker so no :
           local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
           DB:SendDirectMessage(DB.Team[1].fullName, firstPayload)
         else
-          DB:Warning("No team / no master response after % sec, please fix slot 1 and/or paste token")
+          DB:Warning("No team / no master response after % sec, please fix slot 1 and/or paste token", delay)
         end
       end)
     end
