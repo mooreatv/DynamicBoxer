@@ -5,6 +5,12 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+1.9.2 July 10th 2019
+- Put our frame higher on the stack, and 1/3rd to the left instead of just centered
+  to not cover blizzard headings like in the order hall
+- `/dbox reset status` puts it back to default right away without needing /reload
+- Fix isboxer less manual/testing mode error
+
 1.9.1 July 9th 2019
 - Now try the 4 most recent masters per faction for cross realm syncing, 
   this should all but eliminate the need for `/dbox xchg` (Issue #23)

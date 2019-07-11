@@ -579,6 +579,19 @@ function DB:AddStatusLine(f)
   f:setSizeToChildren(0, 3)
 end
 
+-- attach to top of the screen by default but not right in the middle to not cover blizzard headings
+function DB:StatusInitialPos()
+  local w = UIParent:GetWidth()
+  DB.statusPos = {"TOP", w / 5, 0}
+end
+
+function DB:StatusResetPos()
+  dynamicBoxerSaved.statusPos = nil
+  DB:StatusInitialPos()
+  DB.statusFrame:ClearAllPoints()
+  DB.statusFrame:SetPoint(unpack(DB.statusPos))
+end
+
 function DB:SetupStatusUI()
   if DB.statusFrame then
     DB:Debug(1, "Status frame already created")
@@ -587,6 +600,7 @@ function DB:SetupStatusUI()
   DB:Debug(1, "Creating Status frame")
   local f = DB:Frame(DynBoxer, "DynamicBoxer_Status", "DynamicBoxer_Status")
   DB.statusFrame = f
+  f:SetFrameStrata("FULLSCREEN")
   f.fontName = "GameFontHighlightLeft"
   f:SetMovable(true)
   f:RegisterForDrag("LeftButton")
@@ -600,7 +614,7 @@ function DB:SetupStatusUI()
   end)
   f:EnableMouse(true)
   if not DB.statusPos then
-    DB.statusPos = {"TOP", 0, 0} -- attach to top of the screen by default
+    DB:StatusInitialPos()
   end
   f:SetPoint(unpack(DB.statusPos))
   f:SetWidth(1)

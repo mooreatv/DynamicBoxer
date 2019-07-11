@@ -253,14 +253,13 @@ function DB:ReconstructTeam()
       "DynamicBoxer skipping team reconstruction as there is no isboxer team (not running under innerspace).")
     return
   end
-  local searchingFor = isboxer.Character.ActualName
+  local searchingFor = isboxer.Character and isboxer.Character.ActualName
   if not searchingFor or #searchingFor == 0 then
-    if DB.manual > 0 then
-      DB:Warning("No isboxer.Character.ActualName but we have manual override for slot %", DB.manual)
-    else
+    if DB.manual <= 0 then
       DB:Error("Your isboxer.Character.ActualName is not set. please report your config/setup/how to reproduce.")
+      return
     end
-    return
+    DB:Warning("No isboxer.Character.ActualName but we have manual override for slot %", DB.manual)
   end
   local prev = isboxer.SetMacro
   DB.ISBTeam = {}
@@ -1248,8 +1247,8 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
       dynamicBoxerSaved.MasterToken = nil
       DB:Warning("Token cleared per request, will prompt for it at next login")
     elseif rest == "status" then
-      dynamicBoxerSaved.statusPos = nil
-      DB:Warning("Saved window status position cleared per request, will reset at next login")
+      DB:StatusResetPos()
+      DB:Warning("Saved window status position cleared per request and window reset to top left")
     elseif rest == "masters" then
       if dynamicBoxerSaved.serializedMasterHistory then
         dynamicBoxerSaved.serializedMasterHistory[DB.faction] = {}
