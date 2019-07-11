@@ -5,7 +5,7 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-1.9.2 July 10th 2019
+1.9.2 July 11th 2019
 - Put our frame higher on the stack, and about midway to the right instead of just centered
   to not cover blizzard headings like in the order hall and some other topbar addons
 - Fix the padding around frame to be precisely the same in each corner and using
