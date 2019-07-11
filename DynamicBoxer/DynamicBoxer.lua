@@ -473,7 +473,7 @@ function DB.Sync() -- called as ticker so no :
   -- and SameRealmAsMaster false because the master realm came from a previous token
   -- no point in resending if we are team complete (and not asked to resync)
   if DB:CheckMasterFaction() and not (DB:WeAreMaster() or DB:SameRealmAsMaster()) and
-    ((DB.currentCount < DB.expectedCount) or DB.firstMsg == 1) then
+    ((not DB.Team[1]) or DB.firstMsg == 1) then
     -- if we did just send a message we should wait next iteration
     local now = GetTime() -- higher rez than seconds
     if DB.lastDirectMessage and (now <= DB.lastDirectMessage + DB.refresh) then
@@ -487,7 +487,7 @@ function DB.Sync() -- called as ticker so no :
         -- we have to sync twice to complete the team (if all goes well, but it's faster with party invite)
         DB.maxIter = 3 -- give it a couple extra attempts in case 1 slave is slow
       end
-      -- on last attempt, also ping some older/previous masters for our faction
+      -- on last attempt [TODO: split channel retries from this], also ping some older/previous masters for our faction
       if DB.maxIter == 0 then
         local maxOthers = 3
         local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
@@ -502,9 +502,11 @@ function DB.Sync() -- called as ticker so no :
           end
         end
         -- done attempting older masters
-        DB:PrintDefault(
-          "Showing the exchange token UI as we still haven't reached a master (will hide if found in this last attempt)")
-        DB:ExchangeTokenUI()
+        if not DB.Team[1] then
+          DB:PrintDefault(
+            "Showing the exchange token UI as we still haven't reached a master (will hide if found in this last attempt)")
+          DB:ExchangeTokenUI()
+        end
       end
     end
   end
@@ -781,7 +783,7 @@ function DB:ProcessMessage(source, from, data)
   end
   local shortName = DB:ShortName(realname)
   -- we should do that after we joined our channel to get a chance to get completion
-  if channelMessage and DB.newTeam and not DB.justInit and DB:WeAreMaster() and (DB.currentCount < DB.expectedCount) then
+  if channelMessage and DB.newTeam and (not DB.justInit) and DB:WeAreMaster() and (DB.currentCount < DB.expectedCount) then
     DB:Warning("New (isboxer) team detected, on master, showing current token")
     DB:ShowTokenUI()
   end
