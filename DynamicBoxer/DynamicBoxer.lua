@@ -371,7 +371,7 @@ function DB:CheckMasterFaction()
   end
   if DB.masterHistory[DB.faction]:exists(DB.MasterName) then
     DB:PrintDefault("Using previously seen cross realm master token as is.")
-    DB.crossRealmMaster = DB.masterName
+    DB.crossRealmMaster = DB.MasterName
     return true
   end
   for _, faction in ipairs(DB.Factions) do
@@ -391,7 +391,7 @@ function DB:CheckMasterFaction()
     end
   end
   DB:PrintDefault("Never seen before master %, will try it...", DB.MasterName)
-  DB.crossRealmMaster = DB.masterName
+  DB.crossRealmMaster = DB.MasterName
   return true
 end
 
