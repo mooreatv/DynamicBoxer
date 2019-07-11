@@ -379,7 +379,10 @@ function DB:CreateOptionsPanel()
 
   p:addText("Development, troubleshooting and advanced options:"):Place(40, 20)
 
-  p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):Place(0, 20)
+  p:addButton("Reset Window",
+              "Resets the DynamicBoxer status window position back to default\n|cFF99E5FF/dbox reset status|r",
+              "reset status"):Place(0, 20)
+  p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):PlaceRight()
   p:addButton("Join", "Attempts to resync the team by\nsending a message requiring reply\n|cFF99E5FF/dbox j|r", "join")
     :PlaceRight()
   p:addButton("Ping", "Attempts to resync the team by\nsending a message\n|cFF99E5FF/dbox m|r", "message"):PlaceRight()
@@ -623,7 +626,7 @@ function DB:SetupStatusUI()
   f.bg:SetAllPoints()
   f.bg:SetColorTexture(.1, .2, .7, 0.7)
   f:SetAlpha(.9)
-  f:addText("DynamicBoxer on ", f.fontName):Place(1, 1):SetTextColor(0.7, 0.7, 0.7)
+  f:addText("DynamicBoxer on ", f.fontName):Place(1, 1):SetTextColor(0.9, 0.9, 0.9)
   f.slotNum = f:addText("?", f.fontName):PlaceRight(0, 0)
   f.slotNum.slotToText = slotToText
   f.slotNum:slotToText(self.watched.slot)
