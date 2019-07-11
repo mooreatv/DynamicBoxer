@@ -332,37 +332,45 @@ function DB:ReconstructTeam()
   end
 end
 
+DB.crossRealmMaster = nil
+
 function DB:CheckMasterFaction()
   if DB:WeAreMaster() then
     DB:Debug(3, "Not checking master history on master slot")
+    return false
+  end
+  if DB.crossRealmMaster then
+    DB:Debug(3, "already figured out cross realm master %", DB.crossRealmMaster)
     return true
   end
-  if DB.masterHistory[DB.faction]:exists(DB.MasterName) then
-    DB:Debug(3, "Master % is known to our faction history %", DB.MasterName, DB.faction)
-    return true
-  end
+  DB.crossRealmMaster = "" -- so we don't print stuff again
   local master = DB.masterHistory[DB.faction]:newest()
   if not master then
-    DB:Debug("There is no history in our faction %: %", DB.faction, DB.masterHistory[DB.faction])
+    DB:PrintDefault("There is no master history in our faction %, showing token exchange dialog", DB.faction)
+    DB:ExchangeTokenUI()
+    return false
   end
-  -- either brand new master (and we don't know for sure yet which faction, or bad faction)
-  for _, faction in ipairs(DB.Factions) do
-    if DB.masterHistory[faction]:exists(DB.MasterName) then
-      DB:Debug(1, "Master % is wrong faction % vs ours %", DB.MasterName, faction, DB.faction)
-      if master then
-        DB:PrintInfo("Detected other faction (%) master %, will use ours (%) instead: %", faction, DB.MasterName,
-                     DB.faction, master)
-        DB.MasterName = master
-        return true
-      end
-      DB:Warning("Wrong master faction % and first time in this faction %, please paste the token from slot 1", faction,
-                 DB.faction)
-      DB:ExchangeTokenUI()
-      return false
+  -- if any of the top N are crossrealm we need to send msgs
+  local maxOthers = 10
+  for v in DB.masterHistory[DB.faction]:iterateNewest() do
+    maxOthers = maxOthers - 1
+    if maxOthers <= 0 then
+      break
+    end
+    if not DB:SameRealmAsUs(v) then
+      DB:Warning("Trying crossrealm master %s from master history as attempt to find our cross realm master", v)
+      DB.MasterName = v
+      DB.crossRealmMaster = v
+      return true
     end
   end
-  DB:Warning("Completely unknown master %, we'll try it...", DB.MasterName)
-  return true
+  DB:PrintDefault("All recent masters are from same realm, will not try direct messages.")
+  return false
+end
+
+function DB:SameRealmAsUs(fullName)
+  local _, r = DB:SplitFullname(fullName)
+  return DB.myRealm == r
 end
 
 function DB:SameRealmAsMaster()
@@ -460,27 +468,26 @@ function DB.Sync() -- called as ticker so no :
     return -- for now keep trying until we get a channel
   end
   DB.maxIter = DB.maxIter - 1
-  DB:Debug("Sync #% called for slot % our fullname is %, maxIter is now %", DB.syncNum, DB.ISBIndex, DB.fullName,
-           DB.maxIter)
+  DB:Debug("Sync #% called for slot % our fullname is %, maxIter is now % firstMsg=%", DB.syncNum, DB.ISBIndex,
+           DB.fullName, DB.maxIter, DB.firstMsg)
   DB.syncNum = DB.syncNum + 1
   if not DB.ISBIndex then
     DB:Debug("We don't know our slot/actual yet")
     return
   end
+  local now = GetTime() -- higher rez than seconds
   local payload = DB:InfoPayload(DB.ISBIndex, DB.firstMsg, DB.syncNum)
   -- check the master isn't from another faction
   -- redundant check but we can (and used to) have WeAreMaster true because of slot1/index
   -- and SameRealmAsMaster false because the master realm came from a previous token
   -- no point in resending if we are team complete (and not asked to resync)
-  if DB:CheckMasterFaction() and not (DB:WeAreMaster() or DB:SameRealmAsMaster()) and
-    ((not DB.Team[1]) or DB.firstMsg == 1) then
+  if ((not DB.Team[1]) or DB.firstMsg == 1) and DB:CheckMasterFaction() and #DB.crossRealmMaster then
     -- if we did just send a message we should wait next iteration
-    local now = GetTime() -- higher rez than seconds
     if DB.lastDirectMessage and (now <= DB.lastDirectMessage + DB.refresh) then
       DB:Debug("Will postpone pinging master because we received a msg recently")
       DB.maxIter = DB.maxIter + 1
     else
-      DB:Debug("Cross realm sync and team incomplete, pinging master %", DB.MasterName)
+      DB:Debug("Cross realm sync and team incomplete/master unknown, pinging master % - %", DB.MasterName, DB.Team[1])
       DB:SendDirectMessage(DB.MasterName, payload)
       if DB.firstMsg == 1 and DB.maxIter <= 0 then
         DB:Debug("Cross realm sync, first time, increasing msg sync to 2 more")
@@ -492,7 +499,9 @@ function DB.Sync() -- called as ticker so no :
         local maxOthers = 3
         local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
         for v in DB.masterHistory[DB.faction]:iterateNewest() do
-          if v ~= DB.MasterName then
+          DB:Debug("Checking % for next xrealm attempt (mastername %) samerealm %", v, DB.MasterName,
+                   DB:SameRealmAsUs(v))
+          if not DB:SameRealmAsUs(v) and v ~= DB.MasterName then
             DB:Warning("Also trying %s from master history as attempt to find our cross realm master", v)
             DB:SendDirectMessage(v, firstPayload)
             maxOthers = maxOthers - 1
@@ -502,12 +511,38 @@ function DB.Sync() -- called as ticker so no :
           end
         end
         -- done attempting older masters
-        if not DB.Team[1] then
-          DB:PrintDefault(
-            "Showing the exchange token UI as we still haven't reached a master (will hide if found in this last attempt)")
-          DB:ExchangeTokenUI()
-        end
       end
+    end
+  end
+  if not DB:WeAreMaster() then
+    if not DB.Team[1] and not DB.inUI then
+      local delay = DB.refresh * 2.5
+      C_Timer.After(delay, function()
+        if DB.Team[1] or DB.inUI then
+          DB:Debug("% sec later we have a master % or already showing dialog", delay, DB.Team[1])
+          return
+        end
+        DB:PrintDefault(
+          "Showing the exchange token UI after % sec as we still haven't reached a master (will autohide when found)",
+          delay)
+        DB:ExchangeTokenUI()
+      end)
+    end
+    if not DB.noMoreExtra and DB.crossRealmMaster and #DB.crossRealmMaster > 0 and DB.Team[1] then
+      DB.noMoreExtra = true
+      local delay = DB.refresh * 2.5 + DB.ISBIndex
+      C_Timer.After(delay, function()
+        if DB.teamComplete or DB.inUI then
+          DB:Debug("% sec later we have a team complete % or already showing dialog", delay, DB.teamComplete)
+          return
+        end
+        if DB.lastDirectMessage and (now <= DB.lastDirectMessage + DB.refresh) then
+          DB:Debug("Will postpone pinging master because we received a msg recently")
+        end
+        DB:PrintDefault("Team not yet complete after %s, sending 1 extra re-sync", delay)
+        local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
+        DB:SendDirectMessage(DB.Team[1].fullName, firstPayload)
+      end)
     end
   end
   local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
@@ -519,6 +554,7 @@ function DB.Sync() -- called as ticker so no :
     DB.totalRetries = DB.totalRetries + 1
     if DB.totalRetries >= DB.maxRetries then
       DB:Error("Giving up sending/syncing after % retries. Use /dbox j to try again later", DB.totalRetries)
+      DB.firstMsg = 0
       return
     end
     if DB.totalRetries % 5 == 0 then
@@ -774,7 +810,7 @@ function DB:ProcessMessage(source, from, data)
     for k, _ in pairs(DB.Team) do
       local payload = DB:InfoPayload(k, 0, DB.sentMessageCount)
       -- skip our idx (unless force/first) and theirs
-      if (k == 1 and force == 1) or (k ~= 1 and k ~= idx) then
+      if force == 1 or (k ~= 1 and k ~= idx) then -- TODO: only send "themselves" on party channel
         DB:SendDirectMessage(from, payload)
         count = count + 1
       end
@@ -863,6 +899,7 @@ function DB:ProcessMessage(source, from, data)
     DB:PrintInfo("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!", DB.currentCount)
     DB.sentMessageCount = 0
     DB.needRaid = false
+    DB.teamComplete = true
   end
   -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
   if DB.currentCount == DB.expectedCount and DB.EMA then
@@ -1152,6 +1189,7 @@ function DB:Join()
     action = "Joined"
   end
   DB.firstMsg = 1
+  DB.noMoreExtra = nil
   if DB.maxIter <= 0 then
     DB.maxIter = 1
   end

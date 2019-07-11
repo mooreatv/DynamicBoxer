@@ -16,6 +16,7 @@ Coming next:
 - Fix: clear raid flag when needed.
 - Fix: don't try to cross realm contact [older] master[s] if we already know Slot 1
   (unless it's the first msg) and don't show the xchgUI in that case
+- Changes to cross realm retry/sync/master attempts
 
 1.9.1 July 9th 2019
 - Now try the 4 most recent masters per faction for cross realm syncing, 
