@@ -481,7 +481,7 @@ function DB.Sync() -- called as ticker so no :
   -- redundant check but we can (and used to) have WeAreMaster true because of slot1/index
   -- and SameRealmAsMaster false because the master realm came from a previous token
   -- no point in resending if we are team complete (and not asked to resync)
-  if ((not DB.Team[1]) or DB.firstMsg == 1) and DB:CheckMasterFaction() and #DB.crossRealmMaster then
+  if ((not DB.Team[1]) or DB.firstMsg == 1) and DB:CheckMasterFaction() and #DB.crossRealmMaster > 0 then
     -- if we did just send a message we should wait next iteration
     if DB.lastDirectMessage and (now <= DB.lastDirectMessage + DB.refresh) then
       DB:Debug("Will postpone pinging master because we received a msg recently")
@@ -514,7 +514,21 @@ function DB.Sync() -- called as ticker so no :
       end
     end
   end
-  if not DB:WeAreMaster() then
+  if DB:WeAreMaster() then
+    -- slot 1, expect team complete
+    if not DB.teamComplete and not DB.inUI then
+      local delay = DB.refresh * 3.5
+      C_Timer.After(delay, function()
+        if DB.teamComplete or DB.inUI then
+          DB:Debug("% sec later we have a team complete % or already showing dialog", delay, DB.teamComplete)
+          return
+        end
+        DB:PrintDefault("Showing the master exchange token UI after % sec as we still don't have team complete", delay)
+        DB:ExchangeTokenUI()
+      end)
+    end
+  else
+    -- slot 2...N
     if not DB.Team[1] and not DB.inUI then
       local delay = DB.refresh * 2.5
       C_Timer.After(delay, function()
@@ -528,20 +542,24 @@ function DB.Sync() -- called as ticker so no :
         DB:ExchangeTokenUI()
       end)
     end
-    if not DB.noMoreExtra and DB.crossRealmMaster and #DB.crossRealmMaster > 0 and DB.Team[1] then
+    if DB.maxIter <= 0 and not DB.noMoreExtra and DB.crossRealmMaster and #DB.crossRealmMaster > 0 then
       DB.noMoreExtra = true
       local delay = DB.refresh * 2.5 + DB.ISBIndex
       C_Timer.After(delay, function()
-        if DB.teamComplete or DB.inUI then
-          DB:Debug("% sec later we have a team complete % or already showing dialog", delay, DB.teamComplete)
+        if DB.teamComplete then
+          DB:Debug("% sec later we have a team complete %", delay, DB.teamComplete)
           return
         end
         if DB.lastDirectMessage and (now <= DB.lastDirectMessage + DB.refresh) then
           DB:Debug("Will postpone pinging master because we received a msg recently")
         end
-        DB:PrintDefault("Team not yet complete after %s, sending 1 extra re-sync", delay)
-        local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
-        DB:SendDirectMessage(DB.Team[1].fullName, firstPayload)
+        if DB.Team[1] then
+          DB:PrintDefault("Team not yet complete after %s, sending 1 extra re-sync", delay)
+          local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
+          DB:SendDirectMessage(DB.Team[1].fullName, firstPayload)
+        else
+          DB:Warning("No team / no master response after % sec, please fix slot 1 and/or paste token")
+        end
       end)
     end
   end
