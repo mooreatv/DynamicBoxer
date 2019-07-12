@@ -629,10 +629,30 @@ function DB:SetupHugeFont(height)
   DB:Debug("base font is %", baseFont)
   local ret = DB.hugeFont:SetFont(baseFont, height) -- "THICKOUTLINE")
   DB:Debug("Set font for height % : %", height, ret)
-  DB.hugeFont:SetTextColor(.95, .85, .05)
+  DB.hugeFont:SetTextColor(.95, .85, .05, .9)
   DB.hugeFont:SetShadowOffset(3, -3)
-  DB.hugeFont:SetShadowColor(0, 0, 0)
+  DB.hugeFont:SetShadowColor(0, 0, 0, .9)
   return DB.hugeFont
+end
+
+function DB:GetFactionTexture(p, faction)
+  local f = CreateFrame("Frame", nil, p)
+  f:SetFrameStrata("LOW")
+  f:SetSize(1, 1)
+  -- f:SetPoint("TOP")
+  f:SetIgnoreParentAlpha(true)
+  f:SetAlpha(1)
+  local t = f:CreateTexture(nil, "BACKGROUND")
+  -- t:SetAllPoints()
+  t:SetPoint("TOP")
+  --  t:SetColorTexture(.1, .2, .7, 0.7)
+  if faction == "Horde" then
+    t:SetAtlas("scoreboard-horde-header", true)
+  elseif faction == "Alliance" then
+    t:SetAtlas("scoreboard-alliance-header", true)
+  end
+  p:addMethods(f)
+  return f
 end
 
 function DB:ShowBigInfo(autohide)
@@ -659,18 +679,21 @@ function DB:ShowBigInfo(autohide)
   -- f.bg:SetAllPoints()
   -- f.bg:SetColorTexture(.1, .2, .7, 0.7)
   f:SetAlpha(.9)
+  local t = DB:GetFactionTexture(f, DB.faction)
+  t:Place(0, -5, "TOP", "BOTTOM")
   local fo = DB:SetupHugeFont() -- can't really scale past 120 anyway
-  local s = f:addText(">" .. tostring(DB.ISBIndex) .. "<", fo):Place(0, 10, "TOP", "BOTTOM")
+  local s = f:addText(tostring(DB.ISBIndex), fo):Place(0, 60, "TOP", "BOTTOM")
   s:SetJustifyH("CENTER")
   s:SetJustifyV("CENTER")
   local n = f:addText(DB.shortName, fo):Place(0, 0, "TOP", "BOTTOM")
   n:SetJustifyH("CENTER")
   n:SetJustifyV("CENTER")
-  n:SetTextColor(.6, .9, 1)
+  n:SetTextColor(.6, .9, 1, .9)
   local r = f:addText(DB.myRealm, fo):Place(0, 0, "TOP", "BOTTOM")
   r:SetJustifyH("CENTER")
   r:SetJustifyV("CENTER")
   f:Scale(true) -- no padding
+  t:SetScale(1 / t:GetEffectiveScale())
 end
 
 function DB:SetupStatusUI()
