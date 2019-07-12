@@ -1108,6 +1108,9 @@ DB.EventD = {
     if name ~= addon then
       return -- not us, return
     end
+    if DB.manifestVersion == "@project-version@" then
+      DB.manifestVersion = "vX.Y.Z"
+    end
     DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv: type /dbox for command list/help.")
     if dynamicBoxerSaved then
       -- always clear the one time log

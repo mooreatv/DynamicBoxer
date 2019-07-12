@@ -601,6 +601,11 @@ function DB:StatusResetPos()
   DB.statusFrame:SetPoint(unpack(DB.statusPos))
 end
 
+function DB:ShowToolTip(f)
+  GameTooltip:SetOwner(f, "ANCHOR_RIGHT")
+  GameTooltip:SetText(f.tooltipText, 0.9, 0.9, 0.9, 1, false)
+end
+
 function DB:SetupStatusUI()
   if DB.statusFrame then
     DB:Debug(1, "Status frame already created")
@@ -611,6 +616,15 @@ function DB:SetupStatusUI()
   DB.statusFrame = f
   f:SetFrameStrata("FULLSCREEN")
   f.fontName = "GameFontHighlightLeft"
+  f.tooltipText = "|cFFF2D80CDynamicBoxer|r " .. DB.manifestVersion .. " help:\n\n" ..
+                    "Shows your current dynamic mapping\n(|cFF33E526green|r number is known, |cFFFF4C43?|r is unknown)\n\n" ..
+                    "|cFF99E5FFLeft click|r to invite\n" .. "|cFF99E5FFMiddle|r click to disband\n" .. "|cFF99E5FFRight|r click for options\n"
+  f:SetScript("OnEnter", function()
+    DB:ShowToolTip(f)
+  end)
+  f:SetScript("OnLeave", function()
+    GameTooltip:Hide()
+  end)
   f:SetMovable(true)
   f:RegisterForDrag("LeftButton")
   f:SetScript("OnDragStart", f.StartMoving)

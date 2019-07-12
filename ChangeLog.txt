@@ -5,6 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+1.9.5 July X 2019 WIP
+- Added tooltip for status frame
+
 1.9.4 July 11th 2019 - The good one!
 - Fixed masterName->MasterName typo. Who doesn't love runtime errors like
   that... that could be detected by a compiler

@@ -26,6 +26,7 @@ globals = {
     "InviteUnit",
     "IsInRaid",
     "JoinTemporaryChannel",
+    "GameTooltip",
     "GetBindingAction",
     "GetNumGroupMembers",
     "GetUnitName",
