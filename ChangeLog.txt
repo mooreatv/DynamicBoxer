@@ -5,6 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+1.9.6 
+- Minor adjustment to big slot display for better centering and layout
+
 1.9.5 July 12 2019
 - Added tooltip for status frame
 - New (discoverable) Ctrl-Click for toggle autoinvite and Shift-Click to 
