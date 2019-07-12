@@ -619,13 +619,67 @@ function DB:ShowToolTip(f)
   end
 end
 
+function DB:SetupHugeFont(height)
+  if DB.hugeFont then
+    return DB.hugeFont
+  end
+  height = height or 120 -- doesn't get bigger than 120 anyway
+  DB.hugeFont = CreateFont("DynBoxerHuge")
+  local baseFont = Game120Font:GetFont()
+  DB:Debug("base font is %", baseFont)
+  local ret = DB.hugeFont:SetFont(baseFont, height) -- "THICKOUTLINE")
+  DB:Debug("Set font for height % : %", height, ret)
+  DB.hugeFont:SetTextColor(.95, .85, .05)
+  DB.hugeFont:SetShadowOffset(3, -3)
+  DB.hugeFont:SetShadowColor(0, 0, 0)
+  return DB.hugeFont
+end
+
+function DB:ShowBigInfo(autohide)
+  DB:Debug("ShowBigInfo")
+  if autohide then
+    C_Timer.After(autohide, function()
+      DB:Debug("ShowBigInfo: Hiding")
+      DB.bigInfo:Hide()
+    end)
+  end
+  if DB.bigInfo then
+    DB:Debug("ShowBigInfo: Showing")
+    DB.bigInfo:Show()
+    return
+  end
+  DB:Debug("ShowBigInfo: Creating")
+  DB.bigInfo = DB:Frame("DynBoxer_big_info")
+  local f = DB.bigInfo
+  f:SetPoint("CENTER", 0, 0)
+  f:SetAllPoints()
+  -- f:SetWidth(1)
+  -- f:SetHeight(1) -- temp
+  -- f.bg = f:CreateTexture(nil, "BACKGROUND")
+  -- f.bg:SetAllPoints()
+  -- f.bg:SetColorTexture(.1, .2, .7, 0.7)
+  f:SetAlpha(.9)
+  local fo = DB:SetupHugeFont() -- can't really scale past 120 anyway
+  local s = f:addText(">" .. tostring(DB.ISBIndex) .. "<", fo):Place(0, 10, "TOP", "BOTTOM")
+  s:SetJustifyH("CENTER")
+  s:SetJustifyV("CENTER")
+  local n = f:addText(DB.shortName, fo):Place(0, 0, "TOP", "BOTTOM")
+  n:SetJustifyH("CENTER")
+  n:SetJustifyV("CENTER")
+  n:SetTextColor(.6, .9, 1)
+  local r = f:addText(DB.myRealm, fo):Place(0, 0, "TOP", "BOTTOM")
+  r:SetJustifyH("CENTER")
+  r:SetJustifyV("CENTER")
+  f:Scale(true) -- no padding
+end
+
 function DB:SetupStatusUI()
   if DB.statusFrame then
     DB:Debug(1, "Status frame already created")
     return
   end
   DB:Debug(1, "Creating Status frame")
-  local f = DB:Frame(DynBoxer, "DynamicBoxer_Status", "DynamicBoxer_Status")
+  local f = DB:Frame("DynamicBoxer_Status", "DynamicBoxer_Status")
   DB.statusFrame = f
   f:SetFrameStrata("FULLSCREEN")
   f.Modifiers = {}
@@ -654,6 +708,7 @@ function DB:SetupStatusUI()
                     "Shows your current dynamic mapping\n(|cFF33E526green|r number is known, |cFFFF4C43?|r is unknown)\n\n"
   f.defaultTooltipText = heading .. "|cFF99E5FFLeft click|r to invite\n" .. "|cFF99E5FFMiddle|r click to disband\n" ..
                            "|cFF99E5FFRight|r click for options\n\nDrag the frame to move it anywhere.\n" ..
+                           "Press |cFF99E5FFTAB|r to see large on-screen slot information.\n" ..
                            "Hold |cFF99E5FFShift|r, |cFF99E5FFControl|r, |cFF99E5FFAlt|r keys for more tips."
   f.tooltipTextMods = {}
   f.tooltipTextMods.LSHIFT = heading .. "|cFF99E5FFShift Left click|r to toggle party/raid"
@@ -662,14 +717,35 @@ function DB:SetupStatusUI()
 
   f.tooltipText = f.defaultTooltipText
   f:SetScript("OnEnter", function()
+    -- f:SetPropagateKeyboardInput(false)
+    f:EnableKeyboard(true)
     f:RegisterEvent("MODIFIER_STATE_CHANGED")
     DB:ShowToolTip(f)
   end)
   f:SetScript("OnLeave", function()
+    -- f:SetPropagateKeyboardInput(true)
     f:UnregisterEvent("MODIFIER_STATE_CHANGED")
+    f:EnableKeyboard(false)
     GameTooltip:Hide()
     DB:Debug("Hide tool tip...")
   end)
+  f:SetPropagateKeyboardInput(true)
+  f:SetScript("OnKeyDown", function(w, k)
+    DB:Debug("Onkeydown % % %", w:GetName(), k)
+    if k == "TAB" then
+      DB:ShowBigInfo()
+      w:SetPropagateKeyboardInput(false)
+    else
+      w:SetPropagateKeyboardInput(true)
+    end
+  end)
+  f:SetScript("OnKeyUp", function(w, k)
+    DB:Debug("Onkeyup % % %", w:GetName(), k)
+    if k == "TAB" then
+      DB.bigInfo:Hide()
+    end
+  end)
+  f:EnableKeyboard(false) -- starts off
   f:SetMovable(true)
   f:RegisterForDrag("LeftButton")
   f:SetScript("OnDragStart", f.StartMoving)

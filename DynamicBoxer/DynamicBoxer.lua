@@ -311,6 +311,7 @@ function DB:ReconstructTeam()
   if DB.ISBIndex == 1 then
     DB.MasterName = DB.fullName
   end
+  DB:ShowBigInfo(2.5)
   DB:Debug("Team map initial value = %", DB.Team)
   -- detect team changes, keep unique teams
   local teamStr = table.concat(DB.ISBTeam, " ")
