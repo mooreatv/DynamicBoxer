@@ -710,6 +710,16 @@ function DB:Invite(fullName, rescheduled)
   InviteUnit(fullName)
 end
 
+function DB:PartyToggle()
+  if IsInRaid(LE_PARTY_CATEGORY_HOME) then
+    DB:PrintDefault("Switching to party (if possible)...")
+    ConvertToParty()
+  else
+    DB:PrintDefault("Switching to raid...")
+    ConvertToRaid()
+  end
+end
+
 function DB:PartyInvite(continueFrom)
   DB.numInvites = math.max(1, GetNumGroupMembers(LE_PARTY_CATEGORY_HOME))
   local pauseBetweenPartyAndRaid = false
@@ -1269,7 +1279,7 @@ function DB:Help(msg)
                     "/dbox show -- shows the current token string.\n" ..
                     "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
                     "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
-                    "/dbox party inv||disband -- invites the party or disband it\n" ..
+                    "/dbox party inv||disband||toggle -- invites the party or disband it or toggle raid/party\n" ..
                     "/dbox autoinv toggle||off||n -- toggles, turns off or turns on for slot n the autoinvite\n" ..
                     "/dbox config -- open addon config, dbox c works too\n" ..
                     "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
@@ -1328,6 +1338,9 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     if DB:StartsWith(rest, "d") or DB:StartsWith(rest, "u") then
       -- party disband/uninvite
       DB:Disband()
+    elseif DB:StartsWith(rest, "t") then
+      -- Toggle raid/party
+      DB:PartyToggle()
     else
       -- party invite
       DB:PartyInvite()

@@ -578,7 +578,15 @@ function DB:AddStatusLine(f)
   f:SetScript("OnMouseUp", function(_w, mod)
     DB:Debug("Clicked on party size %", mod)
     if mod == "LeftButton" then
-      DB.Slash("party invite")
+      if IsControlKeyDown() then
+        DB.Slash("autoinvite toggle")
+      elseif IsShiftKeyDown() then
+        DB.Slash("party toggle")
+      elseif IsAltKeyDown() then
+        DB.Slash("join")
+      else
+        DB.Slash("party invite")
+      end
     elseif mod == "RightButton" then
       DB.Slash("config")
     else
@@ -602,8 +610,13 @@ function DB:StatusResetPos()
 end
 
 function DB:ShowToolTip(f)
-  GameTooltip:SetOwner(f, "ANCHOR_RIGHT")
-  GameTooltip:SetText(f.tooltipText, 0.9, 0.9, 0.9, 1, false)
+  DB:Debug("Show tool tip...")
+  if f.tooltipText then
+    GameTooltip:SetOwner(f, "ANCHOR_RIGHT")
+    GameTooltip:SetText(f.tooltipText, 0.9, 0.9, 0.9, 1, false)
+  else
+    DB:Debug("No .tooltipText set on %", f:GetName())
+  end
 end
 
 function DB:SetupStatusUI()
@@ -615,15 +628,47 @@ function DB:SetupStatusUI()
   local f = DB:Frame(DynBoxer, "DynamicBoxer_Status", "DynamicBoxer_Status")
   DB.statusFrame = f
   f:SetFrameStrata("FULLSCREEN")
+  f.Modifiers = {}
+  f:SetScript("OnEvent", function(w, _ev, key, state)
+    DB:Debug("modifier % % %", w:GetName(), key, state)
+    if state == 0 then
+      DB:Debug("Using default tooltip and resetting mod for ", key)
+      f.Modifiers[key] = nil
+      if w.defaultTooltipText then
+        w.tooltipText = w.defaultTooltipText
+      end
+      DB:ShowToolTip(w)
+      return
+    end
+    f.Modifiers[key] = true
+    if w.tooltipTextMods and w.tooltipTextMods[key] then
+      DB:Debug("Using tooltip for %", key)
+      w.tooltipText = w.tooltipTextMods[key]
+      DB:ShowToolTip(w)
+      return
+    end
+  end)
+
   f.fontName = "GameFontHighlightLeft"
-  f.tooltipText = "|cFFF2D80CDynamicBoxer|r " .. DB.manifestVersion .. " help:\n\n" ..
-                    "Shows your current dynamic mapping\n(|cFF33E526green|r number is known, |cFFFF4C43?|r is unknown)\n\n" ..
-                    "|cFF99E5FFLeft click|r to invite\n" .. "|cFF99E5FFMiddle|r click to disband\n" .. "|cFF99E5FFRight|r click for options\n"
+  local heading = "|cFFF2D80CDynamicBoxer|r " .. DB.manifestVersion .. " help:\n\n" ..
+                    "Shows your current dynamic mapping\n(|cFF33E526green|r number is known, |cFFFF4C43?|r is unknown)\n\n"
+  f.defaultTooltipText = heading .. "|cFF99E5FFLeft click|r to invite\n" .. "|cFF99E5FFMiddle|r click to disband\n" ..
+                           "|cFF99E5FFRight|r click for options\n\nDrag the frame to move it anywhere.\n" ..
+                           "Hold |cFF99E5FFShift|r, |cFF99E5FFControl|r, |cFF99E5FFAlt|r keys for more tips."
+  f.tooltipTextMods = {}
+  f.tooltipTextMods.LSHIFT = heading .. "|cFF99E5FFShift Left click|r to toggle party/raid"
+  f.tooltipTextMods.LCTRL = heading .. "|cFF99E5FFControl Left click|r to toggle autoinvite"
+  f.tooltipTextMods.LALT = heading .. "|cFF99E5FFAlt Left click|r to send a resync message"
+
+  f.tooltipText = f.defaultTooltipText
   f:SetScript("OnEnter", function()
+    f:RegisterEvent("MODIFIER_STATE_CHANGED")
     DB:ShowToolTip(f)
   end)
   f:SetScript("OnLeave", function()
+    f:UnregisterEvent("MODIFIER_STATE_CHANGED")
     GameTooltip:Hide()
+    DB:Debug("Hide tool tip...")
   end)
   f:SetMovable(true)
   f:RegisterForDrag("LeftButton")

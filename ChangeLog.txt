@@ -5,8 +5,11 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-1.9.5 July X 2019 WIP
+1.9.5 July 11 2019
 - Added tooltip for status frame
+- New (discoverable) Ctrl-Click for toggle autoinvite and Shift-Click to 
+  convert to raid/party toggle (and new `/dbox party toggle`)
+  Alt-click to send a re-sync message (`dbox join`)
 
 1.9.4 July 11th 2019 - The good one!
 - Fixed masterName->MasterName typo. Who doesn't love runtime errors like

@@ -8,6 +8,7 @@ globals = {
     "ChatFrame_AddMessageEventFilter",
     "SendChatMessage",
     "ConvertToRaid",
+    "ConvertToParty",
     "CreateFrame",
     "C_ChatInfo",
     "C_Timer",
