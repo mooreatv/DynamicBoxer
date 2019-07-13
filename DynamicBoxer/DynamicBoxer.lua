@@ -145,6 +145,10 @@ DB.ISBO = {} -- original functions
 
 function DB.ISBH.LoadBinds()
   DB:Debug("Hooked LoadBinds()")
+  -- save the name
+  if not DB.originalSlotName then
+    DB.originalSlotName =  isboxer.Character and isboxer.Character.ActualName
+  end
   if DB.watched.enabled then
     DB:ReconstructTeam()
   else
@@ -261,7 +265,7 @@ function DB:ReconstructTeam()
       "DynamicBoxer skipping team reconstruction as there is no isboxer team (not running under innerspace).")
     return
   end
-  local searchingFor = isboxer.Character and isboxer.Character.ActualName
+  local searchingFor = DB.originalSlotName or isboxer.Character and isboxer.Character.ActualName
   if not searchingFor or #searchingFor == 0 then
     if DB.manual <= 0 then
       DB:Error("Your isboxer.Character.ActualName is not set. please report your config/setup/how to reproduce.")
@@ -1346,6 +1350,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     -- join
     DB.joinDone = false -- force rejoin code
     DB.totalRetries = 0
+    DB:ReconstructTeam()
     DB:Join()
   elseif cmd == "v" then
     -- version
