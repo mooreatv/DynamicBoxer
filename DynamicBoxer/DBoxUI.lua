@@ -381,8 +381,8 @@ function DB:CreateOptionsPanel()
 
   p:addText("Development, troubleshooting and advanced options:"):Place(40, 20)
 
-  local enabled = p:addCheckBox("Addon Enabled", "Whether the addon is currently active" ..
-                                  "helps if you would be logging in/out many cross realm characters without autoinvite\n" ..
+  local enabled = p:addCheckBox("Addon Enabled", "Is the addon is currently active? " ..
+                                  "Pausing helps if you would be logging in/out many cross realm characters without autoinvite\n" ..
                                   "|cFF99E5FF/dbox enable off|r\nor |cFF99E5FF/dbox enable on|r to toggle"):Place(4, 10)
 
   p:addButton("Reset Window",

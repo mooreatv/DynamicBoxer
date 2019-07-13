@@ -145,14 +145,14 @@ DB.ISBO = {} -- original functions
 
 function DB.ISBH.LoadBinds()
   DB:Debug("Hooked LoadBinds()")
-  -- Avoid the mismatch complaint:
-  isboxer.Character.ActualName = GetUnitName("player")
-  isboxer.Character.QualifiedName = DB.fullName
   if DB.enabled then
     DB:ReconstructTeam()
   else
     DB:Warning("Not enabled, not doing any mapping")
   end
+  -- Avoid the mismatch complaint:
+  isboxer.Character.ActualName = GetUnitName("player")
+  isboxer.Character.QualifiedName = DB.fullName
   DB.ISBO.LoadBinds()
   DB.isboxeroutput = false -- only warn/output once
 end
