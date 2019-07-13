@@ -5,9 +5,13 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-1.9.6 
+1.9.6 July 13 2019
 - Minor adjustment to big slot display for better centering and layout
-- Let DB.enabled set to false work from startup (need to add UI - Issue #53)
+- Let DB.enabled set to false work from startup (Issue #53)
+  adding `/dbox enable off` to disable (and anything else to reenable, eg. `/dbox enable`)
+  alt-shift-right click on status window to disable
+  alt-right click to (re)enable (not using toggle so it's safer to broadcast set the same state)
+- adding Ctrl-Right click on status for popping up the token xchg dialog
 
 1.9.5 July 12 2019
 - Added tooltip for status frame

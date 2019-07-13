@@ -1291,6 +1291,7 @@ function DB:Help(msg)
                     "/dbox party inv||disband||toggle -- invites the party or disband it or toggle raid/party\n" ..
                     "/dbox autoinv toggle||off||n -- toggles, turns off or turns on for slot n the autoinvite\n" ..
                     "/dbox config -- open addon config, dbox c works too\n" ..
+                    "/dbox enable on/off-- enable/disable the addon (be careful to turn it back on)\n" ..
                     "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
                     "/dbox reset teams||token||masters||members||status||all -- resets one part of saved variables or all" ..
                     "\n/dbox version -- shows addon version")
@@ -1340,6 +1341,15 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
   elseif cmd == "v" then
     -- version
     DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv")
+  elseif cmd == "e" then
+    -- enable
+    if rest == "off" then
+      DB:Warning("Now PAUSED.")
+      DB:SetSaved("enabled", false)
+    else
+      DB:PrintDefault("DynamicBoxer is enabled")
+      DB:SetSaved("enabled", true)
+    end
   elseif cmd == "i" then
     -- re do initialization
     DB:ForceInit()

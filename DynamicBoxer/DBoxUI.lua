@@ -381,6 +381,10 @@ function DB:CreateOptionsPanel()
 
   p:addText("Development, troubleshooting and advanced options:"):Place(40, 20)
 
+  local enabled = p:addCheckBox("Addon Enabled", "Whether the addon is currently active" ..
+                                  "helps if you would be logging in/out many cross realm characters without autoinvite\n" ..
+                                  "|cFF99E5FF/dbox enable off|r\nor |cFF99E5FF/dbox enable on|r to toggle"):Place(4, 10)
+
   p:addButton("Reset Window",
               "Resets the DynamicBoxer status window position back to default\n|cFF99E5FF/dbox reset status|r",
               "reset status"):Place(0, 20)
@@ -470,6 +474,11 @@ function DB:CreateOptionsPanel()
       invitingSlot:DoDisable()
       autoRaid:DoDisable()
     end
+    if DB.enabled then
+      enabled:SetChecked(true)
+    else
+      enabled:SetChecked(false)
+    end
     autoRaid:SetChecked(DB.autoRaid)
   end
 
@@ -487,6 +496,14 @@ function DB:CreateOptionsPanel()
       end
     end
     DB:SetSaved("debug", sliderVal)
+    local en = enabled:GetChecked()
+    if en ~= DB.enabled then
+      if en then
+        DB.Slash("enable")
+      else
+        DB.Slash("enable off")
+      end
+    end
     local ainv = autoInvite:GetChecked()
     DB:SetSaved("autoInvite", ainv)
     local ainvSlot = invitingSlot:GetValue()
@@ -575,24 +592,6 @@ function DB:AddStatusLine(f)
   end
   local partySize = f:addText("(" .. tostring(DB.expectedCount) .. ")"):PlaceRight(4, y + 1)
   partySize:SetTextColor(.95, .85, .05)
-  f:SetScript("OnMouseUp", function(_w, mod)
-    DB:Debug("Clicked on party size %", mod)
-    if mod == "LeftButton" then
-      if IsControlKeyDown() then
-        DB.Slash("autoinvite toggle")
-      elseif IsShiftKeyDown() then
-        DB.Slash("party toggle")
-      elseif IsAltKeyDown() then
-        DB.Slash("join")
-      else
-        DB.Slash("party invite")
-      end
-    elseif mod == "RightButton" then
-      DB.Slash("config")
-    else
-      DB.Slash("party disband")
-    end
-  end)
   f:Snap()
 end
 
@@ -682,9 +681,10 @@ function DB:ShowBigInfo(autohide)
   local t = DB:GetFactionTexture(f, DB.faction)
   t:Place(0, -5, "TOP", "BOTTOM")
   local fo = DB:SetupHugeFont() -- can't really scale past 120 anyway
-  local s = f:addText(tostring(DB.ISBIndex), fo):Place(-6, 88, "TOP", "BOTTOM")
+  local s = f:addText(tostring(DB.ISBIndex or "???"), fo):Place(-6, 88, "TOP", "BOTTOM")
   s:SetJustifyH("CENTER")
   s:SetJustifyV("CENTER")
+  -- interesting textures for factions: "|T516953:0|t|T516949:0|t"
   local n = f:addText(DB.shortName, fo):Place(0, -6, "TOP", "BOTTOM")
   n:SetJustifyH("CENTER")
   n:SetJustifyV("CENTER")
@@ -734,9 +734,13 @@ function DB:SetupStatusUI()
                            "Press |cFF99E5FFTAB|r to see large on-screen slot information.\n" ..
                            "Hold |cFF99E5FFShift|r, |cFF99E5FFControl|r, |cFF99E5FFAlt|r keys for more tips."
   f.tooltipTextMods = {}
-  f.tooltipTextMods.LSHIFT = heading .. "|cFF99E5FFShift Left click|r to toggle party/raid"
-  f.tooltipTextMods.LCTRL = heading .. "|cFF99E5FFControl Left click|r to toggle autoinvite"
-  f.tooltipTextMods.LALT = heading .. "|cFF99E5FFAlt Left click|r to send a resync message"
+  f.tooltipTextMods.LSHIFT = heading .. "|cFF99E5FFShift Left click|r to toggle party/raid\n" ..
+                               "|cFF99E5FFAlt Shift Right|r click to |cFFFF4C43disable|r (pause) the addon"
+  f.tooltipTextMods.LCTRL = heading .. "|cFF99E5FFControl Left click|r to toggle autoinvite\n" ..
+                              "|cFF99E5FFControl Right|r click to open the token exchange dialog."
+  f.tooltipTextMods.LALT = heading .. "|cFF99E5FFAlt Left click|r to send a resync message\n" ..
+                             "|cFF99E5FFAlt Right|r click to (re)|cFF33E526enable|r or\n" ..
+                             "|cFF99E5FFAlt Shift Right|r click to |cFFFF4C43disable|r (pause) the addon"
 
   f.tooltipText = f.defaultTooltipText
   f:SetScript("OnEnter", function()
@@ -781,6 +785,34 @@ function DB:SetupStatusUI()
     DB:SetSaved("statusPos", statusPos)
   end)
   f:EnableMouse(true)
+  f:SetScript("OnMouseUp", function(_w, mod)
+    DB:Debug("Clicked on party size %", mod)
+    if mod == "LeftButton" then
+      if IsControlKeyDown() then
+        DB.Slash("autoinvite toggle")
+      elseif IsShiftKeyDown() then
+        DB.Slash("party toggle")
+      elseif IsAltKeyDown() then
+        DB.Slash("join")
+      else
+        DB.Slash("party invite")
+      end
+    elseif mod == "RightButton" then
+      if IsControlKeyDown() then
+        DB.Slash("xchg")
+      elseif IsAltKeyDown() then
+        if IsShiftKeyDown() then
+          DB.Slash("enabled off")
+        else
+          DB.Slash("enable")
+        end
+      else
+        DB.Slash("config")
+      end
+    else
+      DB.Slash("party disband")
+    end
+  end)
   if not DB.statusPos then
     DB:StatusInitialPos()
   end
