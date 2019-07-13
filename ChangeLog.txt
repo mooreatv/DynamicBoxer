@@ -14,12 +14,12 @@ Coming next:
 - adding Ctrl-Right click on status for popping up the token xchg dialog
 
 1.9.5 July 12 2019
-- Added tooltip for status frame
+- Added tooltip for status frame (Issue #46)
 - New (discoverable) Ctrl-Click for toggle autoinvite and Shift-Click to 
   convert to raid/party toggle (and new `/dbox party toggle`)
   Alt-click to send a re-sync message (`dbox join`)
 - Very very nice (if I may say so) window/slot info display when hitting tab
-  and mouse over status (and briefly at login)
+  and mouse over status (and briefly at login) - (Issue #52)
 
 1.9.4 July 11th 2019 - The good one!
 - Fixed masterName->MasterName typo. Who doesn't love runtime errors like
@@ -29,7 +29,7 @@ Coming next:
   simple case of entering a token for a new master (!) (need automated test case/regression testing!)
 1.9.2 July 11th 2019 - bad release
 - Put our frame higher on the stack, and about midway to the right instead of just centered
-  to not cover blizzard headings like in the order hall and some other topbar addons
+  to not cover blizzard headings like in the order hall and some other topbar addons (Issue #47)
 - Fix the padding around frame to be precisely the same in each corner and using
   MoLib pixel perfect alignment of frame
 - Reset the max 200 message counter at each team complete event (for long running cross realm sessions)
