@@ -500,6 +500,7 @@ function DB:CreateOptionsPanel()
     if en ~= DB.enabled then
       if en then
         DB.Slash("enable")
+        DB.Slash("join")
       else
         DB.Slash("enable off")
       end
@@ -805,6 +806,7 @@ function DB:SetupStatusUI()
           DB.Slash("enabled off")
         else
           DB.Slash("enable")
+          DB.Slash("join")
         end
       else
         DB.Slash("config")
