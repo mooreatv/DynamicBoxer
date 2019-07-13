@@ -1350,15 +1350,6 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
   elseif cmd == "v" then
     -- version
     DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv")
-  elseif cmd == "e" then
-    -- enable
-    if rest == "off" then
-      DB:Warning("Now PAUSED.")
-      DB:SetWatchedSaved("enabled", false)
-    else
-      DB:PrintDefault("DynamicBoxer is enabled")
-      DB:SetWatchedSaved("enabled", true)
-    end
   elseif cmd == "i" then
     -- re do initialization
     DB:ForceInit()
@@ -1459,6 +1450,17 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     InterfaceOptionsFrame:Show() -- onshow will clear the category if not already displayed
     InterfaceOptionsFrame_OpenToCategory(DB.optionsPanel) -- gets our name selected
   elseif cmd == "e" then
+    if DB:StartsWith(arg, "enable") then
+      -- enable
+      if rest == "off" then
+        DB:Warning("Now PAUSED.")
+        DB:SetWatchedSaved("enabled", false)
+      else
+        DB:PrintDefault("DynamicBoxer is enabled")
+        DB:SetWatchedSaved("enabled", true)
+      end
+      return
+    end
     UIParentLoadAddOn("Blizzard_DebugTools")
     -- hook our code, only once/if there are no other hooks
     if EventTraceFrame:GetScript("OnShow") == EventTraceFrame_OnShow then
