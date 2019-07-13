@@ -94,7 +94,7 @@ DB.EMA = DB.EMA and DB.EMA:GetAddon("Team", true)
 
 -- Returns if we should be operating (basically if isboxer has a static team defined)
 function DB:IsActive()
-  if self.enabled and (isboxer.Character_LoadBinds or self.manual > 0) then
+  if self.watched.enabled and (isboxer.Character_LoadBinds or self.manual > 0) then
     return true -- so we don't return the LoadBinds function
   end
   return false
