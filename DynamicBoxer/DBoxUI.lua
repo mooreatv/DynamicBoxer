@@ -823,13 +823,23 @@ function DB:SetupStatusUI()
   f.bg:SetAllPoints()
   f.bg:SetColorTexture(.1, .2, .7, 0.7)
   f:SetAlpha(.9)
-  f:addText("DynamicBoxer on ", f.fontName):Place(4, 4):SetTextColor(0.9, 0.9, 0.9) -- that also defines the bottom right padding
+  local title = f:addText("DynamicBoxer", f.fontName):Place(4, 4) -- that also defines the bottom right padding
+  f:addText(" on ", f.fontName):PlaceRight(0, 0):SetTextColor(0.9, 0.9, 0.9)
   f.slotNum = f:addText("?", f.fontName):PlaceRight(0, 0)
   f.slotNum.slotToText = slotToText
   f.slotNum:slotToText(self.watched.slot)
   DB.watched:AddWatch("slot", function(_k, v, _oldVal)
     f.slotNum:slotToText(v)
   end)
+  local updtTitle = function(_k, v, _oldVal)
+    if v then
+      title:SetTextColor(0.9, 0.9, 0.9)
+    else
+      title:SetTextColor(1, 0, 0)
+    end
+  end
+  DB.watched:AddWatch("enabled", updtTitle)
+  updtTitle("enabled", DB.watched.enabled, nil) -- initial value
   DB:AddStatusLine(DB.statusFrame)
 end
 

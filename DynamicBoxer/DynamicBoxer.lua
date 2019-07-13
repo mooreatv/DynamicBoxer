@@ -74,7 +74,7 @@ DB.maxRetries = 20 -- after 20s we stop/give up
 DB.chatPrefix = "dbox1" -- protocol version in prefix for the addon messages
 DB.whisperPrefix = "DynamicBoxer~" -- chat prefix in case it goes to wrong toon, to make it clearer what it may be
 DB.channelId = nil
-DB.enabled = true -- set to false if the users cancels out of the UI
+DB.watched.enabled = true -- set to false if the users cancels out of the UI
 DB.randomIdLen = 8 -- we generate 8 characters long random ids
 DB.tokenMinLen = DB.randomIdLen * 2 + 2 + 4
 DB.configVersion = 1 -- bump up to support conversion (and update the ADDON_LOADED handler)
@@ -145,7 +145,7 @@ DB.ISBO = {} -- original functions
 
 function DB.ISBH.LoadBinds()
   DB:Debug("Hooked LoadBinds()")
-  if DB.enabled then
+  if DB.watched.enabled then
     DB:ReconstructTeam()
   else
     DB:Warning("Not enabled, not doing any mapping")
@@ -159,7 +159,7 @@ end
 
 function DB.ISBH.SetMacro(username, key, macro, ...)
   DB:Debug(9, "Hooked SetMacro(%, %, %, %)", username, key, macro, DB:Dump(...))
-  if DB.enabled then
+  if DB.watched.enabled then
     macro = DB:Replace(macro)
   else
     DB:Debug("Skipping macro replace as we are not enabled...")
@@ -616,7 +616,7 @@ function DB.Sync() -- called as ticker so no :
     if DB.totalRetries % 5 == 0 then
       DB:Warning("We tried % times to message the channel, will try rejoining instead", DB.totalRetries)
       DB:SetupChange()
-      DB.enabled = true -- must be after the previous line which sets it off
+      DB.watched.enabled = true -- must be after the previous line which sets it off
       -- DB:CheckChannelOk(DB:format("from Sync %", DB.totalRetries)) -- not enough to detect/fix it seems
     end
     if DB.maxIter <= 0 then
@@ -1297,6 +1297,15 @@ function DB:Help(msg)
                     "\n/dbox version -- shows addon version")
 end
 
+function DB:SetWatchedSaved(name, value)
+  self.watched[name] = value
+  if not dynamicBoxerSaved.watched then
+    dynamicBoxerSaved.watched = {} -- don't sync everything so new table instead of ref
+  end
+  dynamicBoxerSaved.watched[name] = value
+  DB:Debug(4, "(Saved) Watched Setting % set to % - dynamicBoxerSaved=%", name, value, dynamicBoxerSaved)
+end
+
 function DB:SetSaved(name, value)
   self[name] = value
   dynamicBoxerSaved[name] = value
@@ -1307,7 +1316,7 @@ function DB:SetupChange()
   -- re do initialization
   if DB.joinedChannel then
     DB:Debug("Re-init requested, leaving %: %", DB.joinedChannel, LeaveChannelByName(DB.joinedChannel))
-    DB.enabled = false
+    DB.watched.enabled = false
     DB.joinedChannel = nil
     DB.channelId = nil
     DB.joinDone = false
@@ -1345,10 +1354,10 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     -- enable
     if rest == "off" then
       DB:Warning("Now PAUSED.")
-      DB:SetSaved("enabled", false)
+      DB:SetWatchedSaved("enabled", false)
     else
       DB:PrintDefault("DynamicBoxer is enabled")
-      DB:SetSaved("enabled", true)
+      DB:SetWatchedSaved("enabled", true)
     end
   elseif cmd == "i" then
     -- re do initialization
@@ -1436,7 +1445,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
         DB.Secret = tok2
         DB.MasterName = masterName
         DB:SetupChange()
-        DB.enabled = true
+        DB.watched.enabled = true
         DB:Join()
         return
       end
