@@ -145,17 +145,25 @@ DB.ISBO = {} -- original functions
 
 function DB.ISBH.LoadBinds()
   DB:Debug("Hooked LoadBinds()")
-  DB:ReconstructTeam()
   -- Avoid the mismatch complaint:
   isboxer.Character.ActualName = GetUnitName("player")
   isboxer.Character.QualifiedName = DB.fullName
+  if DB.enabled then
+    DB:ReconstructTeam()
+  else
+    DB:Warning("Not enabled, not doing any mapping")
+  end
   DB.ISBO.LoadBinds()
   DB.isboxeroutput = false -- only warn/output once
 end
 
 function DB.ISBH.SetMacro(username, key, macro, ...)
   DB:Debug(9, "Hooked SetMacro(%, %, %, %)", username, key, macro, DB:Dump(...))
-  macro = DB:Replace(macro)
+  if DB.enabled then
+    macro = DB:Replace(macro)
+  else
+    DB:Debug("Skipping macro replace as we are not enabled...")
+  end
   DB.ISBO.SetMacro(username, key, macro, ...)
 end
 
