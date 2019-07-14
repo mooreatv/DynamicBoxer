@@ -6,7 +6,11 @@ Coming next:
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 1.9.7 TBD
-- what should we do next?
+- what should we do next? - possibilities:
+  - faction animation ? character larger class/race img
+  - texture code to MoLib
+  - full-er status window
+  - zoom status window
 
 1.9.6 July 13 2019
 - Minor adjustment to big slot display for better centering and layout
