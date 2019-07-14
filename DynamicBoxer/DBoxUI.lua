@@ -680,6 +680,7 @@ function DB:ShowBigInfo(autohide)
   DB:Debug("ShowBigInfo: Creating")
   DB.bigInfo = DB:Frame("DynBoxer_big_info")
   local f = DB.bigInfo
+  f:SetParent(nil) -- so it's visible with alt-z too
   f:SetFrameStrata("FULLSCREEN")
   f:SetPoint("CENTER", 0, 0)
   f:SetAllPoints()

@@ -13,7 +13,7 @@ Coming next:
   alt-right click to (re)enable (not using toggle so it's safer to broadcast set the same state)
 - adding Ctrl-Right click on status for popping up the token xchg dialog
 - adding slash command (`/dbox id`), key binding and options button for slot identification command
-  in addition to previous TAB when mousing over status window.
+  in addition to previous TAB when mousing over status window. Make it visible also when alt-z'ed.
 
 1.9.5 July 12 2019
 - Added tooltip for status frame (Issue #46)
