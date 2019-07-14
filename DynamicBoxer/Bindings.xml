@@ -12,6 +12,9 @@
     <Binding name="DBOX_DISBAND" category="DYNAMICBOXER">
         DynBoxer.Slash("party disband")
     </Binding>
+    <Binding name="DBOX_IDENTIFY" category="DYNAMICBOXER">
+        DynBoxer.Slash("identify")
+    </Binding>
     <Binding name="DBOX_XCHG" category="DYNAMICBOXER">
         DynBoxer.Slash("xchg")
     </Binding>

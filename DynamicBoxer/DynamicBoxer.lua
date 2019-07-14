@@ -497,9 +497,8 @@ DB.syncNum = 1
 
 -- TODO: separate / disentangle  channel and direct message sync
 function DB.Sync() -- called as ticker so no :
-  local isActive = DB:IsActive()
-  DB:Debug(9, "DB:Sync #% maxIter % active %", DB.syncNum, DB.maxIter, isActive)
-  if DB.maxIter <= 0 or not isActive then
+  DB:Debug(9, "DB:Sync #% maxIter %", DB.syncNum, DB.maxIter)
+  if DB.maxIter <= 0 or not DB:IsActive() then
     return
   end
   if not DB.channelId then
@@ -1355,9 +1354,12 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
   elseif cmd == "v" then
     -- version
     DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv")
-  elseif cmd == "i" then
+  elseif DB:StartsWith(arg, "init") then
     -- re do initialization
     DB:ForceInit()
+  elseif cmd == "i" then
+    DB:PrintDefault("Showing the identify info for 8 (more) seconds")
+    DB:ShowBigInfo(8)
   elseif cmd == "p" then
     if DB:StartsWith(rest, "d") or DB:StartsWith(rest, "u") then
       -- party disband/uninvite

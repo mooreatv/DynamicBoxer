@@ -338,7 +338,8 @@ function DB:CreateOptionsPanel()
   -- TODO: look into i18n
   -- Q: maybe should just always auto place (add&place) ?
   p:addText("DynamicBoxer options", "GameFontNormalLarge"):Place()
-  p:addText("These options let you control the behavior of DynamicBoxer " .. DB.manifestVersion):Place()
+  p:addText("These options let you control the behavior of DynamicBoxer " .. DB.manifestVersion ..
+              "\nMost actions can also be done by mousing over the status window or through keybindings."):Place()
   local autoInvite = p:addCheckBox("Auto invite",
                                    "Whether one of the slot should auto invite the others\n" ..
                                      "it also helps with cross realm teams sync\n" ..
@@ -371,9 +372,12 @@ function DB:CreateOptionsPanel()
     end
   end)
 
+  p:addButton("Identify",
+              "Shows the big identification text (faction, slot, name, realm)\n" .. "|cFF99E5FF/dbox identify|r",
+              "identify"):Place(0, 20)
   p:addButton("Exchange Token", "Shows the token on master and empty ready to paste on slaves\n" ..
                 "Allows for very fast broadcast KeyBind, Ctrl-C (copy) Ctrl-V (paste) Return, 4 keys and done!\n" ..
-                "|cFF99E5FF/dbox xchg|r or better, set a Key Binding", "xchg"):Place(0, 20)
+                "|cFF99E5FF/dbox xchg|r or better, set a Key Binding", "xchg"):PlaceRight(20)
 
   p:addButton("Show Token", "Shows the UI to show or set the current token string\n" ..
                 "(if you need to copy from slave to brand new master, otherwise use xchg)\n" ..
@@ -658,9 +662,14 @@ end
 function DB:ShowBigInfo(autohide)
   DB:Debug("ShowBigInfo")
   if autohide then
-    C_Timer.After(autohide, function()
+    if DB.autoHideBigInfo then
+      DB:Debug("ShowBigInfo: cancelling previous autohide")
+      DB.autoHideBigInfo:Cancel()
+    end
+    DB.autoHideBigInfo = C_Timer.NewTimer(autohide, function()
       DB:Debug("ShowBigInfo: Hiding")
       DB.bigInfo:Hide()
+      DB.autoHideBigInfo = nil
     end)
   end
   if DB.bigInfo then
@@ -671,6 +680,7 @@ function DB:ShowBigInfo(autohide)
   DB:Debug("ShowBigInfo: Creating")
   DB.bigInfo = DB:Frame("DynBoxer_big_info")
   local f = DB.bigInfo
+  f:SetFrameStrata("FULLSCREEN")
   f:SetPoint("CENTER", 0, 0)
   f:SetAllPoints()
   -- f:SetWidth(1)
@@ -849,6 +859,7 @@ end
 _G.DYNAMICBOXER = "DynamicBoxer"
 _G.BINDING_HEADER_DYNAMICBOXER = L["DynamicBoxer addon key bindings"]
 _G.BINDING_NAME_DBOX_INVITE = "Invite team  |cFF99E5FF/dbox party invite|r"
+_G.BINDING_NAME_DBOX_IDENTIFY = "Identify slot |cFF99E5FF/dbox identify|r"
 _G.BINDING_NAME_DBOX_DISBAND = "Disband  |cFF99E5FF/dbox party disband|r"
 _G.BINDING_NAME_DBOX_XCHG = "Exchange token  |cFF99E5FF/dbox xchg|r"
 _G.BINDING_NAME_DBOX_AUTOINV = "Toggle AutoInvite |cFF99E5FF/dbox autoi|r"
