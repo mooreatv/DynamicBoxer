@@ -4,13 +4,16 @@ Coming next:
 - More refinements on the new status UI, options panel and other features
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
-
-1.9.7 TBD
 - what should we do next? - possibilities:
   - faction animation ? character larger class/race img
   - texture code to MoLib
   - full-er status window
   - zoom status window
+
+1.9.7 July 14th 2019
+- Added option in settings to turn off the start up identification, show for only 3s at start
+  and 6s later
+- Handle solo / team of 1 properly (Issue #55)
 
 1.9.6 July 13 2019
 - Minor adjustment to big slot display for better centering and layout

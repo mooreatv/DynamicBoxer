@@ -82,6 +82,7 @@ DB.configVersion = 1 -- bump up to support conversion (and update the ADDON_LOAD
 DB.autoInvite = 1 -- so it's discovered/useful by default
 DB.autoInviteSlot = 1
 DB.autoRaid = true
+DB.showIdAtStart = true
 
 DB.manual = 0 -- testing manual mode, 0 is off, number is slot id
 -- Set to actual expected size, or we'll start with 2 and extend as we get messages from higher slots
@@ -147,7 +148,7 @@ function DB.ISBH.LoadBinds()
   DB:Debug("Hooked LoadBinds()")
   -- save the name
   if not DB.originalSlotName then
-    DB.originalSlotName =  isboxer.Character and isboxer.Character.ActualName
+    DB.originalSlotName = isboxer.Character and isboxer.Character.ActualName
   end
   if DB.watched.enabled then
     DB:ReconstructTeam()
@@ -323,7 +324,11 @@ function DB:ReconstructTeam()
   if DB.ISBIndex == 1 then
     DB.MasterName = DB.fullName
   end
-  DB:ShowBigInfo(4)
+  if DB.showIdAtStart then
+    C_Timer.After(0.5, function()
+      DB:ShowBigInfo(3)
+    end)
+  end
   DB:Debug("Team map initial value = %", DB.Team)
   -- detect team changes, keep unique teams
   local teamStr = table.concat(DB.ISBTeam, " ")
@@ -334,8 +339,13 @@ function DB:ReconstructTeam()
   end
   DB.teamHistory[teamStr] = GetServerTime()
   dynamicBoxerSaved.teamHistory = DB.teamHistory
-  DB.currentCount = DB:SortTeam() -- will be 1
+  DB.currentCount = DB:SortTeam() -- returns 1
   DB.expectedCount = #DB.ISBTeam
+  if DB.expectedCount == DB.currentCount then
+    -- basically a team of 1 / solo is already complete (don't pop up master token etc)
+    DB:Warning("Solo / Team of % detected. Setup complete.", DB.expectedCount)
+    DB.teamComplete = true
+  end
   DB:AddStatusLine(DB.statusFrame)
   DB:Debug("Unique team string key is %, updated in history, expecting a team of size #%", teamStr, DB.expectedCount)
   if DB.EMA then
@@ -1358,8 +1368,8 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     -- re do initialization
     DB:ForceInit()
   elseif cmd == "i" then
-    DB:PrintDefault("Showing the identify info for 8 (more) seconds")
-    DB:ShowBigInfo(8)
+    DB:PrintDefault("Showing the identify info for 6 (more) seconds")
+    DB:ShowBigInfo(6)
   elseif cmd == "p" then
     if DB:StartsWith(rest, "d") or DB:StartsWith(rest, "u") then
       -- party disband/uninvite
