@@ -57,7 +57,7 @@ function DB.OnSetupUIAccept(widget, data, data2)
   widget.editBox:SetMaxLetters(0)
   widget:Hide()
   DB.inUI = false
-  if DB.MasterToken == token and DB.enabled then
+  if DB.MasterToken == token and DB.watched.enabled then
     DB:Debug("Exact same token set, done with setup")
     return
   end
@@ -68,7 +68,7 @@ function DB.OnSetupUIAccept(widget, data, data2)
   DB:Debug("Current master is %", masterName) -- we'll send it a message so it's box stops showing
   DB:AddToMasterHistory(masterName)
   DB:SetupChange() -- joining just after leaving seems to break so we need to wait next sync
-  DB.enabled = true -- must be after the previous line which sets it off
+  DB.watched.enabled = true -- must be after the previous line which sets it off
   if DB.maxIter <= 0 then
     DB.maxIter = 1
   end
@@ -78,7 +78,7 @@ function DB.OnSetupUIAccept(widget, data, data2)
 end
 
 function DB.OnUICancel(widget, _data)
-  DB.enabled = false -- avoids a loop where we keep trying to ask user
+  DB.watched.enabled = false -- avoids a loop where we keep trying to ask user
   DB.inUI = false
   widget:Hide()
   widget.editBox:SetMaxLetters(0)
@@ -511,7 +511,7 @@ function DB:CreateOptionsPanel()
       invitingSlot:DoDisable()
       autoRaid:DoDisable()
     end
-    if DB.enabled then
+    if DB.watched.enabled then
       enabled:SetChecked(true)
     else
       enabled:SetChecked(false)
@@ -535,7 +535,7 @@ function DB:CreateOptionsPanel()
     end
     DB:SetSaved("debug", sliderVal)
     local en = enabled:GetChecked()
-    if en ~= DB.enabled then
+    if en ~= DB.watched.enabled then
       if en then
         DB.Slash("enable")
         DB.Slash("join")
@@ -639,13 +639,18 @@ end
 function DB:StatusInitialPos()
   local w = UIParent:GetWidth()
   DB.statusPos = {"TOP", w / 5, 0}
+  DB.statusScale = 1
 end
 
 function DB:StatusResetPos()
   dynamicBoxerSaved.statusPos = nil
+  dynamicBoxerSaved.statusScale = nil
   DB:StatusInitialPos()
-  DB.statusFrame:ClearAllPoints()
-  DB.statusFrame:SetPoint(unpack(DB.statusPos))
+  local f = DB.statusFrame
+  f:ClearAllPoints()
+  f:SetPoint(unpack(DB.statusPos))
+  f:SetScale(DB.statusScale)
+  f:Snap()
 end
 
 function DB:ShowToolTip(f)
@@ -777,7 +782,8 @@ function DB:SetupStatusUI()
   local heading = "|cFFF2D80CDynamicBoxer|r " .. DB.manifestVersion .. " help:\n\n" ..
                     "Shows your current dynamic mapping\n(|cFF33E526green|r number is known, |cFFFF4C43?|r is unknown)\n\n"
   f.defaultTooltipText = heading .. "|cFF99E5FFLeft click|r to invite\n" .. "|cFF99E5FFMiddle|r click to disband\n" ..
-                           "|cFF99E5FFRight|r click for options\n\nDrag the frame to move it anywhere.\n" ..
+                           "|cFF99E5FFRight|r click for options\n\n" .. "Drag the frame to move it anywhere.\n" ..
+                           "Mousewheel to resize it\n\n" ..
                            "Press |cFF99E5FFTAB|r to see large on-screen slot information.\n" ..
                            "Hold |cFF99E5FFShift|r, |cFF99E5FFControl|r, |cFF99E5FFAlt|r keys for more tips."
   f.tooltipTextMods = {}
@@ -826,13 +832,25 @@ function DB:SetupStatusUI()
   f:SetScript("OnDragStart", f.StartMoving)
   f:SetScript("OnDragStop", function(w, ...)
     f.StopMovingOrSizing(w, ...)
-    f:Snap()
-    local point, _, relativePoint, xOfs, yOfs = w:GetPoint()
-    DB:Debug("Stopped moving status widget % % % %", point, relativePoint, xOfs, yOfs)
-    local statusPos = {point, xOfs, yOfs} -- relativePoint seems to always be same as point
-    DB:SetSaved("statusPos", statusPos)
+    DB:SavePosition(f)
   end)
   f:EnableMouse(true)
+  f:EnableMouseWheel(true)
+  f.mouseWheelTimer = nil
+  f:SetScript("OnMouseWheel", function(_w, direction)
+    if direction > 0 then
+      DB:ChangeScale(f, f:GetScale() * 1.08)
+    else
+      DB:ChangeScale(f, f:GetScale() * .92)
+    end
+    -- don't keep saving, only when adjustments quiet down
+    if f.mouseWheelTimer then
+      f.mouseWheelTimer:Cancel()
+    end
+    f.mouseWheelTimer = C_Timer.NewTimer(0.25, function()
+      DB:SavePosition(f)
+    end)
+  end)
   f:SetScript("OnMouseUp", function(_w, mod)
     DB:Debug("Clicked on party size %", mod)
     if mod == "LeftButton" then
@@ -864,13 +882,16 @@ function DB:SetupStatusUI()
         DB.Slash("team complete")
         return
       end
-        DB.Slash("party disband")
+      DB.Slash("party disband")
     end
   end)
   if not DB.statusPos then
     DB:StatusInitialPos()
   end
   f:SetPoint(unpack(DB.statusPos))
+  if DB.statusScale then
+    f:SetScale(DB.statusScale)
+  end
   f:SetWidth(1)
   f:SetHeight(1) -- will recalc below
   f.bg = f:CreateTexture(nil, "BACKGROUND")
@@ -895,6 +916,26 @@ function DB:SetupStatusUI()
   DB.watched:AddWatch("enabled", updtTitle)
   updtTitle("enabled", DB.watched.enabled, nil) -- initial value
   DB:AddStatusLine(DB.statusFrame)
+end
+
+function DB:SavePosition(f)
+  f:Snap()
+  local point, _, relativePoint, xOfs, yOfs = f:GetPoint()
+  local scale = f:GetScale()
+  DB:Debug("Stopped moving/scaling status widget % % % % - scale %", point, relativePoint, xOfs, yOfs, scale)
+  local statusPos = {point, xOfs, yOfs} -- relativePoint seems to always be same as point
+  DB:SetSaved("statusPos", statusPos)
+  DB:SetSaved("statusScale", scale)
+end
+
+-- Generic, move to MoLib
+function DB:ChangeScale(f, newScale)
+  local pt1, parent, pt2, x, y = f:GetPoint()
+  local oldScale = f:GetScale()
+  local ptMult = oldScale / newScale -- correction for point
+  DB:Debug("Changing scale from % to % - point multiplier %", oldScale, newScale, ptMult)
+  f:SetScale(newScale)
+  f:SetPoint(pt1, parent, pt2, x * ptMult, y * ptMult)
 end
 
 --- Bindings settings (i18n/l10n)

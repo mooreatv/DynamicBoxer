@@ -10,6 +10,10 @@ Coming next:
   - full-er status window
   - zoom status window
 
+1.9.8 July 15th 2019
+- Status window size can be change with mousewheel (and saved like the position)
+- Fixed issue with enabled/disabled flow (some use of old variable weren't renamed to the new watched one)
+
 1.9.7 July 14th 2019
 - Added option in settings to turn off the start up identification, show for only 3s at start
   and 6s later
