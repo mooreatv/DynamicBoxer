@@ -11,7 +11,9 @@ Coming next:
   - zoom status window
 
 1.9.8 July 15th 2019
-- Status window size can be change with mousewheel (and saved like the position)
+- Status window size can be change with mousewheel (and saved like the position), also changeable
+  (better is broadcasting to all windows) using the options menu. Quite some work to get cancel
+  to resetore previous scale etc.
 - Fixed issue with enabled/disabled flow (some use of old variable weren't renamed to the new watched one)
 
 1.9.7 July 14th 2019

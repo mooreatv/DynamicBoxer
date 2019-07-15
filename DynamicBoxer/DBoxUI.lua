@@ -400,14 +400,32 @@ function DB:CreateOptionsPanel()
 
   p:addButton("Identify",
               "Shows the big identification text (faction, slot, name, realm)\n" .. "|cFF99E5FF/dbox identify|r",
-              "identify"):Place(0, 20)
+              "identify"):Place(0, 18)
   local idAtStart = p:addCheckBox("Show slot info at start",
                                   "Shows the big identification text (faction, slot, name, realm) during startup")
                       :PlaceRight()
 
+  local statusFrameScale = p:addSlider("Status Frame Scale", "Sets the zoom/scale of the status window\n" ..
+                                         "You can also mousewheel on the window.", 0.5, 2, .1):Place(16, 28)
+
+  statusFrameScale.callBack = function(_w, val)
+    DB:ChangeScale(DB.statusFrame, val)
+    DB.statusFrame:Snap()
+  end
+
+  p:addButton("Reset Window",
+              "Resets the DynamicBoxer status window position back to default\n|cFF99E5FF/dbox reset status|r",
+              function()
+    statusFrameScale:SetValue(1)
+    DB:StatusResetPos()
+    p.savedCurrentScale = nil
+    DB:Warning("Saved window status position cleared per request and window reset to top left")
+
+  end):PlaceRight(16, -6)
+
   p:addButton("Exchange Token", "Shows the token on master and empty ready to paste on slaves\n" ..
                 "Allows for very fast broadcast KeyBind, Ctrl-C (copy) Ctrl-V (paste) Return, 4 keys and done!\n" ..
-                "|cFF99E5FF/dbox xchg|r or better, set a Key Binding", "xchg"):Place(0, 20)
+                "|cFF99E5FF/dbox xchg|r or better, set a Key Binding", "xchg"):Place(0, 24)
 
   p:addButton("Show Token", "Shows the UI to show or set the current token string\n" ..
                 "(if you need to copy from slave to brand new master, otherwise use xchg)\n" ..
@@ -422,10 +440,7 @@ function DB:CreateOptionsPanel()
                                   "Pausing helps if you would be logging in/out many cross realm characters without autoinvite\n" ..
                                   "|cFF99E5FF/dbox enable off|r\nor |cFF99E5FF/dbox enable on|r to toggle"):Place(4, 10)
 
-  p:addButton("Reset Window",
-              "Resets the DynamicBoxer status window position back to default\n|cFF99E5FF/dbox reset status|r",
-              "reset status"):Place(0, 20)
-  p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):PlaceRight()
+  p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):PlaceRight(0, 20)
   p:addButton("Join", "Attempts to resync the team by\nsending a message requiring reply\n|cFF99E5FF/dbox j|r", "join")
     :PlaceRight()
   p:addButton("Ping", "Attempts to resync the team by\nsending a message\n|cFF99E5FF/dbox m|r", "message"):PlaceRight()
@@ -501,6 +516,8 @@ function DB:CreateOptionsPanel()
   function p:HandleRefresh()
     p:Init()
     debugLevel:SetValue(DB.debug or 0)
+    p.savedCurrentScale = DB.statusScale or 1
+    statusFrameScale:SetValue(DB.statusScale)
     invitingSlot:SetValue(DB.autoInviteSlot)
     if DB.autoInvite then
       autoInvite:SetChecked(true)
@@ -552,12 +569,16 @@ function DB:CreateOptionsPanel()
     DB:SetSaved("showIdAtStart", idAtStart:GetChecked())
     DB:PrintDefault("Configuration: auto invite is " .. (ainv and "ON" or "OFF") .. " for slot %, auto raid is " ..
                       (raid and "ON" or "OFF"), ainvSlot)
-    -- DB:Warning("Generating lua error on purpose in p:HandleOk()")
-    -- error("testing errors")
+    DB:SavePosition(DB.statusFrame)
   end
 
   function p:cancel()
     DB:Warning("Options screen cancelled, not making any changes.")
+    -- warning no errors logged if any
+    if p.savedCurrentScale then
+      DB:ChangeScale(DB.statusFrame, p.savedCurrentScale) -- revert it to previous value
+      DB.statusFrame:Snap()
+    end
   end
 
   function p:okay()
@@ -933,7 +954,7 @@ function DB:ChangeScale(f, newScale)
   local pt1, parent, pt2, x, y = f:GetPoint()
   local oldScale = f:GetScale()
   local ptMult = oldScale / newScale -- correction for point
-  DB:Debug("Changing scale from % to % - point multiplier %", oldScale, newScale, ptMult)
+  DB:Debug(7, "Changing scale from % to % - point multiplier %", oldScale, newScale, ptMult)
   f:SetScale(newScale)
   f:SetPoint(pt1, parent, pt2, x * ptMult, y * ptMult)
 end
