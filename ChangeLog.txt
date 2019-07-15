@@ -8,7 +8,6 @@ Coming next:
   - faction animation ? character larger class/race img
   - texture code to MoLib
   - full-er status window
-  - zoom status window
 
 1.9.8 July 15th 2019
 - Status window size can be change with mousewheel (and saved like the position), also changeable
