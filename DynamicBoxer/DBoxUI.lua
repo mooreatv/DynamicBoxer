@@ -91,6 +91,7 @@ end
 
 function DB.OnShowUICancel(widget, _data)
   DB.inUI = false
+  DB.uiEscaped = true
   widget:Hide()
   DB:Warning("Escaped/cancelled from show token UI (use <return> key to close normally when done copy pasting)")
 end
@@ -258,6 +259,7 @@ function DB:SetupUI()
     DB:Debug(7, "Already in UI, skipping")
     return
   end
+  DB.uiEscaped = false
   DB.inUI = true
   -- DB.fullName= "aÁÁÁ" -- test with utf8 characters (2x bytes per accentuated char)
   -- "master-fullname token1 token2 h" (in glyphs, so need to use strlenutf8 on input/comparaison)
@@ -275,6 +277,7 @@ function DB:ShowTokenUI()
     return
   end
   DB:Debug("ShowTokenUI %", DB.MasterToken)
+  DB.uiEscaped = false
   if not DB.MasterToken or #DB.MasterToken == 0 then
     DB:Warning("No token to show")
     return
@@ -293,12 +296,35 @@ function DB:ShowTokenUI()
   end
 end
 
+DB.uiShowWarning = true -- one time
+
+-- this is called by automatic detection (and should stop when the user escaped out)
+function DB:ShowAutoExchangeTokenUI(msg, ...)
+  if not DB.watched.enabled then
+    DB:Debug("Not showing token exchange UI because we're now disabled (%)", msg)
+    return
+  end
+  if DB.uiEscaped then
+    if DB.uiShowWarning then
+      DB:Warning("Not showing automatic token exchange UI because you escaped one before. Use /dbox x to see one.")
+      DB.uiShowWarning = false
+    else
+      DB:Debug("Not showing exchange token UI because of previous escape and also already shown warning (%)", msg)
+    end
+    return
+  end
+  DB:PrintDefault(msg, ...)
+  DB:ExchangeTokenUI()
+end
+
+-- this is called based on excplicit user action
 function DB:ExchangeTokenUI()
   if DB.inUI then
     DB:Debug(1, "ExchangeTokenUI(): Already in UI, skipping")
     return
   end
   DB:Debug("ExchangeTokenUI %", DB.MasterToken)
+  DB.uiEscaped = false
   if DB:WeAreMaster() then
     return DB:ShowTokenUI()
   end

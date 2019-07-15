@@ -409,7 +409,7 @@ function DB:CheckMasterFaction()
       end
       DB:Warning("Wrong master faction % and first time in this faction %, please paste the token from slot 1", faction,
                  DB.faction)
-      DB:ExchangeTokenUI()
+      DB:ShowAutoExchangeTokenUI()
       return false
     end
   end
@@ -574,8 +574,7 @@ function DB.Sync() -- called as ticker so no :
           DB:Debug("% sec later we have a team complete % or already showing dialog", delay, DB.teamComplete)
           return
         end
-        DB:PrintDefault("Showing the master exchange token UI after % sec as we still don't have team complete", delay)
-        DB:ExchangeTokenUI()
+        DB:ShowAutoExchangeTokenUI("Showing the master exchange token UI after % sec as we still don't have team complete", delay)
       end)
     end
   else
@@ -587,10 +586,8 @@ function DB.Sync() -- called as ticker so no :
           DB:Debug("% sec later we have a master % or already showing dialog", delay, DB.Team[1])
           return
         end
-        DB:PrintDefault(
-          "Showing the exchange token UI after % sec as we still haven't reached a master (will autohide when found)",
-          delay)
-        DB:ExchangeTokenUI()
+        DB:ShowAutoExchangeTokenUI("Showing the exchange token UI after % sec as we still haven't reached a master (will autohide when found)",
+        delay)
       end)
     end
     if DB.maxIter <= 0 and not DB.noMoreExtra and DB.crossRealmMaster and #DB.crossRealmMaster > 0 then
@@ -900,7 +897,7 @@ function DB:ProcessMessage(source, from, data)
   -- we should do that after we joined our channel to get a chance to get completion
   if channelMessage and DB.newTeam and (not DB.justInit) and DB:WeAreMaster() and (DB.currentCount < DB.expectedCount) then
     DB:Warning("New (isboxer) team detected, on master, showing current token")
-    DB:ShowTokenUI()
+    DB:ShowAutoExchangeTokenUI()
   end
   if idx == DB.ISBIndex then
     DB:Debug(3, "% message, about us, from % (real name claim is %)", source, from, realname)
