@@ -574,7 +574,8 @@ function DB.Sync() -- called as ticker so no :
           DB:Debug("% sec later we have a team complete % or already showing dialog", delay, DB.teamComplete)
           return
         end
-        DB:ShowAutoExchangeTokenUI("Showing the master exchange token UI after % sec as we still don't have team complete", delay)
+        DB:ShowAutoExchangeTokenUI(
+          "Showing the master exchange token UI after % sec as we still don't have team complete", delay)
       end)
     end
   else
@@ -586,8 +587,9 @@ function DB.Sync() -- called as ticker so no :
           DB:Debug("% sec later we have a master % or already showing dialog", delay, DB.Team[1])
           return
         end
-        DB:ShowAutoExchangeTokenUI("Showing the exchange token UI after % sec as we still haven't reached a master (will autohide when found)",
-        delay)
+        DB:ShowAutoExchangeTokenUI(
+          "Showing the exchange token UI after % sec as we still haven't reached a master (will autohide when found)",
+          delay)
       end)
     end
     if DB.maxIter <= 0 and not DB.noMoreExtra and DB.crossRealmMaster and #DB.crossRealmMaster > 0 then
@@ -972,33 +974,48 @@ function DB:ProcessMessage(source, from, data)
     DB:AddToMembersHistory(realname)
   end
   if teamComplete then
-    DB:PrintInfo("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!", DB.currentCount)
-    DB.sentMessageCount = 0
-    DB.needRaid = false
-    DB.teamComplete = true
+    DB:TeamIsComplete() -- will also do EMASync so we can return here
+    return
   end
   -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
-  if DB.currentCount == DB.expectedCount and DB.EMA then
-    -- why is there an extra level of table? - adapted from FullTeamList in Core/Team.lua of EMA
-    for name, info in pairs(DB.EMA.db.newTeamList) do
-      local i = DB.TeamIdxByName[name]
-      if i then
-        -- set correct order
-        info[1].order = i
-      else
-        -- remove toons not in our list
-        DB:Debug(">>> Removing % (%) from EMA team", name, info)
-        DB.EMA.db.newTeamList[name] = nil
-      end
-    end
-    DB.EMA.db.master = DB.Team[1].fullName -- set the master too
-    DB:Debug("Set ema master to %", DB.EMA.db.master)
-    -- kinda hard to find what is needed minimally to get the ema list to refresh in the order set above
-    -- it might be DisplayGroupsForCharacterInGroupsList but that's not exposed
-    -- neither SettingsTeamListScrollRefresh nor SettingsRefresh() work...
-    DB.EMA:SendMessage(DB.EMA.MESSAGE_TEAM_ORDER_CHANGED)
-    DB:Debug(1, "Ema team fully set.")
+  if DB.currentCount == DB.expectedCount then
+    DB:EMASync()
   end
+end
+
+function DB:TeamIsComplete()
+  DB:PrintInfo("This completes the team of %, get multiboxing and thank you for using DynamicBoxer!", DB.currentCount)
+  DB.sentMessageCount = 0
+  DB.needRaid = false
+  DB.teamComplete = true
+  DB:HideTokenUI()
+  DB:EMAsync()
+end
+
+function DB:EMAsync()
+  if not DB.EMA then
+    DB:Debug("No EMA present, not syncing")
+    return
+  end
+  -- why is there an extra level of table? - adapted from FullTeamList in Core/Team.lua of EMA
+  for name, info in pairs(DB.EMA.db.newTeamList) do
+    local i = DB.TeamIdxByName[name]
+    if i then
+      -- set correct order
+      info[1].order = i
+    else
+      -- remove toons not in our list
+      DB:Debug(">>> Removing % (%) from EMA team", name, info)
+      DB.EMA.db.newTeamList[name] = nil
+    end
+  end
+  DB.EMA.db.master = DB.Team[1].fullName -- set the master too
+  DB:Debug("Set ema master to %", DB.EMA.db.master)
+  -- kinda hard to find what is needed minimally to get the ema list to refresh in the order set above
+  -- it might be DisplayGroupsForCharacterInGroupsList but that's not exposed
+  -- neither SettingsTeamListScrollRefresh nor SettingsRefresh() work...
+  DB.EMA:SendMessage(DB.EMA.MESSAGE_TEAM_ORDER_CHANGED)
+  DB:Debug(1, "Ema team fully set.")
 end
 
 function DB:ChatAddonMsg(event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
@@ -1299,6 +1316,7 @@ function DB:Help(msg)
                     "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
                     "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
                     "/dbox party inv||disband||toggle -- invites the party or disband it or toggle raid/party\n" ..
+                    "/dbox team complete -- forces the current team to be assumed to be completed despite missing slots\n" ..
                     "/dbox autoinv toggle||off||n -- toggles, turns off or turns on for slot n the autoinvite\n" ..
                     "/dbox config -- open addon config, dbox c works too\n" ..
                     "/dbox enable on/off-- enable/disable the addon (be careful to turn it back on)\n" ..
@@ -1378,6 +1396,16 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
       -- party invite
       DB:PartyInvite()
     end
+  elseif cmd == "t" then
+    -- team complete
+    if DB:StartsWith(rest, "c") then
+      if not DB.teamComplete then
+        DB:Warning("Forcing team to be complete while slots are missing")
+      end
+      DB:TeamIsComplete()
+      return
+    end
+    DB:Help("Unknown team command")
   elseif DB:StartsWith(arg, "reset") then
     -- require reset to be spelled out (other r* are the random gen)
     if rest == "teams" then

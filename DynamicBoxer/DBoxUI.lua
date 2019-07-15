@@ -413,6 +413,9 @@ function DB:CreateOptionsPanel()
                 "(if you need to copy from slave to brand new master, otherwise use xchg)\n" ..
                 "|cFF99E5FF/dbox show|r or Key Binding", "show"):PlaceRight(20)
 
+  p:addButton("Force Team Complete", "Forces the current team to be assumed to be completed despite missing slots\n" ..
+                "|cFF99E5FF/dbox team complete|r", "team complete"):PlaceRight(20)
+
   p:addText("Development, troubleshooting and advanced options:"):Place(40, 20)
 
   local enabled = p:addCheckBox("Addon Enabled", "Is the addon is currently active? " ..
@@ -781,6 +784,7 @@ function DB:SetupStatusUI()
   f.tooltipTextMods.LSHIFT = heading .. "|cFF99E5FFShift Left click|r to toggle party/raid\n" ..
                                "|cFF99E5FFAlt Shift Right|r click to |cFFFF4C43disable|r (pause) the addon"
   f.tooltipTextMods.LCTRL = heading .. "|cFF99E5FFControl Left click|r to toggle autoinvite\n" ..
+                              "|cFF99E5FFControl Middle click|r to force the team to be considered complete\n" ..
                               "|cFF99E5FFControl Right|r click to open the token exchange dialog."
   f.tooltipTextMods.LALT = heading .. "|cFF99E5FFAlt Left click|r to send a resync message\n" ..
                              "|cFF99E5FFAlt Right|r click to (re)|cFF33E526enable|r or\n" ..
@@ -855,7 +859,12 @@ function DB:SetupStatusUI()
         DB.Slash("config")
       end
     else
-      DB.Slash("party disband")
+      -- middle click
+      if IsControlKeyDown() then
+        DB.Slash("team complete")
+        return
+      end
+        DB.Slash("party disband")
     end
   end)
   if not DB.statusPos then

@@ -16,6 +16,9 @@ Coming next:
 - Handle solo / team of 1 properly (Issue #55)
 - Handle "Escape"/Cancel from the token UI popup such as it won't pop again automatically after that
   (until you explicitly ask for it eg `/dbox x` or the mouse/key bindings for it)
+- Added `/dbox team complete` to force a team to be marked as complete despite missing slots
+  (for instance if you log only 3 out of your usual 5 characters and want to sync the shorter 
+  EMA team anyway). Also bound to control-middle click on the status frame.
 
 1.9.6 July 13 2019
 - Minor adjustment to big slot display for better centering and layout
