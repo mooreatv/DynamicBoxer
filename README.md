@@ -15,18 +15,18 @@ Get the binary release using curse client or on https://www.curseforge.com/wow/a
 
 ### Q&A
 
-####Q: What does it do ?
+#### Q: What does it do ?
 A:
 The core concept is to let you start isboxer/innerspace based on a layout (say 5 boxing with slot 2 healer and vfx in 1) once and then change which characters are actually in windows 1... N at will/whim.
 
 It also works for brand new characters (making a new cool 5 Void Elf, team, just do it, no need to go back to windows)
 
-####Q: Why is that useful?
+#### Q: Why is that useful?
 
 A:
 Because you save time and only need a handful of core teams and "virtual"/role based characters in isboxer instead of dozens
 
-####Q: What else does it do ?
+#### Q: What else does it do ?
 A:
 A bunch of small utility things (and I can add more of you ask):
 - It syncs up automatically your EMA team, in the order of the slots (no more "can't push settings" ever)
@@ -35,42 +35,42 @@ A bunch of small utility things (and I can add more of you ask):
 - Has extensive mouse over tooltips in the addon options and key bindings sections to let you discover the features
 
 
-####Q: How big/complicated is the setup?
+#### Q: How big/complicated is the setup?
 A:
 Turn on broadcasting and 3 keystrokes: Ctrl-C, Ctrl-V, Enter 
 do that once, and you're done forever, even if you login 100 different teams!
 
-####Q: Does it work cross realm ?
+#### Q: Does it work cross realm ?
 A:
 Yes since 1.6 and that makes it a big time saver if you need to visit a lot of realms.
 In that setup I recommend you don't change the slot1 but change the other slot(s) and set the auto invite to say slot 2 so everyone phases to slot 2's realm (the changing realm)
 
 
-####Q: I prefer to watch videos than read a wall of text !
+#### Q: I prefer to watch videos than read a wall of text !
 A: 
 
 That's not a question, but a statement  You can watch this mini series:
 https://www.youtube.com/watch?v=TseQzm4Ktb4&list=PLlutLO8wozeIy0U2htIL3O12bIE5cB1VA&index=1
 
-####Q: Do you have a demo?
+#### Q: Do you have a demo?
 A: 
 
 Yes (though it's a bit old, doesn't show the config UI or new commands, etc... and volume is low
 https://www.youtube.com/watch?v=rWGP20xmXTI&list=PLlutLO8wozeIy0U2htIL3O12bIE5cB1VA
 
-####Q: Is there anything that won't work with it but would work with pure isboxer team reload/change ?
+#### Q: Is there anything that won't work with it but would work with pure isboxer team reload/change ?
 A:
 
 First if you log the original team in, you get the exact same functionality + fast auto invite, auto raid conversion if needed/enabled, auto EMA team sync etc... so it's only additive feature wise, you don't loose anything
 
 But yes, if you have a pro setup and try to swap say a Tank for a Healer in the same slot, DynamicBoxer will still remap the macros but they will be your Tank-style actions and thus not likely to be as helpful to your newly slotted Healer; yet if you you just need a quick swap in/out to collect some item, do a quest or anything of that sort, it will still save time and be functional (assist, broadcast, follow etc...), just don't go and do a Mythic + 20 with that setup :-)
 
-####Q: Does it/will it work with Classic ?
+#### Q: Does it/will it work with Classic ?
 A:
 
 Yes ! and it's great to get going even if you don't have characters created yet!
 
-####Q: I'm sold (or willing to try it), where do I get it?
+#### Q: I'm sold (or willing to try it), where do I get it?
 A:
 
 Wherever you like get your wow addons usually, typically on curse/twitch app or wow interface (search for "DynamicBoxer" with no space):
@@ -81,7 +81,7 @@ https://www.wowinterface.com/downloads/info25009-DynamicBoxer.html
 ps: "sold" for free and opensource (it's here on github!)
 
 
-####Q: How do I ask more questions?
+#### Q: How do I ask more questions?
 
 A: 
 Ask here or catch me on discord
