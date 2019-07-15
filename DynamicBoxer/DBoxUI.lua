@@ -313,7 +313,9 @@ function DB:ShowAutoExchangeTokenUI(msg, ...)
     end
     return
   end
-  DB:PrintDefault(msg, ...)
+  if msg then
+    DB:PrintDefault(msg, ...)
+  end
   DB:ExchangeTokenUI()
 end
 
