@@ -6,7 +6,6 @@ Coming next:
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 - Other possibilities:
   - faction animation ? character larger class/race img
-  - texture code to MoLib
   - full-er status window
 
 2.00.00 July XXXX 2019
