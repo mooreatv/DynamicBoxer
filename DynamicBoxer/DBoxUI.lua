@@ -408,10 +408,10 @@ function DB:CreateOptionsPanel()
                       :PlaceRight()
 
   local statusFrameScale = p:addSlider("Status Frame Scale", "Sets the zoom/scale of the status window\n" ..
-                                         "You can also mousewheel on the window.", 0.5, 2, .1):Place(16, 28)
+                                         "You can also mousewheel on the window.", 0.5, 2.5, .1):Place(16, 28)
 
   statusFrameScale.callBack = function(_w, val)
-    DB:ChangeScale(DB.statusFrame, val)
+    DB.statusFrame:ChangeScale(val)
     DB.statusFrame:Snap()
   end
 
@@ -578,7 +578,7 @@ function DB:CreateOptionsPanel()
     DB:Warning("Options screen cancelled, not making any changes.")
     -- warning no errors logged if any
     if p.savedCurrentScale then
-      DB:ChangeScale(DB.statusFrame, p.savedCurrentScale) -- revert it to previous value
+      DB.statusFrame:ChangeScale(p.savedCurrentScale) -- revert it to previous value
       DB.statusFrame:Snap()
     end
   end
@@ -703,23 +703,15 @@ function DB:SetupHugeFont(height)
 end
 
 function DB:GetFactionTexture(p, faction)
-  local f = CreateFrame("Frame", nil, p)
-  f:SetFrameStrata("LOW")
-  f:SetSize(1, 1)
-  -- f:SetPoint("TOP")
-  f:SetIgnoreParentAlpha(true)
-  f:SetAlpha(1)
-  local t = f:CreateTexture(nil, "BACKGROUND")
-  -- t:SetAllPoints()
-  t:SetPoint("TOP")
-  --  t:SetColorTexture(.1, .2, .7, 0.7)
+  local t = p:addTexture()
+  t:SetIgnoreParentAlpha(true)
+  t:SetAlpha(1)
   if faction == "Horde" then
     t:SetAtlas("scoreboard-horde-header", true)
   elseif faction == "Alliance" then
     t:SetAtlas("scoreboard-alliance-header", true)
   end
-  p:addMethods(f)
-  return f
+  return t
 end
 
 function DB:ShowBigInfo(autohide)
@@ -747,16 +739,17 @@ function DB:ShowBigInfo(autohide)
   f:SetFrameStrata("FULLSCREEN")
   f:SetPoint("CENTER", 0, 0)
   f:SetAllPoints()
-  -- f:SetWidth(1)
-  -- f:SetHeight(1) -- temp
-  -- f.bg = f:CreateTexture(nil, "BACKGROUND")
-  -- f.bg:SetAllPoints()
-  -- f.bg:SetColorTexture(.1, .2, .7, 0.7)
   f:SetAlpha(.9)
   local t = DB:GetFactionTexture(f, DB.faction)
   t:Place(0, -5, "TOP", "BOTTOM")
   local fo = DB:SetupHugeFont() -- can't really scale past 120 anyway
-  local s = f:addText(tostring(DB.ISBIndex or "???"), fo):Place(-6, 88, "TOP", "BOTTOM")
+  -- -6 for 1, the other don't need that much delta(!)
+  local slotStr = tostring(DB.ISBIndex or "???")
+  local offset = -3 -- most digits seem offset by a little to the right in their box
+  if slotStr == "1" then
+    offset = -8 -- 1 has a huge offset
+  end
+  local s = f:addText(slotStr, fo):Place(offset, 0, "TOP", "BOTTOM")
   s:SetJustifyH("CENTER")
   s:SetJustifyV("CENTER")
   -- interesting textures for factions: "|T516953:0|t|T516949:0|t"
@@ -862,9 +855,9 @@ function DB:SetupStatusUI()
   f.mouseWheelTimer = nil
   f:SetScript("OnMouseWheel", function(_w, direction)
     if direction > 0 then
-      DB:ChangeScale(f, f:GetScale() * 1.08)
+      f:ChangeScale(f:GetScale() * 1.05)
     else
-      DB:ChangeScale(f, f:GetScale() * .92)
+      f:ChangeScale(f:GetScale() * .95)
     end
     -- don't keep saving, only when adjustments quiet down
     if f.mouseWheelTimer then
@@ -949,16 +942,6 @@ function DB:SavePosition(f)
   local statusPos = {point, xOfs, yOfs} -- relativePoint seems to always be same as point
   DB:SetSaved("statusPos", statusPos)
   DB:SetSaved("statusScale", scale)
-end
-
--- Generic, move to MoLib
-function DB:ChangeScale(f, newScale)
-  local pt1, parent, pt2, x, y = f:GetPoint()
-  local oldScale = f:GetScale()
-  local ptMult = oldScale / newScale -- correction for point
-  DB:Debug(7, "Changing scale from % to % - point multiplier %", oldScale, newScale, ptMult)
-  f:SetScale(newScale)
-  f:SetPoint(pt1, parent, pt2, x * ptMult, y * ptMult)
 end
 
 --- Bindings settings (i18n/l10n)
