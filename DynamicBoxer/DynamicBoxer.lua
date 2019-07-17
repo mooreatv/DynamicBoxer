@@ -150,11 +150,7 @@ function DB.ISBH.LoadBinds()
   if not DB.originalSlotName then
     DB.originalSlotName = isboxer.Character and isboxer.Character.ActualName
   end
-  if DB.watched.enabled then
-    DB:ReconstructTeam()
-  else
-    DB:Warning("Not enabled, not doing any mapping")
-  end
+  DB:ReconstructTeam()
   -- Avoid the mismatch complaint:
   isboxer.Character.ActualName = GetUnitName("player")
   isboxer.Character.QualifiedName = DB.fullName
@@ -261,6 +257,10 @@ function DB:ReconstructTeam()
   DB.fullName = DB:GetMyFQN()
   DB.faction = UnitFactionGroup("player")
   DB.shortName, DB.myRealm = DB:SplitFullname(DB.fullName)
+  if not DB.watched.enabled then
+    DB:Warning("Not enabled, not doing any mapping")
+    return
+  end
   if not DB:IsActive() then
     DB:PrintDefault(
       "DynamicBoxer skipping team reconstruction as there is no isboxer team (not running under innerspace).")
@@ -1135,13 +1135,13 @@ DB.EventD = {
       DB:PrintDefault("Auto accepting invite from current master % (%)", from, n)
     elseif DB.masterHistory[DB.faction]:exists(n) then
       DB:PrintDefault("Auto accepting invite from past master % (%)", from, n)
-    elseif DB.TeamIdxByName[n] then
+    elseif DB.TeamIdxByName and DB.TeamIdxByName[n] then
       DB:PrintDefault("Auto accepting invite from current team member % (%, slot %)", from, n, DB.TeamIdxByName[n])
     elseif DB.memberHistory[DB.faction]:exists(n) then
       DB:PrintDefault("Auto accepting invite from past team member % (%)", from, n)
     else
-      DB:PrintDefault("Not auto accepting invite from % (%). our master is %; team is %)", from, n, DB.MasterName,
-                      DB.TeamIdxByName)
+      DB:PrintDefault("Not auto accepting invite from % (%). our master is %; team is %)", from, n, DB.MasterName or "",
+                      DB.TeamIdxByNam or "")
       return
     end
     -- actual auto accept:

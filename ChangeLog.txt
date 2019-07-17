@@ -9,7 +9,7 @@ Coming next:
   - full-er status window
 
 2.00.00 July XXXX 2019
-- 
+- Fix for rare case of lua error when getting a whisper without isboxer team. (Issue #56)
 - Moved (more) reusable code to MoLib 6.00.xx 
   (including greatly simplified addTexture and no manual hack for offset)
 - (minor) Added special case of "1" offset in the font we are using it isn't centered otherwise
