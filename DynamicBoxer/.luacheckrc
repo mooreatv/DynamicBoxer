@@ -35,6 +35,8 @@ globals = {
     "GameTooltip",
     "GetBindingAction",
     "GetNumGroupMembers",
+    "GetSpecialization",
+    "GetSpecializationInfo",
     "GetUnitName",
     "InterfaceOptions_AddCategory",
     "LeaveChannelByName",

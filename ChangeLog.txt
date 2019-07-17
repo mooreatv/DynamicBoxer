@@ -8,8 +8,9 @@ Coming next:
   - character larger class/race img
   - full-er status window
 
-2.00.00 July XXXX 2019
+2.00.00 July 17th 2019
 - Faction is now a glowing animation on identify splash screen.
+- Added specialization, if available, to identify.
 - Fixed up size/border calculation (border is % of height and width instead of fixed)
 - Fix for rare case of lua error when getting a whisper without isboxer team. (Issue #56)
 - Moved (more) reusable code to MoLib 6.00.xx 

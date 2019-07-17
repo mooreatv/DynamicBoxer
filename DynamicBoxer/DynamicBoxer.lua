@@ -1155,7 +1155,7 @@ DB.EventD = {
       return -- not us, return
     end
     if DB.manifestVersion == "@project-version@" then
-      DB.manifestVersion = "vX.Y.Z"
+      DB.manifestVersion = "vX.YY.ZZ"
     end
     DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv: type /dbox for command list/help.")
     if dynamicBoxerSaved then

@@ -787,7 +787,14 @@ function DB:ShowBigInfo(autohide)
   local s = f:addText(slotStr, fo):Place(offset, -8, "TOP", "BOTTOM")
   s:SetJustifyH("CENTER")
   s:SetJustifyV("CENTER")
-  -- interesting textures for factions: "|T516953:0|t|T516949:0|t"
+  local spec = GetSpecialization()
+  if spec then
+    local _, _, _, icon = GetSpecializationInfo(spec)
+    local class = f:addTexture()
+    class:SetTexture(icon)
+    class:SetSize(32, 32)
+    class:PlaceRight(16, 24)
+  end
   local n = f:addText(DB.shortName, fo):Place(0, -6, "TOP", "BOTTOM")
   n:SetJustifyH("CENTER")
   n:SetJustifyV("CENTER")
