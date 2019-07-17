@@ -787,7 +787,7 @@ function DB:ShowBigInfo(autohide)
   local s = f:addText(slotStr, fo):Place(offset, -8, "TOP", "BOTTOM")
   s:SetJustifyH("CENTER")
   s:SetJustifyV("CENTER")
-  local spec = GetSpecialization()
+  local spec = GetSpecialization and GetSpecialization()
   if spec then
     local _, _, _, icon = GetSpecializationInfo(spec)
     local class = f:addTexture()
