@@ -325,8 +325,8 @@ function DB:ReconstructTeam()
     DB.MasterName = DB.fullName
   end
   if DB.showIdAtStart then
-    C_Timer.After(0.5, function()
-      DB:ShowBigInfo(3)
+    C_Timer.After(0.25, function()
+      DB:ShowBigInfo(3.5)
     end)
   end
   DB:Debug("Team map initial value = %", DB.Team)

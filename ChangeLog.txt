@@ -5,10 +5,12 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 - Other possibilities:
-  - faction animation ? character larger class/race img
+  - character larger class/race img
   - full-er status window
 
 2.00.00 July XXXX 2019
+- Faction is now a glowing animation on identify splash screen.
+- Fixed up size/border calculation (border is % of height and width instead of fixed)
 - Fix for rare case of lua error when getting a whisper without isboxer team. (Issue #56)
 - Moved (more) reusable code to MoLib 6.00.xx 
   (including greatly simplified addTexture and no manual hack for offset)

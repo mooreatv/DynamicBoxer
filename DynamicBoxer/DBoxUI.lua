@@ -702,14 +702,42 @@ function DB:SetupHugeFont(height)
   return DB.hugeFont
 end
 
+DB.animatedTexture = true
+
+DB:PreloadTextures(516953, 516949)
+
 function DB:GetFactionTexture(p, faction)
-  local t = p:addTexture()
+  local t
+  if DB.animatedTexture then
+    local baseId, glowId
+    if faction == "Horde" then
+      baseId = 516953
+    elseif faction == "Alliance" then
+      baseId = 516949
+    else
+      baseId = 616345
+      glowId = 616345
+    end
+    if not glowId then
+      glowId = baseId + 1
+    end
+    t = p:addAnimatedTexture(baseId, glowId)
+    -- t:SetScale(.5)
+    t:SetSize(96, 96)
+    t.linked:SetSize(96, 96)
+    t:SetVertexColor(.85, .85, .85) -- darken the base
+    t:SetIgnoreParentAlpha(true)
+    return t
+  end
+  t = p:addTexture()
   t:SetIgnoreParentAlpha(true)
   t:SetAlpha(1)
   if faction == "Horde" then
     t:SetAtlas("scoreboard-horde-header", true)
   elseif faction == "Alliance" then
     t:SetAtlas("scoreboard-alliance-header", true)
+  else
+    return nil
   end
   return t
 end
@@ -735,13 +763,20 @@ function DB:ShowBigInfo(autohide)
   DB:Debug("ShowBigInfo: Creating")
   DB.bigInfo = DB:Frame("DynBoxer_big_info")
   local f = DB.bigInfo
-  f:SetParent(nil) -- so it's visible with alt-z too
+  -- f:SetParent(WorldFrame) -- so it's visible with alt-z too
   f:SetFrameStrata("FULLSCREEN")
-  f:SetPoint("CENTER", 0, 0)
-  f:SetAllPoints()
-  f:SetAlpha(.9)
+  f:SetAlpha(.85)
+  -- Calculate inner square with border for this frame
+  -- TODO: add a "recenter" to molib after scale()
+  DB:Debug("w % h % s % %", WorldFrame:GetWidth(), WorldFrame:GetHeight(), f:GetScale(), f:GetEffectiveScale())
+  local percent = 95 / 100.
+  local parent = f:GetParent()
+  f:SetSize(parent:GetWidth() * percent, parent:GetHeight() * percent) -- margin in proportion with aspect ratio
+  f:SetPoint("TOP", 0, -parent:GetHeight() * (1. - percent) / 2.)
   local t = DB:GetFactionTexture(f, DB.faction)
-  t:Place(0, -5, "TOP", "BOTTOM")
+  if t then
+    t:Place(0, -10, "TOP", "BOTTOM")
+  end
   local fo = DB:SetupHugeFont() -- can't really scale past 120 anyway
   -- -6 for 1, the other don't need that much delta(!)
   local slotStr = tostring(DB.ISBIndex or "???")
@@ -749,7 +784,7 @@ function DB:ShowBigInfo(autohide)
   if slotStr == "1" then
     offset = -8 -- 1 has a huge offset
   end
-  local s = f:addText(slotStr, fo):Place(offset, 0, "TOP", "BOTTOM")
+  local s = f:addText(slotStr, fo):Place(offset, -8, "TOP", "BOTTOM")
   s:SetJustifyH("CENTER")
   s:SetJustifyV("CENTER")
   -- interesting textures for factions: "|T516953:0|t|T516949:0|t"
@@ -760,8 +795,8 @@ function DB:ShowBigInfo(autohide)
   local r = f:addText(DB.myRealm, fo):Place(0, 16, "TOP", "BOTTOM")
   r:SetJustifyH("CENTER")
   r:SetJustifyV("CENTER")
-  f:Scale(true) -- no padding
-  t:SetScale(1 / t:GetEffectiveScale())
+  f:Scale(0) -- override padding
+  DB:Debug("w % h % s % %", f:GetWidth(), f:GetHeight(), f:GetScale(), f:GetEffectiveScale())
 end
 
 function DB:SetupStatusUI()

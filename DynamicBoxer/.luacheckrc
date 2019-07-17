@@ -54,6 +54,7 @@ globals = {
     "UnitIsGroupLeader",
     "UnitInParty",
     "UninviteUnit",
+    "WorldFrame",
     "OKAY",
     "CANCEL",
 }
