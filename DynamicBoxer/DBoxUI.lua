@@ -702,43 +702,27 @@ function DB:SetupHugeFont(height)
   return DB.hugeFont
 end
 
-DB.animatedTexture = true
-
-DB:PreloadTextures(516953, 516949)
+DB:PreloadTextures(516953, 516949, 616345)
 
 function DB:GetFactionTexture(p, faction)
   local t
-  if DB.animatedTexture then
-    local baseId, glowId
-    if faction == "Horde" then
-      baseId = 516953
-    elseif faction == "Alliance" then
-      baseId = 516949
-    else
-      baseId = 616345
-      glowId = 616345
-    end
-    if not glowId then
-      glowId = baseId + 1
-    end
-    t = p:addAnimatedTexture(baseId, glowId)
-    -- t:SetScale(.5)
-    t:SetSize(96, 96)
-    t.linked:SetSize(96, 96)
-    t:SetVertexColor(.85, .85, .85) -- darken the base
-    t:SetIgnoreParentAlpha(true)
-    return t
-  end
-  t = p:addTexture()
-  t:SetIgnoreParentAlpha(true)
-  t:SetAlpha(1)
+  local baseId, glowId
   if faction == "Horde" then
-    t:SetAtlas("scoreboard-horde-header", true)
+    baseId = 516953
   elseif faction == "Alliance" then
-    t:SetAtlas("scoreboard-alliance-header", true)
+    baseId = 516949
   else
-    return nil
+    baseId = 616345
+    glowId = 616345
   end
+  if not glowId then
+    glowId = baseId + 1
+  end
+  t = p:addAnimatedTexture(baseId, glowId)
+  t:SetSize(80, 80)
+  t.linked:SetSize(80, 80)
+  t:SetVertexColor(.85, .85, .85) -- darken the base
+  t:SetIgnoreParentAlpha(true)
   return t
 end
 
@@ -773,10 +757,6 @@ function DB:ShowBigInfo(autohide)
   local parent = f:GetParent()
   f:SetSize(parent:GetWidth() * percent, parent:GetHeight() * percent) -- margin in proportion with aspect ratio
   f:SetPoint("TOP", 0, -parent:GetHeight() * (1. - percent) / 2.)
-  local t = DB:GetFactionTexture(f, DB.faction)
-  if t then
-    t:Place(0, -10, "TOP", "BOTTOM")
-  end
   local fo = DB:SetupHugeFont() -- can't really scale past 120 anyway
   -- -6 for 1, the other don't need that much delta(!)
   local slotStr = tostring(DB.ISBIndex or "???")
@@ -784,16 +764,27 @@ function DB:ShowBigInfo(autohide)
   if slotStr == "1" then
     offset = -8 -- 1 has a huge offset
   end
-  local s = f:addText(slotStr, fo):Place(offset, -8, "TOP", "BOTTOM")
+  local s = f:addText(slotStr, fo):Place(offset, 20, "TOP", "BOTTOM")
   s:SetJustifyH("CENTER")
   s:SetJustifyV("CENTER")
+  local t = DB:GetFactionTexture(f, DB.faction)
+  if t then
+    local offx = 12
+    local offy = -10
+    if DB.faction == "Neutral" then
+      -- panda icon is different/offset
+      offx = -8
+      offy = 4
+    end
+    t:PlaceLeft(offx, offy) -- won't change lastLeft
+  end
   local spec = GetSpecialization and GetSpecialization()
   if spec then
     local _, _, _, icon = GetSpecializationInfo(spec)
     local class = f:addTexture()
     class:SetTexture(icon)
-    class:SetSize(32, 32)
-    class:PlaceRight(16, 24)
+    class:SetSize(28, 28)
+    class:PlaceRight(16, 18)
   end
   local n = f:addText(DB.shortName, fo):Place(0, -6, "TOP", "BOTTOM")
   n:SetJustifyH("CENTER")
