@@ -5,7 +5,8 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-2.00.00 July 17th 2019
+2.00.01 July 17th 2019
+{2.00.00-beta1 to beta3 were pre-releases, with beta3 identical to this one}
 - Status window now includes the whole team details; shift right click to switching
   between full and compact view. Different color for same realm vs other realm. (Issue #14)
 - Faction is now a glowing animation on identify splash screen.
