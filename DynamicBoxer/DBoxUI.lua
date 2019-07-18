@@ -657,7 +657,7 @@ function DB:AddTeamStatusUI(f)
     for i = #f.children, DB.statusXn + 1, -1 do
       DB:Debug("Removing widget #%", i)
       f.children[i]:Hide()
-      table.wipe(f.children[i])
+      wipe(f.children[i])
       f.children[i] = nil
     end
     -- restore state
@@ -665,7 +665,7 @@ function DB:AddTeamStatusUI(f)
     f.lastLeft = DB.statusXl
     f.numObjects = DB.statusXn
     f.leftMargin = DB.statusXm
-    if DB.watched.fullTeamInfo then
+    if v then
       DB:AddPartyLines(f, DB.watched.slot)
     else
       DB:AddStatusLine(f)

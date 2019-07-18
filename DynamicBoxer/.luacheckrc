@@ -59,6 +59,7 @@ globals = {
     "WorldFrame",
     "OKAY",
     "CANCEL",
+    "wipe",
 }
 max_line_length = 132
 ignore = {
