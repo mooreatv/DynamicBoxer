@@ -626,9 +626,14 @@ local slotInfo = function(slot, last)
     fmt = "%02d"
   end
   if not name then
-    return string.format("|cFFFF4C43" .. fmt .. "|r  ???", slot)
+    return string.format("|cFFFF4C43" .. fmt .. "|r  |cFFF4A042???|r", slot)
   end
-  return string.format("|cFF33E526" .. fmt .. "|r  |cFFF2D80C%s|r", slot, name)
+  local short, realm = DB:SplitFullname(name)
+  local color = "40C0FF"
+  if realm == DB.myRealm then
+    color = "A040FF"
+  end
+  return string.format("|cFF33E526" .. fmt .. "|r  |cFFF2D80C%s|r  |cFF%s%s|r", slot, short, color, realm)
 end
 
 --- *** Status and runtime frame *** ---

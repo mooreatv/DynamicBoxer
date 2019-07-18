@@ -7,7 +7,7 @@ Coming next:
 
 2.00.00 July 17th 2019
 - Status window now includes the whole team details; shift right click to switching
-  between full and compact view.
+  between full and compact view. Different color for same realm vs other realm.
 - Faction is now a glowing animation on identify splash screen.
 - Added specialization, if available, to identify.
 - Moved both of these ^ to the same line as slot #
