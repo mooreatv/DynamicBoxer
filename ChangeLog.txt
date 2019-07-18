@@ -7,7 +7,7 @@ Coming next:
 
 2.00.00 July 17th 2019
 - Status window now includes the whole team details; shift right click to switching
-  between full and compact view. Different color for same realm vs other realm.
+  between full and compact view. Different color for same realm vs other realm. (Issue #14)
 - Faction is now a glowing animation on identify splash screen.
 - Added specialization, if available, to identify.
 - Moved both of these ^ to the same line as slot #
@@ -36,7 +36,7 @@ Coming next:
   (until you explicitly ask for it eg `/dbox x` or the mouse/key bindings for it)
 - Added `/dbox team complete` to force a team to be marked as complete despite missing slots
   (for instance if you log only 3 out of your usual 5 characters and want to sync the shorter 
-  EMA team anyway). Also bound to control-middle click on the status frame.
+  EMA team anyway). Also bound to control-middle click on the status frame. (Issue #44)
 
 1.9.6 July 13 2019
 - Minor adjustment to big slot display for better centering and layout
