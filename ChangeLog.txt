@@ -4,10 +4,10 @@ Coming next:
 - More refinements on the new status UI, options panel and other features
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
-- Other possibilities:
-  - full-er status window
 
 2.00.00 July 17th 2019
+- Status window now includes the whole team details; shift right click to switching
+  between full and compact view.
 - Faction is now a glowing animation on identify splash screen.
 - Added specialization, if available, to identify.
 - Moved both of these ^ to the same line as slot #

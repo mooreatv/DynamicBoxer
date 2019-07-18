@@ -225,7 +225,7 @@ function DB:ManualExtendTeam(oldSize, newSize)
   end
   DB.manualTeamSize = newSize
   DB.expectedCount = newSize
-  DB:AddStatusLine(DB.statusFrame)
+  DB:AddTeamStatusUI(DB.statusFrame)
 end
 
 function DB:ManualSetup()
@@ -320,7 +320,7 @@ function DB:ReconstructTeam()
     fullName = DB.fullName,
     slot = DB.ISBIndex
   }
-  DB.watched[DB.ISBIndex] = DB.ISBIndex
+  DB.watched[DB.ISBIndex] = DB.fullName
   if DB.ISBIndex == 1 then
     DB.MasterName = DB.fullName
   end
@@ -346,7 +346,7 @@ function DB:ReconstructTeam()
     DB:Warning("Solo / Team of % detected. Setup complete.", DB.expectedCount)
     DB.teamComplete = true
   end
-  DB:AddStatusLine(DB.statusFrame)
+  DB:AddTeamStatusUI(DB.statusFrame)
   DB:Debug("Unique team string key is %, updated in history, expecting a team of size #%", teamStr, DB.expectedCount)
   if DB.EMA then
     DB.EMA.db.newTeamList = {}
@@ -965,7 +965,7 @@ function DB:ProcessMessage(source, from, data)
   else
     DB:PrintInfo("New mapping for slot %, dynamically set ISBoxer character to % (%)", idx, shortName, realname)
   end
-  DB.watched[idx] = idx
+  DB.watched[idx] = realname
   if idx == 1 then
     DB:AddToMasterHistory(realname)
     DB:Debug(1, "Master found, hiding current token dialog")

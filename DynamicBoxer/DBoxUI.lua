@@ -415,6 +415,9 @@ function DB:CreateOptionsPanel()
     DB.statusFrame:Snap()
   end
 
+  local fullViewButton = p:addCheckBox("Full view", "Selects full or compact view\nfor the status window"):PlaceRight(
+                           16, -8)
+
   p:addButton("Reset Window",
               "Resets the DynamicBoxer status window position back to default\n|cFF99E5FF/dbox reset status|r",
               function()
@@ -422,8 +425,7 @@ function DB:CreateOptionsPanel()
     DB:StatusResetPos()
     p.savedCurrentScale = nil
     DB:Warning("Saved window status position cleared per request and window reset to top left")
-
-  end):PlaceRight(16, -6)
+  end):PlaceRight(16, 2)
 
   p:addButton("Exchange Token", "Shows the token on master and empty ready to paste on slaves\n" ..
                 "Allows for very fast broadcast KeyBind, Ctrl-C (copy) Ctrl-V (paste) Return, 4 keys and done!\n" ..
@@ -537,6 +539,7 @@ function DB:CreateOptionsPanel()
     end
     autoRaid:SetChecked(DB.autoRaid)
     idAtStart:SetChecked(DB.showIdAtStart)
+    fullViewButton:SetChecked(DB.watched.fullTeamInfo)
   end
 
   function p:HandleOk()
@@ -567,6 +570,7 @@ function DB:CreateOptionsPanel()
     local ainvSlot = invitingSlot:GetValue()
     DB:SetSaved("autoInviteSlot", ainvSlot)
     local raid = autoRaid:GetChecked()
+    DB:SetWatchedSaved("fullTeamInfo", fullViewButton:GetChecked())
     DB:SetSaved("autoRaid", raid)
     DB:SetSaved("showIdAtStart", idAtStart:GetChecked())
     DB:PrintDefault("Configuration: auto invite is " .. (ainv and "ON" or "OFF") .. " for slot %, auto raid is " ..
@@ -614,11 +618,26 @@ local slotToText = function(self, slot)
   end
 end
 
+local slotInfo = function(slot, last)
+  DB:Debug("Called slotInfo %", slot)
+  local name = DB.watched[slot]
+  local fmt = "%d"
+  if last > 9 then
+    fmt = "%02d"
+  end
+  if not name then
+    return string.format("|cFFFF4C43" .. fmt .. "|r  ???", slot)
+  end
+  return string.format("|cFF33E526" .. fmt .. "|r  |cFFF2D80C%s|r", slot, name)
+end
+
 --- *** Status and runtime frame *** ---
 
 DB.statusUp = false
 
-function DB:AddStatusLine(f)
+DB.watched.fullTeamInfo = true
+
+function DB:AddTeamStatusUI(f)
   if not f then
     return
   end
@@ -627,6 +646,37 @@ function DB:AddStatusLine(f)
     return -- already done
   end
   DB.statusUp = true
+  -- save state of first line done
+  DB.statusXn = f.numObjects
+  DB.statusXa = f.lastAdded
+  DB.statusXl = f.lastLeft
+  DB.statusXm = f.leftMargin
+  -- DB.statusRight
+  local viewSelect = function(_k, v, _oldVal)
+    -- remove current lower status
+    for i = #f.children, DB.statusXn + 1, -1 do
+      DB:Debug("Removing widget #%", i)
+      f.children[i]:Hide()
+      table.wipe(f.children[i])
+      f.children[i] = nil
+    end
+    -- restore state
+    f.lastAdded = DB.statusXa
+    f.lastLeft = DB.statusXl
+    f.numObjects = DB.statusXn
+    f.leftMargin = DB.statusXm
+    if DB.watched.fullTeamInfo then
+      DB:AddPartyLines(f, DB.watched.slot)
+    else
+      DB:AddStatusLine(f)
+    end
+    f:Snap()
+  end
+  DB.watched:AddWatch("fullTeamInfo", viewSelect)
+  viewSelect(nil, DB.watched.fullTeamInfo)
+end
+
+function DB:AddStatusLine(f)
   DB:Debug("Adding team line! %", DB.expectedCount)
   -- should center instead of this
   local offset = 29 - 4 * DB.expectedCount
@@ -635,27 +685,43 @@ function DB:AddStatusLine(f)
   end
   f:addText(""):Place(offset, 2)
   local y = 0
+  local mySlot = DB.watched.slot
   for i = 1, DB.expectedCount do
     local x = 4
-    if i == DB.watched.slot then
+    if i == mySlot then
       f:addText(">"):PlaceRight(x, 2):SetTextColor(0.7, 0.7, 0.7)
       x = 0
       y = -2
     end
     local status = f:addText("?", f.fontName):PlaceRight(x, y)
-    if i == DB.watched.slot then
+    if i == mySlot then
       f:addText("<"):PlaceRight(0, 2):SetTextColor(0.7, 0.7, 0.7)
     else
       y = 0
     end
-    DB.watched:AddWatch(i, function(_k, v, _oldVal)
-      slotToText(status, v)
+    DB.watched:AddWatch(i, function(k, v, _oldVal)
+      slotToText(status, v and k)
     end)
-    slotToText(status, DB.watched[i])
+    slotToText(status, DB.watched[i] and i)
   end
   local partySize = f:addText("(" .. tostring(DB.expectedCount) .. ")"):PlaceRight(4, y + 1)
   partySize:SetTextColor(.95, .85, .05)
-  f:Snap()
+end
+
+function DB:AddPartyLines(f, mySlot)
+  local yOffset = 2
+  local last = DB.expectedCount
+  for i = 1, last do
+    local w = f:addText(slotInfo(i, last)):Place(3, yOffset)
+    yOffset = 0
+    DB.watched:AddWatch(i, function(k, _v, _oldVal)
+      w:SetText(slotInfo(k, last))
+      f:Snap()
+    end)
+    if i == mySlot then
+      f:addText(">"):PlaceLeft(0, 0.5):SetTextColor(0.75, 0.75, 0.75)
+    end
+  end
 end
 
 -- attach to top of the screen by default but not right in the middle to not cover blizzard headings
@@ -837,6 +903,7 @@ function DB:SetupStatusUI()
                            "Hold |cFF99E5FFShift|r, |cFF99E5FFControl|r, |cFF99E5FFAlt|r keys for more tips."
   f.tooltipTextMods = {}
   f.tooltipTextMods.LSHIFT = heading .. "|cFF99E5FFShift Left click|r to toggle party/raid\n" ..
+                               "|cFF99E5FFShift Right click|r to switch between compact and full view\n" ..
                                "|cFF99E5FFAlt Shift Right|r click to |cFFFF4C43disable|r (pause) the addon"
   f.tooltipTextMods.LCTRL = heading .. "|cFF99E5FFControl Left click|r to toggle autoinvite\n" ..
                               "|cFF99E5FFControl Middle click|r to force the team to be considered complete\n" ..
@@ -922,6 +989,8 @@ function DB:SetupStatusUI()
           DB.Slash("enable")
           DB.Slash("join")
         end
+      elseif IsShiftKeyDown() then
+        DB:SetWatchedSaved("fullTeamInfo", not DB.watched.fullTeamInfo)
       else
         DB.Slash("config")
       end
@@ -945,15 +1014,18 @@ function DB:SetupStatusUI()
   f:SetHeight(1) -- will recalc below
   f.bg = f:CreateTexture(nil, "BACKGROUND")
   f.bg:SetAllPoints()
-  f.bg:SetColorTexture(.1, .2, .7, 0.7)
-  f:SetAlpha(.9)
+  f.bgColor = {.1, .2, .7, 1}
+  f.bgColorHex = DB:RgbToHex(unpack(f.bgColor))
+  f.bg:SetColorTexture(unpack(f.bgColor))
+  DB:Debug("Status frame background color % -> %", f.bgColor, f.bgColorHex)
+  f:SetAlpha(.75)
   local title = f:addText("DynamicBoxer", f.fontName):Place(4, 4) -- that also defines the bottom right padding
   f:addText(" on ", f.fontName):PlaceRight(0, 0):SetTextColor(0.9, 0.9, 0.9)
   f.slotNum = f:addText("?", f.fontName):PlaceRight(0, 0)
   f.slotNum.slotToText = slotToText
   f.slotNum:slotToText(self.watched.slot)
-  DB.watched:AddWatch("slot", function(_k, v, _oldVal)
-    f.slotNum:slotToText(v)
+  DB.watched:AddWatch("slot", function(k, v, _oldVal)
+    f.slotNum:slotToText(v and k)
   end)
   local updtTitle = function(_k, v, _oldVal)
     if v then
@@ -964,7 +1036,7 @@ function DB:SetupStatusUI()
   end
   DB.watched:AddWatch("enabled", updtTitle)
   updtTitle("enabled", DB.watched.enabled, nil) -- initial value
-  DB:AddStatusLine(DB.statusFrame)
+  DB:AddTeamStatusUI(DB.statusFrame)
 end
 
 function DB:SavePosition(f)
