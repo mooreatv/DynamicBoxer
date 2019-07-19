@@ -1,4 +1,4 @@
-## Interface: 80200
+## Interface: 11320
 ## Title: DynamicBoxer
 ## Notes: Augments ISBoxer to manage multiboxing teams dynamically
 ## Author: MooreaTV moorea@ymail.com
