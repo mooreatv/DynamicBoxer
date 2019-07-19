@@ -778,10 +778,12 @@ DB:PreloadTextures(516953, 516949, 616345)
 function DB:GetFactionTexture(p, faction)
   local t
   local baseId, glowId
+  local size = 90
   if faction == "Horde" then
     baseId = 516953
   elseif faction == "Alliance" then
     baseId = 516949
+    size = 100 -- horde one is a bit taller so we enlarge alliance it a bit
   else
     baseId = 616345
     glowId = 616345
@@ -790,8 +792,8 @@ function DB:GetFactionTexture(p, faction)
     glowId = baseId + 1
   end
   t = p:addAnimatedTexture(baseId, glowId)
-  t:SetSize(80, 80)
-  t.linked:SetSize(80, 80)
+  t:SetSize(size, size)
+  t.linked:SetSize(size, size)
   t:SetVertexColor(.85, .85, .85) -- darken the base
   t:SetIgnoreParentAlpha(true)
   return t
@@ -841,22 +843,26 @@ function DB:ShowBigInfo(autohide)
   local t = DB:GetFactionTexture(f, DB.faction)
   if t then
     local offx = 12
-    local offy = -10
+    local offy = 0
     if DB.faction == "Neutral" then
       -- panda icon is different/offset
       offx = -8
-      offy = 4
+      offy = -4
     end
-    t:PlaceLeft(offx, offy) -- won't change lastLeft
+    t:PlaceLeft(offx, offy, "RIGHT", "LEFT") -- won't change lastLeft
   end
   local spec = GetSpecialization and GetSpecialization()
+  local class = f:addTexture()
   if spec then
     local _, _, _, icon = GetSpecializationInfo(spec)
-    local class = f:addTexture()
     class:SetTexture(icon)
-    class:SetSize(28, 28)
-    class:PlaceRight(16, 18)
+  else
+    local _, className = UnitClass("player")
+    class:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
+    class:SetTexCoord(unpack(CLASS_ICON_TCOORDS[className]))
   end
+  class:SetSize(30, 30)
+  class:PlaceRight(16, 0, "LEFT", "RIGHT")
   local n = f:addText(DB.shortName, fo):Place(0, -6, "TOP", "BOTTOM")
   n:SetJustifyH("CENTER")
   n:SetJustifyV("CENTER")

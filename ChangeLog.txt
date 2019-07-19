@@ -5,6 +5,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+2.00.02 July 18th 2019
+- Add support for classic/no specialization icon
+- Center the faction and class/spec icons better
+
 2.00.01 July 17th 2019
 {2.00.00-beta1 to beta3 were pre-releases, with beta3 identical to this one}
 - Status window now includes the whole team details; shift right click to switching
