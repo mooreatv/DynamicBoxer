@@ -21,4 +21,10 @@ _G[addon]:MoLibInstallInto(DB, "DynamicBoxer")
 DB.L = DB:GetLocalization()
 
 -- Make sure if we (or more likely, another addon) has errors the user notices/reports the bug
-C_CVar.SetCVar("scriptErrors", 1)
+if C_CVar then
+  -- bfa onward
+  C_CVar.SetCVar("scriptErrors", 1)
+elseif SetCVar then
+  -- classic version
+  SetCVar("scriptErrors", 1)
+end

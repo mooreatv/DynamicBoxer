@@ -13,6 +13,7 @@ globals = {
     "CreateFrame",
     "C_ChatInfo",
     "C_CVar",
+    "SetCVar",
     "C_Timer",
     "CLASS_ICON_TCOORDS",
     "EMAApi",
