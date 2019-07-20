@@ -6,6 +6,7 @@ Coming next:
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 v2.00.04 July 20th 2019
+{minor update to help any troubleshooting/ensure it's clear which version is running}
 - Fix version number not showing, dev placeholder X.YY.ZZ showing instead
   (if you see bugs like this please report them)
 - Make sure lua errors are shown in case there are any (not likely from DynamicBoxer
