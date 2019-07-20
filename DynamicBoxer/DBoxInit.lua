@@ -24,6 +24,7 @@ DB.L = DB:GetLocalization()
 if C_CVar then
   -- bfa onward
   C_CVar.SetCVar("scriptErrors", 1)
+  C_CVar.SetCVar("fstack_preferParentKeys", 0)
 elseif SetCVar then
   -- classic version
   SetCVar("scriptErrors", 1)

@@ -1308,6 +1308,9 @@ function DB:Join()
   return DB.channelId
 end
 
+
+-- DB.NO_SNAPSCALE = true -- only set for testing/removes scaling and snapping
+
 -- testing strings
 -- ÁßçÐéÞýØîÿÆü
 -- 乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒乓乒
