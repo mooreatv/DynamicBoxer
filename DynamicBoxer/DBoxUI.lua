@@ -367,7 +367,8 @@ function DB:CreateOptionsPanel()
   -- Q: maybe should just always auto place (add&place) ?
   p:addText("DynamicBoxer options", "GameFontNormalLarge"):Place()
   p:addText("These options let you control the behavior of DynamicBoxer " .. DB.manifestVersion ..
-              "\nMost actions can also be done by mousing over the status window or through keybindings."):Place()
+              " @project-abbreviated-hash@\n" ..
+              "Most actions can also be done by mousing over the status window or through keybindings."):Place()
   local autoInvite = p:addCheckBox("Auto invite",
                                    "Whether one of the slot should auto invite the others\n" ..
                                      "it also helps with cross realm teams sync\n" ..
@@ -424,7 +425,7 @@ function DB:CreateOptionsPanel()
     statusFrameScale:SetValue(1)
     DB:StatusResetPos()
     p.savedCurrentScale = nil
-    DB:Warning("Saved window status position cleared per request and window reset to top left")
+    DB:Warning("Saved window status position cleared per request and window reset to top right")
   end):PlaceRight(16, 2)
 
   p:addButton("Exchange Token", "Shows the token on master and empty ready to paste on slaves\n" ..

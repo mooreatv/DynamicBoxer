@@ -1154,7 +1154,8 @@ DB.EventD = {
     if name ~= addon then
       return -- not us, return
     end
-    if DB.manifestVersion == "@project-version@" then
+    -- check for dev version (need to split the tags or they get substituted)
+    if DB.manifestVersion == "@" .. "project-version" .. "@" then
       DB.manifestVersion = "vX.YY.ZZ"
     end
     DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv: type /dbox for command list/help.")
@@ -1168,6 +1169,7 @@ DB.EventD = {
           dynamicBoxerSaved.configVersion, DB.configVersion)
       else
         dynamicBoxerSaved.addonVersion = DB.manifestVersion
+        dynamicBoxerSaved.addonHash = "@project-abbreviated-hash@"
         local valid, masterName, tok1, tok2 -- start nil
         if not dynamicBoxerSaved.MasterToken or #dynamicBoxerSaved.MasterToken == 0 then
           -- allow nil/unset master token
@@ -1207,6 +1209,7 @@ DB.EventD = {
     dynamicBoxerSaved.configVersion = DB.configVersion
     dynamicBoxerSaved.debugLog = {}
     dynamicBoxerSaved.addonVersion = DB.manifestVersion
+    dynamicBoxerSaved.addonHash = "@project-abbreviated-hash@"
   end
 }
 
@@ -1378,7 +1381,8 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     DB:Join()
   elseif cmd == "v" then
     -- version
-    DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv")
+    DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion ..
+                      " (@project-abbreviated-hash@) by MooreaTv (moorea@ymail.com)")
   elseif DB:StartsWith(arg, "init") then
     -- re do initialization
     DB:ForceInit()

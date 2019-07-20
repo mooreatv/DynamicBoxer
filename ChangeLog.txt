@@ -5,7 +5,11 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-v2.00.03 July 18th 2019 (2.00.02 has the classic 1.13.2 compatibility toc)
+v2.00.04 July 20th 2019
+- Fix version number not showing, dev placeholder X.YY.ZZ showing instead
+  (if you see bugs like this please report them)
+
+v2.00.03 July 18th 2019 (v2.00.02 has the classic 1.13.2 compatibility toc)
 - Add support for classic/no specialization icon
 - Center the faction and class/spec icons better
 
