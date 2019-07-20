@@ -19,3 +19,6 @@ local DB = DynBoxer
 _G[addon]:MoLibInstallInto(DB, "DynamicBoxer")
 
 DB.L = DB:GetLocalization()
+
+-- Make sure if we (or more likely, another addon) has errors the user notices/reports the bug
+C_CVar.SetCVar("scriptErrors", 1)

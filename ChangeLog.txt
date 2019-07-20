@@ -8,6 +8,9 @@ Coming next:
 v2.00.04 July 20th 2019
 - Fix version number not showing, dev placeholder X.YY.ZZ showing instead
   (if you see bugs like this please report them)
+- Make sure lua errors are shown in case there are any (not likely from DynamicBoxer
+  but can affect DynamicBoxer so better to investigate) - please report any LUA error seen
+  while using dynamic boxer.
 
 v2.00.03 July 18th 2019 (v2.00.02 has the classic 1.13.2 compatibility toc)
 - Add support for classic/no specialization icon

@@ -12,6 +12,7 @@ globals = {
     "ConvertToParty",
     "CreateFrame",
     "C_ChatInfo",
+    "C_CVar",
     "C_Timer",
     "CLASS_ICON_TCOORDS",
     "EMAApi",
