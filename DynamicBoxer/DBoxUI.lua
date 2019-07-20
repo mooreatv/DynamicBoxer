@@ -852,8 +852,8 @@ function DB:ShowBigInfo(autohide)
     end
     t:PlaceLeft(offx, offy, "RIGHT", "LEFT") -- won't change lastLeft
   end
-  local spec = GetSpecialization and GetSpecialization()
   local class = f:addTexture()
+  local spec = GetSpecialization and GetSpecialization() -- missing in classic
   if spec then
     local _, _, _, icon = GetSpecializationInfo(spec)
     class:SetTexture(icon)

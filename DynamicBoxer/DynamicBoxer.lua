@@ -383,13 +383,14 @@ function DB:CheckMasterFaction()
   DB.crossRealmMaster = "" -- so we don't print stuff again
   local master = DB:NewestCrossRealmMaster()
   if DB:SameRealmAsUs(DB.MasterName) then
-    if master then
+    if master and #master > 0 then
       DB:Warning("Trying crossrealm master %s from master history as attempt to find our cross realm master", master)
       DB.MasterName = master
       DB.crossRealmMaster = master
       return true
     end
-    DB:PrintDefault("All recent masters, and the current token, are from same realm, will not try direct messages.")
+    DB:PrintDefault("All recent masters, and the current token one (%), are from same realm, will not try direct messages.",
+                    DB.MasterName)
     return false
   end
   if DB.masterHistory[DB.faction]:exists(DB.MasterName) then
@@ -1307,7 +1308,6 @@ function DB:Join()
   DB.joinDone = true
   return DB.channelId
 end
-
 
 -- DB.NO_SNAPSCALE = true -- only set for testing/removes scaling and snapping
 
