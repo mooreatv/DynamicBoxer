@@ -662,9 +662,8 @@ function DB:AddTeamStatusUI(f)
     -- remove current lower status
     for i = #f.children, DB.statusXn + 1, -1 do
       DB:Debug("Removing widget #%", i)
-      f.children[i]:Hide()
-      wipe(f.children[i])
-      f.children[i] = nil
+      -- probably should return to pool instead but we don't do this that often
+      f.children[i] = DB:WipeFrame(f.children[i])
     end
     -- restore state
     f.lastAdded = DB.statusXa
@@ -677,6 +676,12 @@ function DB:AddTeamStatusUI(f)
       DB:AddStatusLine(f)
     end
     f:Snap()
+    -- local scale = f:GetEffectiveScale()
+    local scale = f:GetScale()
+    local one = 1 / scale
+    f:addBorder(0, 0, one, 0.5, 0.5, .5, 1, "ARTWORK")
+    -- f:addBorder(one, one, one, 1, 0, 0, 1, "ARTWORK")
+    -- f:addBorder(one * 2, one * 2, 1 / scale, 0, 1, 0, 1, "ARTWORK")
   end
   DB.watched:AddWatch("fullTeamInfo", viewSelect)
   viewSelect(nil, DB.watched.fullTeamInfo)
@@ -746,16 +751,6 @@ function DB:StatusResetPos()
   f:SetPoint(unpack(DB.statusPos))
   f:SetScale(DB.statusScale)
   f:Snap()
-end
-
-function DB:ShowToolTip(f)
-  DB:Debug("Show tool tip...")
-  if f.tooltipText then
-    GameTooltip:SetOwner(f, "ANCHOR_RIGHT")
-    GameTooltip:SetText(f.tooltipText, 0.9, 0.9, 0.9, 1, false)
-  else
-    DB:Debug("No .tooltipText set on %", f:GetName())
-  end
 end
 
 function DB:SetupHugeFont(height)
@@ -1036,8 +1031,8 @@ function DB:SetupStatusUI()
   f.slotNum = f:addText("?", f.fontName):PlaceRight(0, 0)
   f.slotNum.slotToText = slotToText
   f.slotNum:slotToText(self.watched.slot)
-  DB.watched:AddWatch("slot", function(k, v, _oldVal)
-    f.slotNum:slotToText(v and k)
+  DB.watched:AddWatch("slot", function(_k, v, _oldVal)
+    f.slotNum:slotToText(v)
   end)
   local updtTitle = function(_k, v, _oldVal)
     if v then

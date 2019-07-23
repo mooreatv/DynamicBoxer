@@ -5,6 +5,11 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+v2.01.00 July 23rd 2019 / WIP
+- (WIP) Use MoLib v7 for pixel perfect operations
+- moved ShowToolTip to MoLib, use WipeFrame from MoLib
+- fixed bug with slot watch
+
 v2.00.05 July 20th 2019
 - Small fix for all same realm master case
 v2.00.04 July 20th 2019
