@@ -7,8 +7,11 @@ Coming next:
 
 v2.01.00 July 23rd 2019 / WIP
 - (WIP) Use MoLib v7 for pixel perfect operations
-- moved ShowToolTip to MoLib, use WipeFrame from MoLib
+- moved ShowToolTip and SplitFullName to MoLib, use WipeFrame from MoLib
 - fixed bug with slot watch
+- fixed small bug with error when trying to complete team or send sync message when
+  the addon is disabled, also made sure `/dbox init` reenables if needed (not that
+  one should ever need to init again but...)
 
 v2.00.05 July 20th 2019
 - Small fix for all same realm master case

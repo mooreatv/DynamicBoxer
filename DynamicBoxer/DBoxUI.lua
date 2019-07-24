@@ -629,7 +629,7 @@ local slotInfo = function(slot, last)
   if not name then
     return string.format("|cFFFF4C43" .. fmt .. "|r  |cFFF4A042???|r", slot)
   end
-  local short, realm = DB:SplitFullname(name)
+  local short, realm = DB:SplitFullName(name)
   local color = "40C0FF"
   if realm == DB.myRealm then
     color = "A040FF"

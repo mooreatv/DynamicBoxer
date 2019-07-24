@@ -188,14 +188,6 @@ for k, v in pairs(DB.ISBH) do
   isboxer[k] = v
 end
 
-function DB:SplitFullname(fullname)
-  if type(fullname) ~= 'string' then
-    DB:Debug(1, "trying to split non string %", fullname)
-    return
-  end
-  return fullname:match("(.+)-(.+)")
-end
-
 -- short name -> fullname
 function DB:NormalizeName(name)
   if name:match("(.+)-(.+)") then
@@ -206,7 +198,7 @@ function DB:NormalizeName(name)
 end
 -- name -> shortest working name
 function DB:ShortName(name)
-  local s, r = DB:SplitFullname(name)
+  local s, r = DB:SplitFullName(name)
   if r == DB.myRealm then
     DB:Debug(4, "% is on our realm, using %", name, s)
     return s
@@ -256,7 +248,7 @@ function DB:ReconstructTeam()
   end
   DB.fullName = DB:GetMyFQN()
   DB.faction = UnitFactionGroup("player")
-  DB.shortName, DB.myRealm = DB:SplitFullname(DB.fullName)
+  DB.shortName, DB.myRealm = DB:SplitFullName(DB.fullName)
   if not DB.watched.enabled then
     DB:Warning("Not enabled, not doing any mapping")
     return
@@ -420,12 +412,12 @@ function DB:CheckMasterFaction()
 end
 
 function DB:SameRealmAsUs(fullName)
-  local _, r = DB:SplitFullname(fullName)
+  local _, r = DB:SplitFullName(fullName)
   return DB.myRealm == r
 end
 
 function DB:SameRealmAsMaster()
-  local _, r = DB:SplitFullname(DB.MasterName)
+  local _, r = DB:SplitFullName(DB.MasterName)
   return DB.myRealm == r
 end
 
@@ -1358,6 +1350,7 @@ function DB:SetupChange()
 end
 
 function DB:ForceInit()
+  DB.watched.enabled = true
   DB:SetupChange()
   DB:ReconstructTeam()
   DB:SetupUI()
@@ -1377,6 +1370,10 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     rest = string.sub(arg, posRest + 1)
   end
   if cmd == "j" then
+    if not DB.watched.enabled then
+      DB:Warning("Addon is disabled. Please enable it first. (|cFF99E5FF/dbox enable|r)")
+      return
+    end
     -- join
     DB.joinDone = false -- force rejoin code
     DB.totalRetries = 0
@@ -1404,6 +1401,10 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
       DB:PartyInvite()
     end
   elseif cmd == "t" then
+    if not DB.watched.enabled then
+      DB:Warning("Addon is disabled. Please enable it first. (|cFF99E5FF/dbox enable|r)")
+      return
+    end
     -- team complete
     if DB:StartsWith(rest, "c") then
       if not DB.teamComplete then
