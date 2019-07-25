@@ -648,7 +648,7 @@ function DB:AddTeamStatusUI(f)
     return
   end
   if DB.expectedCount <= 0 or DB.statusUp then
-    f:Snap()
+    DB:RestorePosition(f, DB.statusPos, DB.statusScale)
     return -- already done
   end
   DB.statusUp = true
@@ -675,11 +675,13 @@ function DB:AddTeamStatusUI(f)
     else
       DB:AddStatusLine(f)
     end
-    f:Snap()
+    DB:RestorePosition(f, DB.statusPos, DB.statusScale)
     -- local scale = f:GetEffectiveScale()
     local scale = f:GetScale()
     local one = 1 / scale
-    f:addBorder(0, 0, one, 0.5, 0.5, .5, 1, "ARTWORK")
+    local padding = one / 32 -- need to be ever so slighting inside or it doesn't always show
+    f:addBorder(padding, padding, one, 0.5, 0.5, 0.5, 1, "ARTWORK")
+    -- f:addBorder(0, 0, one, 0.5, 0.5, 0.5, 1, "ARTWORK")
     -- f:addBorder(one, one, one, 1, 0, 0, 1, "ARTWORK")
     -- f:addBorder(one * 2, one * 2, 1 / scale, 0, 1, 0, 1, "ARTWORK")
   end
@@ -730,7 +732,7 @@ function DB:AddPartyLines(f, mySlot)
       f:Snap()
     end)
     if i == mySlot then
-      f:addText(">"):PlaceLeft(0, 0.5):SetTextColor(0.75, 0.75, 0.75)
+      f:addText(">"):PlaceLeft(1, 0.5):SetTextColor(0.75, 0.75, 0.75)
     end
   end
 end
@@ -746,11 +748,7 @@ function DB:StatusResetPos()
   dynamicBoxerSaved.statusPos = nil
   dynamicBoxerSaved.statusScale = nil
   DB:StatusInitialPos()
-  local f = DB.statusFrame
-  f:ClearAllPoints()
-  f:SetPoint(unpack(DB.statusPos))
-  f:SetScale(DB.statusScale)
-  f:Snap()
+  DB:RestorePosition(DB.statusFrame, DB.statusPos, DB.statusScale)
 end
 
 function DB:SetupHugeFont(height)
@@ -876,6 +874,9 @@ function DB:SetupStatusUI()
     return
   end
   DB:Debug(1, "Creating Status frame")
+  if not DB.statusPos then
+    DB:StatusInitialPos()
+  end
   local f = DB:Frame("DynamicBoxer_Status", "DynamicBoxer_Status")
   DB.statusFrame = f
   f:SetFrameStrata("FULLSCREEN")
@@ -950,13 +951,7 @@ function DB:SetupStatusUI()
     end
   end)
   f:EnableKeyboard(false) -- starts off
-  f:SetMovable(true)
-  f:RegisterForDrag("LeftButton")
-  f:SetScript("OnDragStart", f.StartMoving)
-  f:SetScript("OnDragStop", function(w, ...)
-    f.StopMovingOrSizing(w, ...)
-    DB:SavePosition(f)
-  end)
+  DB:MakeMoveable(f, DB.SavePositionCB)
   f:EnableMouse(true)
   f:EnableMouseWheel(true)
   f.mouseWheelTimer = nil
@@ -971,7 +966,7 @@ function DB:SetupStatusUI()
       f.mouseWheelTimer:Cancel()
     end
     f.mouseWheelTimer = C_Timer.NewTimer(0.25, function()
-      DB:SavePosition(f)
+      DB:SavePosition(f) -- might save the wrong anchor one
     end)
   end)
   f:SetScript("OnMouseUp", function(_w, mod)
@@ -1010,13 +1005,6 @@ function DB:SetupStatusUI()
       DB.Slash("party disband")
     end
   end)
-  if not DB.statusPos then
-    DB:StatusInitialPos()
-  end
-  f:SetPoint(unpack(DB.statusPos))
-  if DB.statusScale then
-    f:SetScale(DB.statusScale)
-  end
   f:SetWidth(1)
   f:SetHeight(1) -- will recalc below
   f.bg = f:CreateTexture(nil, "BACKGROUND")
@@ -1046,14 +1034,11 @@ function DB:SetupStatusUI()
   DB:AddTeamStatusUI(DB.statusFrame)
 end
 
-function DB:SavePosition(f)
-  f:Snap()
-  local point, _, relativePoint, xOfs, yOfs = f:GetPoint()
-  local scale = f:GetScale()
-  DB:Debug("Stopped moving/scaling status widget % % % % - scale %", point, relativePoint, xOfs, yOfs, scale)
-  local statusPos = {point, xOfs, yOfs} -- relativePoint seems to always be same as point
-  DB:SetSaved("statusPos", statusPos)
+function DB.SavePositionCB(f, pos, scale)
+  DB:Debug("Call back to save pos % scale %", pos, scale)
+  DB:SetSaved("statusPos", pos)
   DB:SetSaved("statusScale", scale)
+  f:Snap()
 end
 
 --- Bindings settings (i18n/l10n)

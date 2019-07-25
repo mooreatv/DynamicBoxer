@@ -5,8 +5,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-v2.01.00 July 23rd 2019 / WIP
-- (WIP) Use MoLib v7 for pixel perfect operations
+v2.01.00 July 25th 2019
+- Use MoLib v7 for pixel perfect operations: Exactly 1 pixel border.
+  Use new shared code MakeMoveable, SavePosition, RestorePosition now in MoLib
+- Handle screen resize and UI scale changes (we do keep our internal scale though)
 - moved ShowToolTip and SplitFullName to MoLib, use WipeFrame from MoLib
 - fixed bug with slot watch
 - fixed small bug with error when trying to complete team or send sync message when

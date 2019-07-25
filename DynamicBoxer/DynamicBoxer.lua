@@ -381,8 +381,9 @@ function DB:CheckMasterFaction()
       DB.crossRealmMaster = master
       return true
     end
-    DB:PrintDefault("All recent masters, and the current token one (%), are from same realm, will not try direct messages.",
-                    DB.MasterName)
+    DB:PrintDefault(
+      "All recent masters, and the current token one (%), are from same realm, will not try direct messages.",
+      DB.MasterName)
     return false
   end
   if DB.masterHistory[DB.faction]:exists(DB.MasterName) then
@@ -1140,6 +1141,20 @@ DB.EventD = {
     -- actual auto accept:
     AcceptGroup()
     StaticPopup_Hide("PARTY_INVITE")
+  end,
+
+  DISPLAY_SIZE_CHANGED = function(self, ...)
+    self:DebugEvCall(1, ...)
+    if DB.statusUp then
+      DB:RestorePosition(DB.statusFrame, DB.statusPos, DB.statusScale)
+    end
+  end,
+
+  UI_SCALE_CHANGED = function(self, ...)
+    self:DebugEvCall(1, ...)
+    if DB.statusUp then
+      DB:RestorePosition(DB.statusFrame, DB.statusPos, DB.statusScale)
+    end
   end,
 
   ADDON_LOADED = function(self, _event, name)
