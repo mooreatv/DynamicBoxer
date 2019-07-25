@@ -409,7 +409,7 @@ function DB:CreateOptionsPanel()
                       :PlaceRight()
 
   local statusFrameScale = p:addSlider("Status Frame Scale", "Sets the zoom/scale of the status window\n" ..
-                                         "You can also mousewheel on the window.", 0.5, 2.5, .1):Place(16, 28)
+                                         "You can also mousewheel on the window.", 0.75, 4, .05):Place(16, 28)
 
   statusFrameScale.callBack = function(_w, val)
     DB.statusFrame:ChangeScale(val)
@@ -676,14 +676,8 @@ function DB:AddTeamStatusUI(f)
       DB:AddStatusLine(f)
     end
     DB:RestorePosition(f, DB.statusPos, DB.statusScale)
-    -- local scale = f:GetEffectiveScale()
-    local scale = f:GetScale()
-    local one = 1 / scale
-    local padding = one / 32 -- need to be ever so slighting inside or it doesn't always show
-    f:addBorder(padding, padding, one, 0.5, 0.5, 0.5, 1, "ARTWORK")
-    -- f:addBorder(0, 0, one, 0.5, 0.5, 0.5, 1, "ARTWORK")
-    -- f:addBorder(one, one, one, 1, 0, 0, 1, "ARTWORK")
-    -- f:addBorder(one * 2, one * 2, 1 / scale, 0, 1, 0, 1, "ARTWORK")
+    local padding = 1 / 32 -- need to be ever so slighting inside or it doesn't always show
+    f:addBorder(padding, padding, 1, 0, 0, 0, 1, "ARTWORK")
   end
   DB.watched:AddWatch("fullTeamInfo", viewSelect)
   viewSelect(nil, DB.watched.fullTeamInfo)
@@ -740,7 +734,8 @@ end
 -- attach to top of the screen by default but not right in the middle to not cover blizzard headings
 function DB:StatusInitialPos()
   local w = UIParent:GetWidth()
-  DB.statusPos = {"TOP", w / 5, 0}
+  -- so we can see our neat 1 pixel black border, put the frame 2 pixels down from top (2 because we snap on even pixel anyway)
+  DB.statusPos = {"TOP", w / 5, -2} -- /DB:PixelPerfectFrame():GetScale()}
   DB.statusScale = 1
 end
 

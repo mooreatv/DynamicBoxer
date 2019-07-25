@@ -6,7 +6,7 @@ Coming next:
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 v2.01.00 July 25th 2019
-- Use MoLib v7 for pixel perfect operations: Exactly 1 pixel border.
+- Use MoLib v7 for pixel perfect operations: Exactly 1 pixel border (using :addBorder).
   Use new shared code MakeMoveable, SavePosition, RestorePosition now in MoLib
 - Handle screen resize and UI scale changes (we do keep our internal scale though)
 - moved ShowToolTip and SplitFullName to MoLib, use WipeFrame from MoLib
@@ -14,6 +14,8 @@ v2.01.00 July 25th 2019
 - fixed small bug with error when trying to complete team or send sync message when
   the addon is disabled, also made sure `/dbox init` reenables if needed (not that
   one should ever need to init again but...)
+- changed border to black, and default position to 2 pixels below top edge of screen
+  let me know how you like it
 
 v2.00.05 July 20th 2019
 - Small fix for all same realm master case
