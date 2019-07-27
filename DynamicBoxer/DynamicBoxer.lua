@@ -983,7 +983,7 @@ function DB:ProcessMessage(source, from, data)
   end
   -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
   if DB.currentCount == DB.expectedCount then
-    DB:EMASync()
+    DB:EMAsync()
   end
 end
 
