@@ -5,9 +5,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-v2.02.00 July 26th 2019
-- Right indent and align the realms
+v2.02.00 July 27th 2019
+- Right indent and align the realms in the status window
 - Typo fix in EMAsync (I wish lua had better tooling to find typos)
+- Optional DynBoxer.teamCompleteCallBack called if set when the team is complete (Issue 63)
 
 v2.01.00 July 25th 2019
 - Use MoLib v7 for pixel perfect operations: Exactly 1 pixel border (using :addBorder).

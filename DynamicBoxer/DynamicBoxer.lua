@@ -997,6 +997,9 @@ function DB:TeamIsComplete()
 end
 
 function DB:EMAsync()
+  if DB.teamCompleteCallBack then
+    DB.teamCompleteCallBack(DB.Team)
+  end
   if not DB.EMA then
     DB:Debug("No EMA present, not syncing")
     return
