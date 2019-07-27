@@ -2,7 +2,10 @@
 
 # DynamicBoxer
 
-The way [ISBoxer](http://isboxer.com/wiki/WoW:Quicker_Start_Guide?from=DynamicBoxer) works currently is you need to go back outside of the game into the windows isboxer suite program each time you want to create a new character or change whichever combination of characters you may want to be multi-boxing with at the time.
+The way [ISBoxer](http://isboxer.com/wiki/WoW:Quicker_Start_Guide?from=DynamicBoxer) works currently
+is you need to go back outside of the game into the windows isboxer suite program each time you want
+to create a new character or change whichever combination of characters you may want to be multi-boxing
+with at the time.
 
 This addon allows you to create only 1 team per layout and dynamically load any characters you wish into it
 
@@ -10,8 +13,14 @@ Likewise it lets you create new characters and teams dynamically without having 
 
 This is quite important for instance in classic when you can't create your teams ahead of time and want to get going asap with your teams
 
-Get the binary release using curse client or on https://www.curseforge.com/wow/addons/dynamicboxer or on [WowInterface](https://www.wowinterface.com/downloads/info25009-DynamicBoxer.html)
+Get the binary release using curse/twitch client or on 
+https://www.curseforge.com/wow/addons/dynamicboxer or 
+on [WowInterface](https://www.wowinterface.com/downloads/info25009-DynamicBoxer.html)
 
+The source of the addon resides at https://github.com/mooreatv/DynamicBoxer
+(and the MoLib library at https://github.com/mooreatv/MoLib)
+
+Releases detail/changes are on https://github.com/mooreatv/DynamicBoxer/releases and the ChangeLog.txt
 
 ### Q&A
 

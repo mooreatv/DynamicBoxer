@@ -3,9 +3,19 @@
    Licensed under LGPLv3 - No Warranty
    (contact the author if you need a different license)
 
+   Get the binary release using curse/twitch client or on
+   https://www.curseforge.com/wow/addons/dynamicboxer or
+   on https://www.wowinterface.com/downloads/info25009-DynamicBoxer.html
+
+   The source of the addon resides at https://github.com/mooreatv/DynamicBoxer
+   (and the MoLib library at https://github.com/mooreatv/MoLib)
+
+   Releases detail/changes are on https://github.com/mooreatv/DynamicBoxer/releases
+   and the ChangeLog.txt
+
    Evolved from prototype/proof of concept to usuable for "prod", here is how it currently works:
 
-   New (1.2) idea:
+   New (since 1.2) idea:
    UI only shows what to copy from slot 1 into slot 2..N
    Includes slot1's name and a secret
    all 2..N msg slot1, 2 cases:

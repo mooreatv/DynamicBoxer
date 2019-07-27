@@ -634,7 +634,8 @@ local slotInfo = function(slot, last)
   if realm == DB.myRealm then
     color = "A040FF"
   end
-  return string.format("|cFF33E526" .. fmt .. "|r  |cFFF2D80C%s|r  |cFF%s%s|r", slot, short, color, realm)
+  return string.format("|cFF33E526" .. fmt .. "|r  |cFFF2D80C%s|r", slot, short),
+         string.format("|cFF%s%s|r", color, realm)
 end
 
 --- *** Status and runtime frame *** ---
@@ -719,15 +720,22 @@ function DB:AddPartyLines(f, mySlot)
   local yOffset = 2
   local last = DB.expectedCount
   for i = 1, last do
-    local w = f:addText(slotInfo(i, last)):Place(3, yOffset)
+    local left, right = slotInfo(i, last)
+    local w = f:addText(left):Place(3, yOffset)
+    local wR = f:addText(right)
+    wR:SetJustifyH("RIGHT")
     yOffset = 0
     DB.watched:AddWatch(i, function(k, _v, _oldVal)
-      w:SetText(slotInfo(k, last))
+      local l, r = slotInfo(k, last)
+      w:SetText(l)
+      wR:SetText(r)
       f:Snap()
     end)
     if i == mySlot then
       f:addText(">"):PlaceLeft(1, 0.5):SetTextColor(0.75, 0.75, 0.75)
     end
+    wR:PlaceRight(2)
+    wR:SetPoint("RIGHT", -3, 0)
   end
 end
 
