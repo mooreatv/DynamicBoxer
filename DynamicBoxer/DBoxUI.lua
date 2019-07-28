@@ -627,7 +627,7 @@ local slotInfo = function(slot, last)
     fmt = "%02d"
   end
   if not name then
-    return string.format("|cFFFF4C43" .. fmt .. "|r  |cFFF4A042???|r", slot)
+    return string.format("|cFFFF4C43" .. fmt .. "|r  |cFFF4A042???|r", slot), "" -- "|cFFA040FF?|r"
   end
   local short, realm = DB:SplitFullName(name)
   local color = "40C0FF"
@@ -730,12 +730,17 @@ function DB:AddPartyLines(f, mySlot)
       w:SetText(l)
       wR:SetText(r)
       f:Snap()
+      C_Timer.After(0, function()
+        f:Snap() -- twice because of right alignment
+      end)
     end)
     if i == mySlot then
       f:addText(">"):PlaceLeft(1, 0.5):SetTextColor(0.75, 0.75, 0.75)
     end
     wR:PlaceRight(2)
-    wR:SetPoint("RIGHT", -3, 0)
+    wR.extraWidth = 3
+    wR:SetPoint("RIGHT", -wR.extraWidth, 0)
+    wR:SetMaxLines(1)
   end
 end
 
