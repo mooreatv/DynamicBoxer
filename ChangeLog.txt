@@ -5,6 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+v2.02.02 WIP
+- No need for double snap pass if setting the height of strings first
+
 v2.02.01 July 28th 2019
 - In molib fixes for Issues #65, #66 (status window forced to stay on screen)
 - Fixes for #67 (initial view off and also wrapping right aligned text fix to not wrap)

@@ -724,15 +724,13 @@ function DB:AddPartyLines(f, mySlot)
     local w = f:addText(left):Place(3, yOffset)
     local wR = f:addText(right)
     wR:SetJustifyH("RIGHT")
+    wR:SetHeight(wR:GetStringHeight()) -- this is key to prevent multiline / wrapped text; avoids having to do 2 passes
     yOffset = 0
     DB.watched:AddWatch(i, function(k, _v, _oldVal)
       local l, r = slotInfo(k, last)
       w:SetText(l)
       wR:SetText(r)
       f:Snap()
-      C_Timer.After(0, function()
-        f:Snap() -- twice because of right alignment
-      end)
     end)
     if i == mySlot then
       f:addText(">"):PlaceLeft(1, 0.5):SetTextColor(0.75, 0.75, 0.75)
