@@ -1352,6 +1352,7 @@ function DB:Help(msg)
                     "/dbox config -- open addon config, dbox c works too\n" ..
                     "/dbox enable on/off-- enable/disable the addon (be careful to turn it back on)\n" ..
                     "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
+                    "/dbox bug -- for bug reporting.\n" ..
                     "/dbox reset teams||token||masters||members||status||all -- resets one part of saved variables or all" ..
                     "\n/dbox version -- shows addon version")
 end
@@ -1390,6 +1391,13 @@ function DB:ForceInit()
   DB.justInit = true
 end
 
+function DB:StartBugReport(text)
+  local subText = "Please submit on discord or on https://|cFF99E5FFbit.ly/dboxbug|r or email"
+  DB:PrintDefault("DynamicBoxer bug report open: " .. subText)
+  -- base molib will add version and date/timne
+  DB:BugReport(subText, "@project-abbreviated-hash@\n\n" .. text)
+end
+
 function DB.Slash(arg) -- can't be a : because used directly as slash command
   DB:Debug("Got slash cmd: %", arg)
   if #arg == 0 then
@@ -1416,6 +1424,9 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     -- version
     DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion ..
                       " (@project-abbreviated-hash@) by MooreaTv (moorea@ymail.com)")
+  elseif cmd == "b" then
+    -- bug reporting
+    DB:StartBugReport("submitted from slash command")
   elseif DB:StartsWith(arg, "init") then
     -- re do initialization
     DB:ForceInit()

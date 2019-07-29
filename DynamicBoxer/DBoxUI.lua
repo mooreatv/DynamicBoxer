@@ -445,7 +445,9 @@ function DB:CreateOptionsPanel()
                                   "Pausing helps if you would be logging in/out many cross realm characters without autoinvite\n" ..
                                   "|cFF99E5FF/dbox enable off|r\nor |cFF99E5FF/dbox enable on|r to toggle"):Place(4, 10)
 
-  p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):PlaceRight(0, 20)
+  p:addButton("Bug Report", "Get Information to submit a bug.\n|cFF99E5FF/dbox bug|r", "bug"):PlaceRight(92, 1)
+
+  p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):Place(0, 12)
   p:addButton("Join", "Attempts to resync the team by\nsending a message requiring reply\n|cFF99E5FF/dbox j|r", "join")
     :PlaceRight()
   p:addButton("Ping", "Attempts to resync the team by\nsending a message\n|cFF99E5FF/dbox m|r", "message"):PlaceRight()

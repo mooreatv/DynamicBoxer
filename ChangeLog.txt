@@ -5,7 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-v2.02.02-beta1 July 28th 2019
+v2.03.00-beta1 July 28th 2019
+- New feature integrated from MoLib: `/dbox bug` to submit bug information for bug reports!
+  post them to https://bit.ly/dboxbug (which redirects to curse bug, or email me or discord or github)
 - No need for double snap pass if setting the height of strings first
 - Smoother zoom with less shimmering (newer MoLib)
 - Fix lua error when receiving mapping while disabled
