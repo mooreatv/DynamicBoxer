@@ -658,7 +658,7 @@ function DB:AddTeamStatusUI(f)
   DB.statusXa = f.lastAdded
   DB.statusXl = f.lastLeft
   DB.statusXm = f.leftMargin
-  -- DB.statusRight
+  DB:RestorePosition(f, DB.statusPos, DB.statusScale)
   local viewSelect = function(_k, v, _oldVal)
     -- remove current lower status
     for i = #f.children, DB.statusXn + 1, -1 do
@@ -676,7 +676,8 @@ function DB:AddTeamStatusUI(f)
     else
       DB:AddStatusLine(f)
     end
-    DB:RestorePosition(f, DB.statusPos, DB.statusScale)
+    -- DB:RestorePosition(f, DB.statusPos, DB.statusScale)
+    f:Snap()
     local padding = 1 / 32 -- need to be ever so slighting inside or it doesn't always show
     f:addBorder(padding, padding, 1, 0, 0, 0, 1, "ARTWORK")
   end
@@ -971,7 +972,7 @@ function DB:SetupStatusUI()
     if f.mouseWheelTimer then
       f.mouseWheelTimer:Cancel()
     end
-    f.mouseWheelTimer = C_Timer.NewTimer(0.25, function()
+    f.mouseWheelTimer = C_Timer.NewTimer(.5, function()
       DB:SavePosition(f) -- might save the wrong anchor one
     end)
   end)

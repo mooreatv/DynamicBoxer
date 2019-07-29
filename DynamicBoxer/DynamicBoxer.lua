@@ -866,6 +866,11 @@ function DB:ProcessMessage(source, from, data)
     -- Since 1.4 and secure message support allow relay/another toon to set other slots it knows
     DB:Debug(3, "Fwded message from % about % (source is %)", from, realname, source)
   end
+  if not DB.watched.enabled then
+    DB:Warning("Addon is disabled, so ignoring otherwise good % mapping for slot %: % from %", source, idx, realname,
+               from)
+    return
+  end
   if doForward then -- we are master when we are forwarding
     -- check for loops/sanity; that the data is really only about their slot
     if idx == 1 then
@@ -1363,7 +1368,7 @@ end
 function DB:SetSaved(name, value)
   self[name] = value
   dynamicBoxerSaved[name] = value
-  DB:Debug(5, "(Saved) Setting % set to % - dynamicBoxerSaved=%", name, value, dynamicBoxerSaved)
+  DB:Debug(7, "(Saved) Setting % set to % - dynamicBoxerSaved=%", name, value, dynamicBoxerSaved)
 end
 
 function DB:SetupChange()
