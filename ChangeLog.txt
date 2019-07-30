@@ -5,7 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-v2.03.00-beta2 July 28th 2019
+v2.03.00 July 29th 2019
+- New feature: Export your keybinds to CSV (Excel, Google docs, gist.github.com...)
+  `/dbox keys` and copy paste from the new frame that pops up
 - New feature integrated from MoLib: `/dbox bug` to submit bug information for bug reports!
   post them to https://bit.ly/dboxbug (which redirects to curse bug, or email me or discord or github)
 - (beta2) Much better look for the bug report frame (MoLib fix)

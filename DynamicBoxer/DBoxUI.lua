@@ -445,7 +445,9 @@ function DB:CreateOptionsPanel()
                                   "Pausing helps if you would be logging in/out many cross realm characters without autoinvite\n" ..
                                   "|cFF99E5FF/dbox enable off|r\nor |cFF99E5FF/dbox enable on|r to toggle"):Place(4, 10)
 
-  p:addButton("Bug Report", "Get Information to submit a bug.\n|cFF99E5FF/dbox bug|r", "bug"):PlaceRight(92, 1)
+  p:addButton("Bug Report", "Get Information to submit a bug.\n|cFF99E5FF/dbox bug|r", "bug"):PlaceRight(48, 1)
+
+  p:addButton("Export Keybindings", "Exports your current key bindings.\n|cFF99E5FF/dbox keys|r", "keys"):PlaceRight(48)
 
   p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):Place(0, 12)
   p:addButton("Join", "Attempts to resync the team by\nsending a message requiring reply\n|cFF99E5FF/dbox j|r", "join")
@@ -1047,6 +1049,59 @@ function DB.SavePositionCB(f, pos, scale)
   DB:Debug("Call back to save pos % scale %", pos, scale)
   DB:SetSaved("statusPos", pos)
   DB:SetSaved("statusScale", scale)
+  f:Snap()
+end
+
+--- Key Bindings dump
+
+function DB:GetBoundKeys(mode)
+  mode = mode or 1
+  local lastCat
+  local bindings = {}
+  for i = 1, GetNumBindings() do
+    (function(cmd, cat, ...)
+      local numKeys = select("#", ...)
+      if numKeys == 0 then
+        return
+      end
+      if cat ~= lastCat then
+        bindings[#bindings + 1] = cat
+        lastCat = cat
+      end
+      -- if there are more than 2 which is possible, repeat the line with the other keys
+      local keys = {...}
+      for j = 1, numKeys, 2 do
+        local key1 = keys[j]
+        local key2 = keys[j + 1]
+        bindings[#bindings + 1] = {cmd, key1 or "", key2 or ""}
+      end
+    end)(GetBinding(i, mode))
+  end
+  return bindings
+end
+
+function DB:ExportBindingsUI(mode)
+  local bindings = DB:GetBoundKeys(mode)
+  local frameName = "DynamicBoxerBindingsExport"
+  local f = DB:StandardFrame(frameName, "DynamicBoxer Key Bindings Export (csv)")
+  f:addText("Copy (Ctrl-C) your current key bindings,"):Place()
+  f:addText("paste in gist.gitbub.com or save in a file, named |cFF99E5FF.csv|r:"):Place()
+  local _, h = ChatFontNormal:GetFont()
+  f.seb = f:addScrollEditFrame(320, h * 12) -- 12 lines
+  f.seb:Place(5, 14) -- 4 is inset
+  local eb = f.seb.editBox
+  eb:SetScript("OnEscapePressed", function()
+    f:Hide()
+  end)
+  local text = [["Binding", "First key", "Second key"]]
+  for _, binding in ipairs(bindings) do
+    if type(binding) == "string" then
+      text = text .. "\n\"--- " .. binding .. " ---\",,"
+    else
+      text = text .. "\n" .. table.concat(binding, ", ")
+    end
+  end
+  DB:SetReadOnly(eb, text)
   f:Snap()
 end
 

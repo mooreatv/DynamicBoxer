@@ -1352,7 +1352,7 @@ function DB:Help(msg)
                     "/dbox config -- open addon config, dbox c works too\n" ..
                     "/dbox enable on/off-- enable/disable the addon (be careful to turn it back on)\n" ..
                     "/dbox debug on/off/level -- for debugging on at level or off.\n" ..
-                    "/dbox bug -- for bug reporting.\n" ..
+                    "/dbox bug -- for bug reporting.\n" .. "/dbox keys -- exports your key bindings utility.\n" ..
                     "/dbox reset teams||token||masters||members||status||all -- resets one part of saved variables or all" ..
                     "\n/dbox version -- shows addon version")
 end
@@ -1427,6 +1427,10 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
   elseif cmd == "b" then
     -- bug reporting
     DB:StartBugReport("submitted from slash command")
+  elseif cmd == "k" then
+    -- key bindings
+    DB:PrintDefault("DynamicBoxer showing all your current key bindings for export")
+    DB:ExportBindingsUI()
   elseif DB:StartsWith(arg, "init") then
     -- re do initialization
     DB:ForceInit()
