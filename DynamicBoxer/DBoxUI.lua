@@ -1065,7 +1065,7 @@ function DB:GetBoundKeys(mode)
         return
       end
       if cat ~= lastCat then
-        bindings[#bindings + 1] = cat
+        bindings[#bindings + 1] = _G[cat] or cat
         lastCat = cat
       end
       -- if there are more than 2 which is possible, repeat the line with the other keys
