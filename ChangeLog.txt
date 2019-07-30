@@ -7,7 +7,7 @@ Coming next:
 
 v2.03.00 July 29th 2019
 - New feature: Export your keybinds to CSV (Excel, Google docs, gist.github.com...)
-  `/dbox keys` and copy paste from the new frame that pops up
+  `/dbox keys` and copy paste from the new frame that pops up. (Issue #60)
 - New feature integrated from MoLib: `/dbox bug` to submit bug information for bug reports!
   post them to https://bit.ly/dboxbug (which redirects to curse bug, or email me or discord or github)
 - (beta2) Much better look for the bug report frame (MoLib fix)
