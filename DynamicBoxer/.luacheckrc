@@ -63,6 +63,8 @@ globals = {
     "WorldFrame",
     "OKAY",
     "CANCEL",
+    "GetBinding",
+    "GetNumBindings",
 }
 max_line_length = 132
 ignore = {

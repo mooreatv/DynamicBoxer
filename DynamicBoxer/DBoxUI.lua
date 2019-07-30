@@ -706,7 +706,7 @@ function DB:AddStatusLine(f)
       x = 0
       y = -2
     end
-    local status = f:addText("?", f.fontName):PlaceRight(x, y)
+    local status = f:addText("?", f.font):PlaceRight(x, y)
     if i == mySlot then
       f:addText("<"):PlaceRight(0, 2):SetTextColor(0.7, 0.7, 0.7)
     else
@@ -912,7 +912,7 @@ function DB:SetupStatusUI()
     end
   end)
 
-  f.fontName = "GameFontHighlightLeft"
+  f.font = DB:NormalizeFont("GameFontHighlightLeft")
   local heading = "|cFFF2D80CDynamicBoxer|r " .. DB.manifestVersion .. " help:\n\n" ..
                     "Shows your current dynamic mapping\n(|cFF33E526green|r number is known, |cFFFF4C43?|r is unknown)\n\n"
   f.defaultTooltipText = heading .. "|cFF99E5FFLeft click|r to invite\n" .. "|cFF99E5FFMiddle|r click to disband\n" ..
@@ -1025,9 +1025,9 @@ function DB:SetupStatusUI()
   f.bg:SetColorTexture(unpack(f.bgColor))
   DB:Debug("Status frame background color % -> %", f.bgColor, f.bgColorHex)
   f:SetAlpha(.75)
-  local title = f:addText("DynamicBoxer", f.fontName):Place(4, 4) -- that also defines the bottom right padding
-  f:addText(" on ", f.fontName):PlaceRight(0, 0):SetTextColor(0.9, 0.9, 0.9)
-  f.slotNum = f:addText("?", f.fontName):PlaceRight(0, 0)
+  local title = f:addText("DynamicBoxer", f.font):Place(4, 4) -- that also defines the bottom right padding
+  f:addText(" on ", f.font):PlaceRight(0, 0):SetTextColor(0.9, 0.9, 0.9)
+  f.slotNum = f:addText("?", f.font):PlaceRight(0, 0)
   f.slotNum.slotToText = slotToText
   f.slotNum:slotToText(self.watched.slot)
   DB.watched:AddWatch("slot", function(_k, v, _oldVal)
@@ -1058,7 +1058,7 @@ function DB:GetBoundKeys(mode)
   mode = mode or 1
   local lastCat
   local bindings = {}
-  for i = 1, GetNumBindings() do
+  for i = 1, GetNumBindings(mode) do
     (function(cmd, cat, ...)
       local numKeys = select("#", ...)
       if numKeys == 0 then
@@ -1086,8 +1086,9 @@ function DB:ExportBindingsUI(mode)
   local f = DB:StandardFrame(frameName, "DynamicBoxer Key Bindings Export (csv)")
   f:addText("Copy (Ctrl-C) your current key bindings,"):Place()
   f:addText("paste in gist.gitbub.com or save in a file, named |cFF99E5FF.csv|r:"):Place()
-  local _, h = ChatFontNormal:GetFont()
-  f.seb = f:addScrollEditFrame(320, h * 12) -- 12 lines
+  local font = DB:NormalizeFont("ChatFontNormal")
+  local _, h = font:GetFont()
+  f.seb = f:addScrollEditFrame(320, h * 12, font) -- 12 lines
   f.seb:Place(5, 14) -- 4 is inset
   local eb = f.seb.editBox
   eb:SetScript("OnEscapePressed", function()
@@ -1102,6 +1103,7 @@ function DB:ExportBindingsUI(mode)
     end
   end
   DB:SetReadOnly(eb, text)
+  f:SetPoint("TOP", 0, -380)
   f:Snap()
 end
 
