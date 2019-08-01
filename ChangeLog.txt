@@ -5,9 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-v2.03.01 July 30th 2019
+v2.03.01 July 31st 2019
 - Filter and truncate bug reports as needed (MoLib fix)
-- use molib new NormalizeFont and font object param
+- use MoLib's new NormalizeFont and font object param
 
 v2.03.00 July 29th 2019
 - New feature: Export your keybinds to CSV (Excel, Google docs, gist.github.com...)
