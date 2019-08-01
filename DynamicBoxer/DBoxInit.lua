@@ -14,7 +14,7 @@ local shortName = "DynBoxer"
 -- Another alternative is to put our frame on DB.frame which may be cleaner (TODO/to consider)
 CreateFrame("frame", shortName, UIParent)
 
-local DB = DynBoxer
+local DB = _G[shortName]
 
 _G[addon]:MoLibInstallInto(DB, "DynamicBoxer")
 
