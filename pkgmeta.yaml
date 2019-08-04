@@ -2,6 +2,7 @@ package-as: DynamicBoxer
 
 ignore:
     - installdb.bat
+    - classictag.sh
     - DynamicBoxer.png
     - DynamicBoxer/luaformat.cfg
     - MoLib/installmolib.bat

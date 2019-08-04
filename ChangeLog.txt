@@ -5,6 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+v2.03.02 Aug 4th 2019
+- Latest MoLib and re-tagging with correct TOC for classic
+- new classictag.sh to auto sync the classic tags
 v2.03.01 July 31st 2019
 - Filter and truncate bug reports as needed (MoLib fix)
 - use MoLib's new NormalizeFont and font object param
