@@ -22,9 +22,9 @@ fi
 TOC_FILES=$(ls *.toc */*.toc 2> /dev/null)
 echo "Processing TOC file(s): $TOC_FILES"
 sed -i -e "s/## Interface:.*/## Interface: $CLASSIC_TOC_V/" $TOC_FILES
-git commit -m -a "Switching to classic toc $CLASSIC_TOC_V for $TAG-classic"
+git commit -a -m "Switching to classic toc $CLASSIC_TOC_V for $TAG-classic"
 git tag ${TAG}-classic
 git push --follow-tags
 sed -i -e "s/## Interface:.*/## Interface: $RETAIL_TOC_V/" $TOC_FILES
-git commit -m -a "Switching back to retail toc $RETAIL_TOC_V"
+git commit -a -m "Switching back to retail toc $RETAIL_TOC_V"
 git push
