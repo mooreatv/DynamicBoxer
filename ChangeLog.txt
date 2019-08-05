@@ -5,6 +5,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+v2.04.00 WIP
+- TBD/WIP (and testing classic branch/tags)
+- another change to see if curseforge builds are back - take 7
+
 v2.03.03 Aug 4th 2019
 - Latest MoLib and re-tagging with correct TOC for classic
 - new classictag.sh to auto sync the classic tags (take 2)

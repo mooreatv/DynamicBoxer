@@ -8,7 +8,7 @@
 RETAIL_TOC_V=80200
 CLASSIC_TOC_V=11302
 
-git fetch
+git fetch && git pull
 
 TAG=`git describe --tags`
 if [[ $TAG == *"classic"* ]]; then
