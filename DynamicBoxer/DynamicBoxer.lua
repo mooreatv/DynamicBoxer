@@ -101,6 +101,7 @@ DB.manualTeamSize = 0
 DB.isboxerTeam = false
 
 DB.EMA = _G.LibStub and _G.LibStub:GetLibrary("AceAddon-3.0", true)
+DB.Jamba = DB.EMA and DB.EMA:GetAddon("JambaTeam", true)
 DB.EMA = DB.EMA and DB.EMA:GetAddon("Team", true)
 
 -- Returns if we should be operating (basically if isboxer has a static team defined)
@@ -955,6 +956,10 @@ function DB:ProcessMessage(source, from, data)
     DB:Debug(">>>Calling ema AddMember %", realname)
     EMAApi.AddMember(realname)
   end
+  if DB.Jamba then
+    DB:Warning(">>>Calling Jamba AddMember %", realname)
+    DB.Jamba:AddMemberCommand(nil, realname)
+  end
   local oldCount = DB.currentCount
   DB.currentCount = DB:SortTeam()
   local teamComplete = (DB.currentCount >= DB.expectedCount and DB.currentCount ~= oldCount)
@@ -983,12 +988,12 @@ function DB:ProcessMessage(source, from, data)
     DB:AddToMembersHistory(realname)
   end
   if teamComplete then
-    DB:TeamIsComplete() -- will also do EMASync so we can return here
+    DB:TeamIsComplete() -- will also do OtherAddonsSync so we can return here
     return
   end
   -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
   if DB.currentCount == DB.expectedCount then
-    DB:EMAsync()
+    DB:OtherAddonsSync()
   end
 end
 
@@ -998,17 +1003,40 @@ function DB:TeamIsComplete()
   DB.needRaid = false
   DB.teamComplete = true
   DB:HideTokenUI()
-  DB:EMAsync()
+  DB:OtherAddonsSync()
 end
 
-function DB:EMAsync()
+function DB:OtherAddonsSync()
   if DB.teamCompleteCallBack then
     DB.teamCompleteCallBack(DB.Team)
   end
-  if not DB.EMA then
-    DB:Debug("No EMA present, not syncing")
-    return
+  if DB.Jamba then
+    DB:JambaSync()
   end
+  if DB.EMA then
+    DB:EMAsync()
+  end
+end
+
+function DB:JambaSync()
+  for name, order in pairs(DB.Jamba.db.teamList) do
+    local i = DB.TeamIdxByName[name]
+    if i then
+      -- set correct order
+      DB.Jamba.db.teamList[name] = i
+    else
+      -- remove toons not in our list
+      DB:Debug(">>> Removing % (%) from Jamba team", name, order)
+      DB.Jamba.db.teamList[name] = nil
+    end
+  end
+  -- kinda hard to find what is needed minimally to get the Jamba list to refresh in the order set above
+  -- but this seems to do it:
+  DB.Jamba:CommandSetMaster(nil, DB.Team[1].fullName) -- set the master too
+  DB:Debug("Jamba team fully set and set Jamba master to %", DB.Jamba.db.master)
+end
+
+function DB:EMAsync()
   -- why is there an extra level of table? - adapted from FullTeamList in Core/Team.lua of EMA
   for name, info in pairs(DB.EMA.db.newTeamList) do
     local i = DB.TeamIdxByName[name]

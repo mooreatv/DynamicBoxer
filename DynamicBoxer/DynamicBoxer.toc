@@ -5,7 +5,7 @@
 ## Version: @project-version@
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
-## OptionalDeps: ISBoxer, EMA, EMA-Classic
+## OptionalDeps: ISBoxer, EMA, EMA-Classic, Jamba
 ## SavedVariables: dynamicBoxerSaved
 ## Globe: check-classic
 MoLib/MoLib.lua
