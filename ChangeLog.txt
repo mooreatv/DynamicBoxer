@@ -5,8 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-v2.04.00 Aug 5th 2019
-- Added Jamba support (DynamicBoxer will auto set your Jamba team like your EMA team)
+v2.04.00 Aug 7th 2019
+- Added Jamba support (DynamicBoxer will auto set your Jamba team like 
+  it has been doing for your EMA team so far)
 - Fixed typo in invite code (only affecting debug-ish printing)
 
 v2.03.03 Aug 4th 2019
