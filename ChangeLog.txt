@@ -7,6 +7,7 @@ Coming next:
 
 v2.04.00 Aug 5th 2019
 - Added Jamba support (DynamicBoxer will auto set your Jamba team like your EMA team)
+- Fixed typo in invite code (only affecting debug-ish printing)
 
 v2.03.03 Aug 4th 2019
 - Latest MoLib and re-tagging with correct TOC for classic

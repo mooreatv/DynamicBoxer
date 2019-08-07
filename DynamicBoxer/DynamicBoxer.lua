@@ -1181,7 +1181,7 @@ DB.EventD = {
       DB:PrintDefault("Auto accepting invite from past team member % (%)", from, n)
     else
       DB:PrintDefault("Not auto accepting invite from % (%). our master is %; team is %)", from, n, DB.MasterName or "",
-                      DB.TeamIdxByNam or "")
+                      DB.TeamIdxByName or "")
       return
     end
     -- actual auto accept:
