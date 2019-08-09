@@ -5,6 +5,8 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+v2.04.01 Aug 9th 2019
+- Pick up wow classic fix from MoLib for bug report and keybinds frame
 v2.04.00 Aug 7th 2019
 - Added Jamba support (DynamicBoxer will auto set your Jamba team like 
   it has been doing for your EMA team so far)
