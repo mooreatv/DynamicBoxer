@@ -1025,7 +1025,7 @@ function DB:SetupStatusUI()
   f.bg:SetColorTexture(unpack(f.bgColor))
   DB:Debug("Status frame background color % -> %", f.bgColor, f.bgColorHex)
   f:SetAlpha(.75)
-  local title = f:addText("DynamicBoxer", f.font):Place(4, 4) -- that also defines the bottom right padding
+  local title = f:addText(self.name, f.font):Place(4, 4) -- that also defines the bottom right padding
   f:addText(" on ", f.font):PlaceRight(0, 0):SetTextColor(0.9, 0.9, 0.9)
   f.slotNum = f:addText("?", f.font):PlaceRight(0, 0)
   f.slotNum.slotToText = slotToText
