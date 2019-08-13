@@ -793,7 +793,7 @@ function DB:PartyInvite(continueFrom, retries)
     elseif UnitInParty(v.new) then
       DB:Debug("Slot %: % is already in our party/raid, won't re invite", k, v.fullName)
     else
-      if DB.autoRaid and pauseBetweenPartyAndRaid and k >= 6 then
+      if unlimitedInvites and pauseBetweenPartyAndRaid and k >= 6 then
         DB:PrintDefault("Small pause between party to raid transition...")
         DB.needRaid = true
         C_Timer.After(0.5, function()
