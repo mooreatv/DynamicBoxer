@@ -1214,6 +1214,7 @@ DB.EventD = {
     end
     DB:PrintDefault("DynamicBoxer " .. DB.manifestVersion .. " by MooreaTv: type /dbox for command list/help.")
     if dynamicBoxerSaved then
+      self.savedVar = dynamicBoxerSaved -- by ref
       -- always clear the one time log
       dynamicBoxerSaved.debugLog = {}
       if not dynamicBoxerSaved.configVersion or dynamicBoxerSaved.configVersion ~= DB.configVersion then
@@ -1260,6 +1261,7 @@ DB.EventD = {
     -- (re)Init saved vars
     self:Debug("Initialized empty saved vars")
     dynamicBoxerSaved = {}
+    self.savedVar = dynamicBoxerSaved -- by ref
     dynamicBoxerSaved.configVersion = DB.configVersion
     dynamicBoxerSaved.debugLog = {}
     dynamicBoxerSaved.addonVersion = DB.manifestVersion
@@ -1392,12 +1394,6 @@ function DB:SetWatchedSaved(name, value)
   end
   dynamicBoxerSaved.watched[name] = value
   DB:Debug(4, "(Saved) Watched Setting % set to % - dynamicBoxerSaved=%", name, value, dynamicBoxerSaved)
-end
-
-function DB:SetSaved(name, value)
-  self[name] = value
-  dynamicBoxerSaved[name] = value
-  DB:Debug(7, "(Saved) Setting % set to % - dynamicBoxerSaved=%", name, value, dynamicBoxerSaved)
 end
 
 function DB:SetupChange()

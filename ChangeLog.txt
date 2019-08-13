@@ -6,6 +6,8 @@ Coming next:
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 v2.05.00 Aug 11th 2019
+- Moved :SetSaved handling to MoLib (by setting self.savedVar)
+- WIP: Option to limit autoinvite to some max party size. eg. 4 so a 8box can be 2x4 (Issue #61)
 - WIP: support for Mama
 
 v2.04.01 Aug 9th 2019
