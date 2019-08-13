@@ -93,6 +93,7 @@ DB.autoInvite = 1 -- so it's discovered/useful by default
 DB.autoInviteSlot = 1
 DB.autoRaid = true
 DB.showIdAtStart = true
+DB.maxParty = 5 -- not that 5 means unlimited (ie will make a raid of 40 is autoRaid is set)
 
 DB.manual = 0 -- testing manual mode, 0 is off, number is slot id
 -- Set to actual expected size, or we'll start with 2 and extend as we get messages from higher slots
@@ -707,10 +708,16 @@ DB.needRaid = false
 
 -- raid logic is kinda ugly and too tricky - refactor?
 
-function DB:Invite(fullName, rescheduled)
+function DB:UnlimitedInvites()
+  return (DB.maxParty == 5) and DB.autoRaid
+end
+
+function DB:Invite(fullName, rescheduled, retries)
   local num = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) -- this lags/doesn't include not yet accepted invites
   local inRaid = IsInRaid(LE_PARTY_CATEGORY_HOME)
-  DB:Debug("Currently % in party/raid, in raid is %, oustanding/done invites %", num, inRaid, DB.numInvites)
+  local unlimitedInvites = DB:UnlimitedInvites()
+  DB:Debug("Currently % in party/raid, in raid is %, outstanding/done invites %, unlimited %", num, inRaid,
+           DB.numInvites, unlimitedInvites)
   if DB.numInvites == 5 then -- add and not already in raid
     if not DB.autoRaid then
       if not inRaid then
@@ -723,10 +730,15 @@ function DB:Invite(fullName, rescheduled)
       end
       -- retest in case conversion to raid just worked
       if not IsInRaid(LE_PARTY_CATEGORY_HOME) then
+        retries = retries or 0
+        if retries > 10 then
+          DB:Warning("Giving up trying to invites after 10 tries. Are your characters too low to be in raid?")
+          return
+        end
         DB:Debug("Not yet in raid, rescheduling the invite...")
         DB.needRaid = true
         C_Timer.After(0.2, function()
-          DB:Invite(fullName, true)
+          DB:Invite(fullName, true, retries + 1)
         end)
         return
       end
@@ -746,8 +758,9 @@ function DB:PartyToggle()
   end
 end
 
-function DB:PartyInvite(continueFrom)
+function DB:PartyInvite(continueFrom, retries)
   DB.numInvites = math.max(1, GetNumGroupMembers(LE_PARTY_CATEGORY_HOME))
+  local unlimitedInvites = DB:UnlimitedInvites()
   local pauseBetweenPartyAndRaid = false
   if DB.numInvites == 1 then
     -- we don't even have a party yet, so we can't make a raid so we'll stop at 5 and reschedule
@@ -756,12 +769,25 @@ function DB:PartyInvite(continueFrom)
   if IsInRaid(LE_PARTY_CATEGORY_HOME) then
     pauseBetweenPartyAndRaid = false
   end
+  retries = retries or 0
+  if retries > 10 then
+    DB:Warning("Giving up trying to finish the invites after 10 tries. Are your characters too low to be in raid?")
+    return
+  end
   continueFrom = continueFrom or 0
+  local lastInv = 99 -- raid of 99 should be enough for anyone
+  if not unlimitedInvites and DB.expectedCount > DB.maxParty then
+    continueFrom = DB.ISBIndex
+    lastInv = continueFrom + DB.maxParty - 1
+  end
   for k, v in pairs(DB.Team) do
     DB:Debug(9, "k is %, v is %", k, v)
     assert(k == v.slot)
     if k < continueFrom then
       DB:Debug("skipping % as we are continuing from %", k, continueFrom)
+    elseif k > lastInv then
+      DB:Debug("Done with % invites", DB.maxParty)
+      return
     elseif k == DB.ISBIndex then
       DB:Debug("Slot %: is us, not inviting ourselves.", k)
     elseif UnitInParty(v.new) then
@@ -771,7 +797,7 @@ function DB:PartyInvite(continueFrom)
         DB:PrintDefault("Small pause between party to raid transition...")
         DB.needRaid = true
         C_Timer.After(0.5, function()
-          DB:PartyInvite(k)
+          DB:PartyInvite(k, retries + 1)
         end)
         return
       end
@@ -939,14 +965,29 @@ function DB:ProcessMessage(source, from, data)
     DB:ManualExtendTeam(DB.manualTeamSize, idx)
   end
   DB.Team[idx] = {orig = DB.ISBTeam[idx], new = shortName, fullName = realname, slot = idx}
-  if DB.autoInvite and DB.autoInviteSlot == DB.ISBIndex and idx ~= DB.ISBIndex then
+  local autoInviteSlotMatch
+  local minInviteSlot = 1
+  local maxInviteSlot = 99
+  if DB:UnlimitedInvites() then
+    autoInviteSlotMatch = (DB.autoInviteSlot == DB.ISBIndex)
+  else
+    autoInviteSlotMatch = ((DB.ISBIndex % DB.maxParty) == DB.autoInviteSlot)
+    minInviteSlot = DB.ISBIndex
+    maxInviteSlot = DB.ISBIndex + DB.maxParty - 1
+  end
+  if DB.autoInvite and autoInviteSlotMatch and idx ~= DB.ISBIndex then
     -- This check works for in raid too but must be short name
     if UnitInParty(shortName) then
       DB:Debug("Slot %: % is already in our party/raid, won't re invite", idx, realname)
     else
-      DB:PrintDefault("Auto invite is on for our slot, inviting #%: % (turn off/configure in /dbox config if desired)",
-                      idx, realname)
-      DB:Invite(realname)
+      if idx >= minInviteSlot and idx <= maxInviteSlot then
+        DB:PrintDefault(
+          "Auto invite is on for our slot, inviting #%: % (turn off/configure in /dbox config if desired)", idx,
+          realname)
+        DB:Invite(realname)
+      else
+        DB:PrintDefault("Not inviting out of max party range slot #%: %", idx, realname)
+      end
     end
   else
     DB:Debug("Slot % not inviting slot % - auto inv slot is %, auto invite is %", DB.ISBIndex, idx, DB.autoInviteSlot,
@@ -1087,9 +1128,10 @@ DB.EventD = {
     if isboxer.frame then
       isboxer.frame:RegisterEvent("UPDATE_BINDINGS")
     end
+    DB:CreateOptionsPanel() -- after sync so we get teamsize for invite slider
     DB.numInvites = math.max(GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1)
     DB:Debug("Set initial inv count to %", DB.numInvites)
-    DB:CreateOptionsPanel() -- after sync so we get teamsize for invite slider
+    DB.numInvitesAdjust = true
   end,
 
   CHANNEL_COUNT_UPDATE = function(self, _event, displayIndex, count) -- Note: never seem to fire
@@ -1157,11 +1199,24 @@ DB.EventD = {
   end,
 
   GROUP_ROSTER_UPDATE = function(self, ...)
-    DB:Debug("Rooster udate, num party %, needRaid %", GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), DB.needRaid)
+    local num = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME)
+    DB:Debug("Rooster udate, num party %, needRaid %", num, DB.needRaid)
+    if DB.numInvitesAdjust and num > DB.numInvites then
+      -- only adjust once (player login doesn't have party yet upon real login (vs reload))
+      -- don't keep adjusting as we are decrementing numInvites when we uninvite toons
+      if DB.numInvites ~= 1 then
+        DB:Warning(
+          "Unexpected to have to adjust numInvites to current party size % when numInvites % is not 1 - please report (/dbox bug)",
+          num, DB.numInvites)
+      end
+      DB:Debug("Adjusting numInvites from % to current party size %", DB.numInvites, num)
+      DB.numInvites = num
+    end
+    DB.numInvitesAdjust = false
     local inRaid = IsInRaid(LE_PARTY_CATEGORY_HOME)
     if inRaid then
       DB.needRaid = false
-    elseif DB.needRaid and DB.autoRaid then -- in case it got turned off
+    elseif DB.needRaid and DB:UnlimitedInvites() then -- in case it got turned off
       DB:Debug("(Re) converting to raid")
       ConvertToRaid()
     end
@@ -1376,7 +1431,8 @@ function DB:Help(msg)
                     "/dbox show -- shows the current token string.\n" ..
                     "/dbox set tokenstring -- sets the token string (but using the UI is better)\n" ..
                     "/dbox m -- send mapping again\n" .. "/dbox join -- (re)join channel.\n" ..
-                    "/dbox party inv||disband||toggle -- invites the party or disband it or toggle raid/party\n" ..
+                    "/dbox party inv||disband||toggle||maxsize" ..
+                    " -- invites the party or disband it or toggle raid/party or set max party size\n" ..
                     "/dbox team complete -- forces the current team to be assumed to be completed despite missing slots\n" ..
                     "/dbox autoinv toggle||off||n -- toggles, turns off or turns on for slot n the autoinvite\n" ..
                     "/dbox config -- open addon config, dbox c works too\n" ..
@@ -1468,6 +1524,19 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     elseif DB:StartsWith(rest, "t") then
       -- Toggle raid/party
       DB:PartyToggle()
+    elseif tonumber(rest) then
+      local mx = tonumber(rest)
+      if mx < 2 then
+        DB:Warning("Ignoring dbox partymax num with invalid num < 2")
+        return
+      end
+      if mx >= 5 then
+        DB:PrintInfo("Resetting maximum party size for invite to default: unlimited.")
+        DB:SetSaved("maxParty", 5)
+        return
+      end
+      DB:PrintInfo("Setting maximum party size for invite to be a party of %.", mx)
+      DB:SetSaved("maxParty", mx)
     else
       -- party invite
       DB:PartyInvite()

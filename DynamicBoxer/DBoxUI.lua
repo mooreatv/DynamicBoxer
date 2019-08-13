@@ -384,7 +384,11 @@ function DB:CreateOptionsPanel()
 
   local invitingSlot = p:addSlider("Party leader slot", "Sets which slot should be doing the party inviting\n" ..
                                      "or e.g |cFF99E5FF/dbox autoinv 5|r for invites from slot 5", 1,
-                                   math.max(5, DB.expectedCount)):Place(16, 12) -- need more vspace
+                                   math.max(5, DB.expectedCount)):Place(16, 14) -- need more vspace
+
+  local maxParty = p:addSlider("Max party size", "Invites stop once this limit is reached\n" ..
+                                 "or e.g |cFF99E5FF/dbox partymax 4|r for groups of 4 max; 5 for unlimited/raid", 2,
+                               5, 1, nil, "unlimited"):PlaceRight(32)
 
   local autoRaid = p:addCheckBox("Auto convert to raid",
                                  "Whether to auto convert to raid before inviting the 6th party member\n" ..
@@ -545,6 +549,7 @@ function DB:CreateOptionsPanel()
     autoRaid:SetChecked(DB.autoRaid)
     idAtStart:SetChecked(DB.showIdAtStart)
     fullViewButton:SetChecked(DB.watched.fullTeamInfo)
+    maxParty:SetValue(DB.maxParty)
   end
 
   function p:HandleOk()
@@ -577,9 +582,12 @@ function DB:CreateOptionsPanel()
     local raid = autoRaid:GetChecked()
     DB:SetWatchedSaved("fullTeamInfo", fullViewButton:GetChecked())
     DB:SetSaved("autoRaid", raid)
+    local maxP = maxParty:GetValue()
+    DB:SetSaved("maxParty", maxP)
     DB:SetSaved("showIdAtStart", idAtStart:GetChecked())
     DB:PrintDefault("Configuration: auto invite is " .. (ainv and "ON" or "OFF") .. " for slot %, auto raid is " ..
-                      (raid and "ON" or "OFF"), ainvSlot)
+                      (raid and "ON" or "OFF") .. " max party is " .. (maxP == 5 and "unlimited" or tostring(maxP)),
+                    ainvSlot)
     DB:SavePosition(DB.statusFrame)
   end
 
