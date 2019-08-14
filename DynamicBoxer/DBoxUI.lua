@@ -262,7 +262,7 @@ function DB:SetupUI()
   DB.uiEscaped = false
   DB.inUI = true
   -- DB.fullName= "aÁÁÁ" -- test with utf8 characters (2x bytes per accentuated char)
-  -- "master-fullname token1 token2 h" (in glyphs, so need to use strlenutf8 on input/comparaison)
+  -- "master-fullname token1 token2 h" (in glyphs, so need to use strlenutf8 on input/comparison)
   DB.uiTextLen = DB:CalcUITextLen(DB.fullName)
   if DB:WeAreMaster() then
     StaticPopup_Show("DYNBOXER_MASTER", "txt1", "txt2", {OnUICancel = DB.OnUICancel})
