@@ -1111,7 +1111,7 @@ function DB:ChatAddonMsg(event, prefix, data, channel, sender, zoneChannelID, lo
   return -- not our message(s)
 end
 
-DB.EventD = {
+DB.EventHdlrs = {
   CHAT_MSG_ADDON = DB.ChatAddonMsg,
 
   BN_CHAT_MSG_ADDON = DB.ChatAddonMsg,
@@ -1323,15 +1323,6 @@ DB.EventD = {
     dynamicBoxerSaved.addonHash = "@project-abbreviated-hash@"
   end
 }
-
-function DB:OnEvent(event, first, ...)
-  DB:Debug(8, "OnEvent called for % e=% %", self:GetName(), event, first)
-  local handler = self.EventD[event]
-  if handler then
-    return handler(self, event, first, ...)
-  end
-  DB:Error("Unexpected event without handler %", event)
-end
 
 function DB:DynamicInit()
   DB:Debug("Delayed init called")
@@ -1696,10 +1687,8 @@ SlashCmdList["DynamicBoxer_Slash_Command"] = DB.Slash
 SLASH_DynamicBoxer_Slash_Command1 = "/dbox"
 SLASH_DynamicBoxer_Slash_Command2 = "/dynamicboxer"
 
-DB:SetScript("OnEvent", DB.OnEvent)
-for k, _ in pairs(DB.EventD) do
-  DB:RegisterEvent(k)
-end
+DB.frame = DB -- yeah I know... self pointer... because on newer addon the frame is .frame while here the frame is the global
+DB:RegisterEventHandlers()
 
 -- DB.debug = 2
 DB:Debug("dbox main file loaded")
