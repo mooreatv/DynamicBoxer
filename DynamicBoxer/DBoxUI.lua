@@ -387,8 +387,8 @@ function DB:CreateOptionsPanel()
                                    math.max(5, DB.expectedCount)):Place(16, 14) -- need more vspace
 
   local maxParty = p:addSlider("Max party size", "Invites stop once this limit is reached\n" ..
-                                 "or e.g |cFF99E5FF/dbox partymax 4|r for groups of 4 max; 5 for unlimited/raid", 2,
-                               5, 1, nil, "unlimited"):PlaceRight(32)
+                                 "or e.g |cFF99E5FF/dbox partymax 4|r for groups of 4 max; 5 for unlimited/raid", 2, 5,
+                               1, nil, "unlimited"):PlaceRight(32)
 
   local autoRaid = p:addCheckBox("Auto convert to raid",
                                  "Whether to auto convert to raid before inviting the 6th party member\n" ..
@@ -585,9 +585,9 @@ function DB:CreateOptionsPanel()
     local maxP = maxParty:GetValue()
     DB:SetSaved("maxParty", maxP)
     DB:SetSaved("showIdAtStart", idAtStart:GetChecked())
-    DB:PrintDefault("Configuration: auto invite is " .. (ainv and "ON" or "OFF") .. " for slot %, auto raid is " ..
-                      (raid and "ON" or "OFF") .. " max party is " .. (maxP == 5 and "unlimited" or tostring(maxP)),
-                    ainvSlot)
+    DB:PrintDefault("DynamicBoxer configuration: auto invite is " .. (ainv and "ON" or "OFF") ..
+                      " for slot %, auto raid is " .. (raid and "ON" or "OFF") .. " max party is " ..
+                      (maxP == 5 and "unlimited" or tostring(maxP)), ainvSlot)
     DB:SavePosition(DB.statusFrame)
   end
 
