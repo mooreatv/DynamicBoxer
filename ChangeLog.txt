@@ -5,6 +5,8 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+v2.05.02 Aug 24th 2019
+- Fixed bogus realm mismatch warning
 v2.05.01 Aug 24th 2019
 - Moved some common code to MoLib (event registration)
 - Trigger rebuild with latest MoLib for Classic
