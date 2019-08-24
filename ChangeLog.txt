@@ -5,6 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+v2.05.01 Aug 24th 2019
+- Moved some common code to MoLib (event registration)
+- Trigger rebuild with latest MoLib for Classic
 v2.05.00 Aug 11th 2019
 - Option to limit invite to a set max party size. eg. 4 so a 8box can be 2x4 (Issue #61)
   if you have 12 and set max to 4 you will have 3 groups of 4 (1-4, 5-8, 9-12) automatically at login
