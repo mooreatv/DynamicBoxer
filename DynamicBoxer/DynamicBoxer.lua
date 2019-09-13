@@ -284,8 +284,13 @@ function DB:ReconstructTeam()
   DB.IsbAssistMacro = "<not found>"
   -- parse the text which looks like (note the ]xxx; delimiters for most but \n at the end)
   -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt...,mod:lctrl]LAST\n""
-  isboxer.SetMacro = function(macro, _key, text)
+  isboxer.SetMacro = function(macro, key, text)
     if macro ~= "FTLAssist" then
+      return
+    end
+    DB:Debug(1, "Parsing FTLAssist macro % on key %", text, key)
+    if #DB.ISBTeam > 0 then
+      DB:Warning("Already parsed team % - skipping duplicate FTLAssist macro for %", DB.ISBTeam, key)
       return
     end
     DB.ISBAssistMacro = text
@@ -293,7 +298,7 @@ function DB:ReconstructTeam()
       table.insert(DB.ISBTeam, x)
       if x == searchingFor then
         if DB.ISBIndex > 0 then
-          DB:Warning("Duplicate entry for % found in %!", searchingFor, text)
+          DB:Warning("Duplicate entry for % found in %! team so far %", searchingFor, text, DB.ISBTeam)
         else
           DB.ISBIndex = #DB.ISBTeam
           DB.watched.slot = DB.ISBIndex
