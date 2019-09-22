@@ -1,6 +1,6 @@
 name: Build addon zip
 
-on: [push]
+on: [push, tags]
 
 jobs:
   build:
