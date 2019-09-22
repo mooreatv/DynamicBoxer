@@ -14,7 +14,7 @@ jobs:
         run: |
           sudo apt-get install luarocks
           luarocks install --local luacheck
-          exec /home/runner/.luarocks/bin/luacheck . --no-color --config ./luacheckrc -q
+          exec /home/runner/.luarocks/bin/luacheck . --no-color --config ./.luacheckrc -q
       - name: Create Retail Package
         run: curl -s https://raw.githubusercontent.com/mooreatv/packager/master/release.sh | bash
         env:
