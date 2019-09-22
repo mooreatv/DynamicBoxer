@@ -25,7 +25,7 @@ jobs:
          CF_API_KEY: ${{ secrets.CF_API_KEY }}
          GITHUB_OAUTH: ${{ secrets.GITHUB_OAUTH }}
          WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
-     - uses: actions/upload-artifact@master
+      - uses: actions/upload-artifact@master
          with:
            name: DynamicBoxer-${{ github.head_ref }}
            path: .release/
