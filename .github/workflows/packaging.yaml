@@ -1,0 +1,23 @@
+name: Build addon zip
+
+on: [push]
+
+jobs:
+  build:
+    name: packager
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1 # get the source tree
+      # Stolen from https://github.com/WeakAuras/WeakAuras2/blob/master/.github/workflows/build.yml
+      # should probably be a docker so a lot of this is cached/created once
+      - name: Install and run Luacheck
+        run: |
+          sudo apt-get install luarocks
+          luarocks install --local luacheck
+          /home/runner/.luarocks/bin/luacheck . --no-color -q
+      - name: Create Retail Package
+        run: curl -s https://raw.githubusercontent.com/mooreatv/packager/master/release.sh | bash
+        env:
+         CF_API_KEY: ${{ secrets.CF_API_KEY }}
+         GITHUB_OAUTH: ${{ secrets.GITHUB_OAUTH }}
+         WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
