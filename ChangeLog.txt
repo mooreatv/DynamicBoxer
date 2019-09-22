@@ -6,7 +6,7 @@ Coming next:
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
 v2.06.03 Sept 22nd 2019
-- Fixed packager bug/changelog being mangled on cf.
+- Fixed packager bug/changelog being mangled on cf
 v2.06.02 Sept 21st 2019
 - Switch to community/bigwigs packager as CF build was stuck/broken, also lets us
   have classic and non classic toc without retagging and upload to wowi automatically too
