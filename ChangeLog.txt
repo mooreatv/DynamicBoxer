@@ -5,10 +5,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-v2.06.01 Sept 21st 2019
+v2.06.02 Sept 21st 2019
 - Switch to community/bigwigs packager as CF build was stuck/broken, also lets us
   have classic and non classic toc without retagging and upload to wowi automatically too
-  Thanks Nebula and Nev for their help.
+  Thanks Nebula and Nev for their help. (rebuilt as .02 to avoid double file confusion)
 v2.06.00 Sept 21st 2019
 - Option to delay a bit accept of auto invite in order to have team in slot order.
   (you need to set the option on all the windows, not just the lead, also disable auto accept
