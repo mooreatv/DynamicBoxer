@@ -1,8 +1,6 @@
 name: Build addon zip
 
-on: 
-  - push
-  - tags
+on: [push]
 
 jobs:
   build:
@@ -17,9 +15,17 @@ jobs:
           sudo apt-get install luarocks
           luarocks install --local luacheck
           exec /home/runner/.luarocks/bin/luacheck DynamicBoxer/ --no-color --config ./DynamicBoxer/.luacheckrc -q
+      - name: Get the packager
+        run: |
+          curl -s https://raw.githubusercontent.com/mooreatv/packager/master/release.sh > ./release.sh
+          chmod 755 ./release.sh
       - name: Create Retail Package
-        run: curl -s https://raw.githubusercontent.com/mooreatv/packager/master/release.sh | bash -s -- -m pkgmeta.yaml -p 323794 -w 25009
+        run: ./release.sh -m pkgmeta.yaml -p 323794 -w 25009
         env:
          CF_API_KEY: ${{ secrets.CF_API_KEY }}
          GITHUB_OAUTH: ${{ secrets.GITHUB_OAUTH }}
          WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
+     - uses: actions/upload-artifact@master
+         with:
+           name: DynamicBoxer-${{ github.head_ref }}
+           path: .release/
