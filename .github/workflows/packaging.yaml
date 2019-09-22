@@ -16,7 +16,7 @@ jobs:
           luarocks install --local luacheck
           exec /home/runner/.luarocks/bin/luacheck DynamicBoxer/ --no-color --config ./DynamicBoxer/.luacheckrc -q
       - name: Create Retail Package
-        run: curl -s https://raw.githubusercontent.com/mooreatv/packager/master/release.sh | bash -m pkgmeta.yaml -p 323794 -w 25009
+        run: curl -s https://raw.githubusercontent.com/mooreatv/packager/master/release.sh | bash -s -- -m pkgmeta.yaml -p 323794 -w 25009
         env:
          CF_API_KEY: ${{ secrets.CF_API_KEY }}
          GITHUB_OAUTH: ${{ secrets.GITHUB_OAUTH }}
