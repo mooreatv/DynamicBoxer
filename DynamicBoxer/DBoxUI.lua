@@ -394,6 +394,10 @@ function DB:CreateOptionsPanel()
                                  "Whether to auto convert to raid before inviting the 6th party member\n" ..
                                    "|cFF99E5FF/dbox raid|r"):Place(4, 6)
 
+  local delayAccept = p:addCheckBox("Delay invite accept",
+                                    "Whether to delay the invite accept in order to keep the team in slot order")
+                        :PlaceRight(20)
+
   autoInvite:SetScript("PostClick", function(w, button, down)
     DB:Debug(3, "ainv post click % %", button, down)
     if w:GetChecked() then
@@ -546,6 +550,7 @@ function DB:CreateOptionsPanel()
     else
       enabled:SetChecked(false)
     end
+    delayAccept:SetChecked(DB.delayAccept)
     autoRaid:SetChecked(DB.autoRaid)
     idAtStart:SetChecked(DB.showIdAtStart)
     fullViewButton:SetChecked(DB.watched.fullTeamInfo)
@@ -585,6 +590,7 @@ function DB:CreateOptionsPanel()
     local maxP = maxParty:GetValue()
     DB:SetSaved("maxParty", maxP)
     DB:SetSaved("showIdAtStart", idAtStart:GetChecked())
+    DB:SetSaved("delayAccept", delayAccept:GetChecked())
     DB:PrintDefault("DynamicBoxer configuration: auto invite is " .. (ainv and "ON" or "OFF") ..
                       " for slot %, auto raid is " .. (raid and "ON" or "OFF") .. " max party is " ..
                       (maxP == 5 and "unlimited" or tostring(maxP)), ainvSlot)

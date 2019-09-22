@@ -94,6 +94,7 @@ DB.autoInviteSlot = 1
 DB.autoRaid = true
 DB.showIdAtStart = true
 DB.maxParty = 5 -- not that 5 means unlimited (ie will make a raid of 40 is autoRaid is set)
+DB.delayAccept = false -- try to order the team by delaying responses to accept
 
 DB.manual = 0 -- testing manual mode, 0 is off, number is slot id
 -- Set to actual expected size, or we'll start with 2 and extend as we get messages from higher slots
@@ -1116,6 +1117,11 @@ function DB:ChatAddonMsg(event, prefix, data, channel, sender, zoneChannelID, lo
   return -- not our message(s)
 end
 
+function DB:AcceptInvite()
+  AcceptGroup()
+  StaticPopup_Hide("PARTY_INVITE")
+end
+
 DB.EventHdlrs = {
   CHAT_MSG_ADDON = DB.ChatAddonMsg,
 
@@ -1245,8 +1251,14 @@ DB.EventHdlrs = {
       return
     end
     -- actual auto accept:
-    AcceptGroup()
-    StaticPopup_Hide("PARTY_INVITE")
+    -- optionally delayed
+    local delay = math.max(0, .25 * (DB.ISBIndex - 2))
+    if DB.delayAccept and delay > 0 then
+      DB:PrintDefault("Postponing invite accept by % s to set team order.", delay)
+      C_Timer.After(delay, DB.AcceptInvite)
+    else
+      DB.AcceptInvite()
+    end
   end,
 
   DISPLAY_SIZE_CHANGED = function(self, ...)

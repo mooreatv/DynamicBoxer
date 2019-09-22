@@ -5,6 +5,12 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+v2.06.00 Sept 21st 2019
+- Option to delay a bit accept of auto invite in order to have team in slot order.
+  (you need to set the option on all the windows, not just the lead, also disable auto accept
+  in other addons like EMA to use this feature; lastly it may not work at login time, if so,
+  middle click to disband and left click to reinvite, in order)
+
 v2.05.03 Sept 12th 2019
 - Fixed bug for case where there was duplicate binding of isboxer FTLAssist macro
 v2.05.02 Aug 24th 2019
