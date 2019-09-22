@@ -32,5 +32,5 @@ jobs:
          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@master
         with:
-          name: DynamicBoxerBuild-${{ github.ref }}
+          name: DynamicBoxerBuild-${{ github.sha }}
           path: .release/
