@@ -5,6 +5,8 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
+v2.07.00 Sept 24th 2019
+- BfA 8.2.5 toc update (everything seems to be working from my testing)
 v2.06.03 Sept 22nd 2019
 - Fixed packager bug/changelog being mangled on cf
 v2.06.02 Sept 21st 2019
