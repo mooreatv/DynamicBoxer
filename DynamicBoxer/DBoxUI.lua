@@ -871,14 +871,14 @@ function DB:ShowBigInfo(autohide)
     t:PlaceLeft(offx, offy, "RIGHT", "LEFT") -- won't change lastLeft
   end
   local class = f:addTexture()
-  local spec = GetSpecialization and GetSpecialization() -- missing in classic
-  if spec then
-    local _, _, _, icon = GetSpecializationInfo(spec)
-    class:SetTexture(icon)
-  else
+  if DB.isClassic then
     local _, className = UnitClass("player")
     class:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
     class:SetTexCoord(unpack(CLASS_ICON_TCOORDS[className]))
+  else
+    local spec = GetSpecialization() -- missing in classic
+    local _, _, _, icon = GetSpecializationInfo(spec)
+    class:SetTexture(icon)
   end
   class:SetSize(30, 30)
   class:PlaceRight(16, 0, "LEFT", "RIGHT")

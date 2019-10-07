@@ -5,11 +5,12 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
 
-v2.xx.yy xxx 2019
-- wip
-
+v2.07.01 Oct 5th 2019
+- Fix for some other addon emulating only partially bfa api in classic ()
+  (attempt to call global 'GetSpecializationInfo' (a nil value))
 v2.07.00 Sept 24th 2019
 - BfA 8.2.5 toc update (everything seems to be working from my testing)
+
 v2.06.03 Sept 22nd 2019
 - Fixed packager bug/changelog being mangled on cf
 v2.06.02 Sept 21st 2019
