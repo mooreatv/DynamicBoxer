@@ -3,7 +3,7 @@ ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 Coming next:
 - More refinements on the new status UI, options panel and other features
 - Your input/suggestions welcome !
-- See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues)
+- See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
 v2.07.01 Oct 5th 2019
 - Fix for some other addon emulating only partially bfa api in classic ()

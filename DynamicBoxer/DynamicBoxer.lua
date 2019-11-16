@@ -266,6 +266,7 @@ function DB:ReconstructTeam()
     DB:Warning("Not enabled, not doing any mapping")
     return
   end
+  DB.SortedTeam = {}
   if not DB:IsActive() then
     DB:PrintDefault(
       "DynamicBoxer skipping team reconstruction as there is no isboxer team (not running under innerspace).")
@@ -284,7 +285,7 @@ function DB:ReconstructTeam()
   DB.ISBIndex = -1 -- temp value to check for already set/dups/found below
   DB.IsbAssistMacro = "<not found>"
   -- parse the text which looks like (note the ]xxx; delimiters for most but \n at the end)
-  -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt...,mod:lctrl]LAST\n""
+  -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt...,mod:lctrl]LAST\n"
   isboxer.SetMacro = function(macro, key, text)
     if macro ~= "FTLAssist" then
       return
@@ -295,7 +296,7 @@ function DB:ReconstructTeam()
       return
     end
     DB.ISBAssistMacro = text
-    for x in text:gmatch("%]([^;]+)[;\n]") do
+    for x in text:gmatch("%]([^; \t\r\n]+)[; \t\r\n]") do
       table.insert(DB.ISBTeam, x)
       if x == searchingFor then
         if DB.ISBIndex > 0 then

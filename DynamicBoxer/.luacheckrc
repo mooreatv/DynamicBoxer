@@ -65,6 +65,7 @@ globals = {
     "CANCEL",
     "GetBinding",
     "GetNumBindings",
+    "unpack",
 }
 max_line_length = 132
 ignore = {
