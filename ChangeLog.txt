@@ -5,6 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v2.07.02 Nov 16th 2019
+- Fix for error finding last toon for modified FTL assist case (when using /targetexact {FTL}\n/assist)
+  Many thanks to Termi for the help finding and debugging this issue!
 v2.07.01 Oct 5th 2019
 - Fix for some other addon emulating only partially bfa api in classic ()
   (attempt to call global 'GetSpecializationInfo' (a nil value))
