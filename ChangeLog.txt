@@ -8,6 +8,10 @@ Coming next:
 v2.07.02 Nov 16th 2019
 - Fix for error finding last toon for modified FTL assist case (when using /targetexact {FTL}\n/assist)
   Many thanks to Termi for the help finding and debugging this issue!
+  In order to be more able to detect characters in modified ISboxer macros (that may contain extra spaces)
+  we now use space as a possible separator as that is illegal for wow characters but was working for versions before this one
+  NOTE: that means you should not use spaces in the name of your characters (ie if you have "Character 1" please
+  rename that to "Character1" or "Character_1")
 v2.07.01 Oct 5th 2019
 - Fix for some other addon emulating only partially bfa api in classic ()
   (attempt to call global 'GetSpecializationInfo' (a nil value))
