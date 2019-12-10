@@ -386,7 +386,7 @@ function DB:CreateOptionsPanel()
                                      "or e.g |cFF99E5FF/dbox autoinv 5|r for invites from slot 5", 1,
                                    math.max(5, DB.expectedCount)):Place(16, 14) -- need more vspace
 
-  local maxParty = p:addSlider("Max party size", "Invites stop once this limit is reached\n" ..
+  local maxParty = p:addSlider("Group size", "Split in groups of this size\n" ..
                                  "or e.g |cFF99E5FF/dbox partymax 4|r for groups of 4 max; 5 for unlimited/raid", 2, 5,
                                1, nil, "unlimited"):PlaceRight(32)
 

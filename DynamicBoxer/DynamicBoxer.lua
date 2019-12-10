@@ -319,8 +319,8 @@ function DB:ReconstructTeam()
   if DB.ISBIndex <= 0 then
     DB.ISBIndex = nil -- set if back to unset
     DB:Error("Problem identifying this character isboxer.Character.ActualName=% " ..
-               "in the isboxer macro FTLAssist=% - please report this problem/how to reproduce it", searchingFor,
-             DB.ISBAssistMacro)
+               "in the isboxer macro FTLAssist=% - make sure all chars have FTL modifier or report this problem with /dbox bug",
+             searchingFor, DB.ISBAssistMacro)
     return
   end
   DB:Debug("Found isbteam to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
