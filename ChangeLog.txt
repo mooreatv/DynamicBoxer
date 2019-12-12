@@ -11,6 +11,8 @@ v2.08.00 Dec 10th 2019
   - use bfa xrealm like whisper based sync instead
   - started refactor for classic only into new DBoxClassic.lua file (overriding some functions from the main file)
   - todo:
+    - there are still some rough edges with or requiring broadcast /reload or selective resync (alt left click) to be fixed
+      (specially with a mix of in and out of party toons)
     - refactor/cleanup
     - add guild/say/yell option for faster/more efficient reach
 - Slightly better error and options text
