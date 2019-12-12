@@ -19,5 +19,6 @@ MoLib/Realms.lua
 DBoxInit.lua
 ISBoxerPatches.lua
 DynamicBoxer.lua
+DBoxClassic.lua
 DBoxUI.lua
 DBoxChat.lua

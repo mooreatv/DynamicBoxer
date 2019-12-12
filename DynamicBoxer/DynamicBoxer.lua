@@ -16,7 +16,7 @@
    Evolved from prototype/proof of concept to usuable for "prod", here is how it currently works:
 
    With classic change in 1.13.3 we can't use a secret protected channel anymore, so we'll use direct
-   whispers
+   whispers - see DBoxClassic.lua
 
    In retail/bfa it works as follows:
 
@@ -386,20 +386,6 @@ function DB:NewestCrossRealmMaster()
   return ""
 end
 
-function DB:NewestSameRealmMaster()
-  local maxOthers = 10
-  for v in DB.masterHistory[DB.faction]:iterateNewest() do
-    maxOthers = maxOthers - 1
-    if maxOthers <= 0 then
-      break
-    end
-    if DB:SameRealmAsUs(v) then
-      return v
-    end
-  end
-  return ""
-end
-
 function DB:CheckMasterFaction()
   if DB:WeAreMaster() then
     DB:Debug(3, "Not checking master history on master slot")
@@ -410,32 +396,21 @@ function DB:CheckMasterFaction()
     return true
   end
   DB.crossRealmMaster = "" -- so we don't print stuff again
-  local master
-  if DB.isClassic then
-    master = DB:NewestSameRealmMaster()
+  local master = DB:NewestCrossRealmMaster()
+  if DB:SameRealmAsUs(DB.MasterName) then
     if master and #master > 0 then
+      DB:Warning("Trying crossrealm master % from master history as attempt to find our cross realm master", master)
       DB.MasterName = master
       DB.crossRealmMaster = master
-      DB:PrintDefault("Trying most recent same realm and faction master %, for direct message sync.", DB.MasterName)
       return true
     end
-  else
-    master = DB:NewestCrossRealmMaster()
-    if DB:SameRealmAsUs(DB.MasterName) then
-      if master and #master > 0 then
-        DB:Warning("Trying crossrealm master % from master history as attempt to find our cross realm master", master)
-        DB.MasterName = master
-        DB.crossRealmMaster = master
-        return true
-      end
-      DB:PrintDefault(
-        "All recent masters, and the current token one (%), are from same realm, will not try direct messages.",
-        DB.MasterName)
-      return false
-    end
+    DB:PrintDefault(
+      "All recent masters, and the current token one (%), are from same realm, will not try direct messages.",
+      DB.MasterName)
+    return false
   end
   if DB.masterHistory[DB.faction]:exists(DB.MasterName) then
-    DB:PrintDefault("Using previously seen (cross realm on bfa) master token as is.")
+    DB:PrintDefault("Using previously seen cross realm master token as is.")
     DB.crossRealmMaster = DB.MasterName
     return true
   end
@@ -594,11 +569,7 @@ function DB.Sync() -- called as ticker so no :
         for v in DB.masterHistory[DB.faction]:iterateNewest() do
           DB:Debug("Checking % for next xrealm attempt (mastername %) samerealm %", v, DB.MasterName,
                    DB:SameRealmAsUs(v))
-          local tryIt = not DB:SameRealmAsUs(v)
-          if DB.isClassic then
-            tryIt = not tryIt -- classic is reverse, need to use same realm
-          end
-          if tryIt and v ~= DB.MasterName then
+          if not DB:SameRealmAsUs(v) and v ~= DB.MasterName then
             DB:Warning("Also trying %s from master history as attempt to find our cross realm master", v)
             DB:SendDirectMessage(v, firstPayload)
             maxOthers = maxOthers - 1
@@ -659,14 +630,8 @@ function DB.Sync() -- called as ticker so no :
       end)
     end
   end
-  local ret = true
-  if DB.isClassic then
-    SendChatMessage(payload, "CHANNEL", nil, DB.channelId) -- returns nothing even if successful (!)
-    DB:Debug(2, "Sent classic Channel on chanId %", DB.channelId)
-  else
-    ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
-    DB:Debug(2, "Channel Message send retcode is % on chanId %", ret, DB.channelId)
-  end
+  local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
+  DB:Debug(2, "Channel Message send retcode is % on chanId %", ret, DB.channelId)
   if ret then
     DB.firstMsg = 0
   else
@@ -734,11 +699,7 @@ end
 -- additional message if failed
 function DB:CheckChannelOk(msg)
   if not DB.joinedChannel or #DB.joinedChannel < 1 then
-    if DB.isClassic then
-      DB:Debug("No real channel on classic (" .. msg .. ")")
-    else
-      DB:Warning("We haven't calculated the channel yet, will retry (" .. msg .. ")")
-    end
+    DB:Warning("We haven't calculated the channel yet, will retry (" .. msg .. ")")
     return false
   end
   DB.channelId = GetChannelName(DB.joinedChannel)
@@ -1411,20 +1372,6 @@ DB.stdChannelChecks = 0
 
 -- note: 2 sources of retry, the dynamic init and
 function DB:Join()
-  if DB.isClassic then
-    -- channel addon messaging is broken in 1.13.3 so we just bail
-    -- this is spaghetti and we need to cleanup classic vs not some more
-    if not DB.joinDone then
-      -- one time setup
-      DB:ReconstructTeam()
-    end
-    DB.channelId = -1 -- classic hack for now to not loop into this
-    DB.joinDone = true
-    DB:Debug("Running on classic, no channel addon comms, no channel joining")
-    DB:PrintInfo("DynBoxer running on classic. This is slot % and dynamically setting ISBoxer character to %",
-                 DB.ISBIndex, DB.fullName)
-    return DB.channelId
-  end
   -- First check if we have the std channel and reschedule if not
   -- (so our channel doesn't end up as first one, and /1, /2 etc are normal)
   -- if DB.stdChannelChecks == 0 then
