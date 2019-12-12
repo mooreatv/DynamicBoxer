@@ -15,7 +15,11 @@
 
    Evolved from prototype/proof of concept to usuable for "prod", here is how it currently works:
 
-   New (since 1.2) idea:
+   With classic change in 1.13.3 we can't use a secret protected channel anymore, so we'll use direct
+   whispers
+
+   In retail/bfa it works as follows:
+
    UI only shows what to copy from slot 1 into slot 2..N
    Includes slot1's name and a secret
    all 2..N msg slot1, 2 cases:
