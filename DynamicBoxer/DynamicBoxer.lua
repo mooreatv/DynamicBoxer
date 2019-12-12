@@ -1114,7 +1114,8 @@ function DB:ChatAddonMsg(event, prefix, data, channel, sender, zoneChannelID, lo
   DB:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", self:GetName(),
            event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
   if prefix == DB.chatPrefix and
-    ((channel == "CHANNEL" and instanceID == DB.joinedChannel) or channel == "WHISPER" or channel == "PARTY") then
+    ((channel == "CHANNEL" and instanceID == DB.joinedChannel) or channel == "WHISPER" or channel == "PARTY" or channel ==
+      "RAID") then
     DB:ProcessMessage(channel, sender, data)
     return
   end

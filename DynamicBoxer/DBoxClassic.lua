@@ -6,6 +6,8 @@
    With classic change in 1.13.3 we can't use a secret protected channel anymore, so we'll use direct
    whispers
 
+   TODO: remember the current/last party and differentiate simple /reload from logout/login (player entering world vs login)
+
    ]] --
 --
 -- our name, our empty default (and unused) anonymous ns
@@ -550,7 +552,7 @@ function DB:ProcessMessage(source, from, data)
   end
 end
 
-function DB:ChatAddonMsg(event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
+function DB:ChatAddonMsgCLASSIC(event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
   DB:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", self:GetName(),
            event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
   if prefix == DB.chatPrefix and
@@ -588,76 +590,24 @@ DB.stdChannelChecks = 0
 
 -- note: 2 sources of retry, the dynamic init and
 function DB:Join()
-  if DB.isClassic then
-    -- channel addon messaging is broken in 1.13.3 so we just bail
-    -- this is spaghetti and we need to cleanup classic vs not some more
-    if not DB.joinDone then
-      -- one time setup
-      DB:ReconstructTeam()
-    end
-    DB.channelId = -1 -- classic hack for now to not loop into this
-    DB.joinDone = true
-    DB:Debug("Running on classic, no channel addon comms, no channel joining")
-    DB:PrintInfo(L["DynBoxer running on classic. This is slot % and dynamically setting ISBoxer character to %"],
-                 DB.ISBIndex, DB.fullName)
-    return DB.channelId
-  end
-  -- First check if we have the std channel and reschedule if not
-  -- (so our channel doesn't end up as first one, and /1, /2 etc are normal)
-  -- if DB.stdChannelChecks == 0 then
-  --  DB.Slash("etrace")
-  -- end
-  -- GetChannelList() is used by chatconfigchanelsettings, but  C_ChatInfo.GetNumActiveChannels() is
-  -- same cardinality at all times (that I tested) and much simpler, so using it:
-  local numChans = C_ChatInfo.GetNumActiveChannels() -- {GetChannelList()}
-  DB:Debug("Checking std channel: num is %", numChans)
-  -- we want /1 General and /2 Trade (or /3 Local Defense) at least; if using a non en locale on en server you only get lfg
-  if numChans < 1 then
-    DB:Debug("Not having std channels, we'll retry later- check %/%, numChans=%", DB.stdChannelChecks,
-             DB.maxStdChannelCheck, numChans)
-    DB.stdChannelChecks = DB.stdChannelChecks + 1
-    if DB.stdChannelChecks % 5 == 0 then
-      DB:PrintInfo("DynamicBoxer still waiting for standard channels to appear... retry #%", DB.stdChannelChecks)
-    end
-    if DB.stdChannelChecks > DB.maxStdChannelCheck then
-      DB:Error("Didn't find expected standard channels after > 1 minute (% channels found. % checks done)," ..
-                 " giving up/joining anyway, please report this", numChans, DB.stdChannelChecks)
-    else
-      -- keep trying for now
-      return
-    end
-  end
-  -- DB.Slash("etrace stop")
-  DB.stdChannelChecks = 0
-  if DB.joinDone and DB.joinedChannel and GetChannelName(DB.joinedChannel) then
-    DB:Debug("Join already done and channel id still valid. skipping this one") -- Sync will retry
-    return
-  end
-  local action = "Rejoined"
+  -- channel addon messaging is broken in 1.13.3 so we just bail
   if not DB.joinDone then
     -- one time setup
     DB:ReconstructTeam()
-    local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
-    DB:Debug("Prefix register success % in dynamic setup", ret)
-    action = "Joined"
   end
+  DB.stdChannelChecks = 0
+  DB.channelId = -1 -- classic hack for now to not loop into this
+  DB:Debug("Running on classic, no channel addon comms, no channel joining")
+  -- still need to register prefix though because of party/raid chat
+  local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
+  DB:Debug("Prefix register success % in dynamic setup", ret)
+  DB:PrintInfo(L["DynBoxer running on classic. This is slot % and dynamically setting ISBoxer character to %"],
+               DB.ISBIndex, DB.fullName)
   DB.firstMsg = 1
   DB.noMoreExtra = nil
   if DB.maxIter <= 0 then
     DB.maxIter = 1
   end
-  if not DB.Channel or #DB.Channel == 0 or not DB.Secret or #DB.Secret == 0 then
-    DB:Error("Channel and or Password are empty - this should not be reached/happen")
-    return
-  end
-  DB.joinedChannel = "DynamicBoxer4" .. DB.Channel -- only alphanums seems legal, couldn't find better seperator than 4
-  local t, n = JoinTemporaryChannel(DB.joinedChannel, DB.Secret)
-  if not DB:CheckChannelOk(DB:format("from Join t=% n=%", t, n)) then
-    return
-  end
-  DB:Debug("Joined channel % / % type % name % id %", DB.joinedChannel, DB.Secret, t, n, DB.channelId)
-  DB:PrintInfo(action .. " DynBoxer secure channel. This is slot % and dynamically setting ISBoxer character to %",
-               DB.ISBIndex, DB.fullName)
   DB.joinDone = true
   return DB.channelId
 end
