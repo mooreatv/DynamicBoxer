@@ -9,7 +9,8 @@ v2.08.00 Dec 10th 2019
 - Handle classic API changes:
   - can't use addon messages on private secure channel anymore
   - use bfa xrealm like whisper based sync instead
-  - todo: 
+  - started refactor for classic only into new DBoxClassic.lua file (overriding some functions from the main file)
+  - todo:
     - refactor/cleanup
     - add guild/say/yell option for faster/more efficient reach
 - Slightly better error and options text
