@@ -9,7 +9,7 @@
    ]] --
 --
 -- our name, our empty default (and unused) anonymous ns
-local addon, _ns = ...
+local _addon, _ns = ...
 
 -- Created by DBoxInit
 local DB = DynBoxer
@@ -93,7 +93,6 @@ function DB:CheckMasterFaction()
   DB.crossRealmMaster = DB.MasterName
   return true
 end
-
 
 function DB:SendDirectMessage(to, payload)
   DB.sentMessageCount = DB.sentMessageCount + 1
@@ -343,7 +342,6 @@ function DB:CheckChannelOk(msg)
   end
   return true
 end
-
 
 -- [bfa] Too bad addon messages don't work cross realm even through whisper
 -- (and yet they work with BN friends BUT they don't work with yourself!)
@@ -600,7 +598,7 @@ function DB:Join()
     DB.channelId = -1 -- classic hack for now to not loop into this
     DB.joinDone = true
     DB:Debug("Running on classic, no channel addon comms, no channel joining")
-    DB:PrintInfo("DynBoxer running on classic. This is slot % and dynamically setting ISBoxer character to %",
+    DB:PrintInfo(L["DynBoxer running on classic. This is slot % and dynamically setting ISBoxer character to %"],
                  DB.ISBIndex, DB.fullName)
     return DB.channelId
   end
