@@ -5,6 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v2.08.01 Feb 21st 2020
+- Updated TOC for BfA/mainline 8.3
+
 v2.08.00 Dec 10th 2019
 - Handle classic API changes:
   - can't use addon messages on private secure channel anymore
