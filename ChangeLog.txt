@@ -5,6 +5,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v2.08.02 March 3rd 2020
+- Updated TOC for Classic 1.13.4
+
 v2.08.01 Feb 21st 2020
 - Updated TOC for BfA/mainline 8.3
 
