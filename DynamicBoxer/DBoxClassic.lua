@@ -350,7 +350,7 @@ end
 -- TODO: refactor, this is too long / complicated for 1 function
 function DB:ProcessMessage(source, from, data)
   if not DB.ISBTeam then
-    DB:ReconstructTeam() -- we can get messages events before the normal reconstruct team flow
+    DB.ISBH.LoadBinds() -- we can get messages events before the normal reconstruct team flow
   end
   local doForward = nil
   local channelMessage = (source == "CHANNEL")
@@ -491,14 +491,17 @@ function DB:ProcessMessage(source, from, data)
   end
   if DB.autoInvite and autoInviteSlotMatch and idx ~= DB.ISBIndex then
     -- This check works for in raid too but must be short name
+    -- sometimes it lags...
     if UnitInParty(shortName) then
       DB:Debug("Slot %: % is already in our party/raid, won't re invite", idx, realname)
     else
       if idx >= minInviteSlot and idx <= maxInviteSlot then
         DB:PrintDefault(
-          "Auto invite is on for our slot, inviting #%: % (turn off/configure in /dbox config if desired)", idx,
+          "Auto invite is on for our slot, scheduling invite #%: % (turn off/configure in /dbox config if desired)", idx,
           realname)
-        DB:Invite(realname)
+          C_Timer.After(0.25, function()
+            DB:Invite(realname)
+          end)
       else
         DB:PrintDefault("Not inviting out of max party range slot #%: %", idx, realname)
       end

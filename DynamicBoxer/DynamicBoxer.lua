@@ -724,6 +724,11 @@ function DB:UnlimitedInvites()
 end
 
 function DB:Invite(fullName, rescheduled, retries)
+  local shortName = DB:ShortName(fullName)
+  if UnitInParty(shortName) then
+    DB:PrintDefault("% (%) is already in our party/raid, won't re invite", fullName, shortName)
+    return
+  end
   local num = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) -- this lags/doesn't include not yet accepted invites
   local inRaid = IsInRaid(LE_PARTY_CATEGORY_HOME)
   local unlimitedInvites = DB:UnlimitedInvites()

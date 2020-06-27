@@ -1,9 +1,13 @@
 ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
 
 Coming next:
-- More refinements on the new status UI, options panel and other features
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
+
+v2.09.00 June 27th 2020
+Classic fixes:
+- Fix bug with race condition at start and isboxer complaining about wrong slot (Issue #75)
+- Workaround reinvite bug (trying to invite already in party toon) by delaying auto invites
 
 v2.08.02 March 3rd 2020
 - Updated TOC for Classic 1.13.4
