@@ -33,6 +33,7 @@ jobs:
         env:
          CF_API_KEY: ${{ secrets.CF_API_KEY }}
          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+         WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
       - uses: actions/upload-artifact@master
         with:
           name: DynamicBoxerBuild-${{ github.sha }}
