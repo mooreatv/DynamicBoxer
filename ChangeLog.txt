@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v2.09.01 July 8th 2020
+- Classic is now 1.13.5
+
 v2.09.00 June 27th 2020
 Classic fixes:
 - Fix bug with race condition at start and isboxer complaining about wrong slot (Issue #75)
