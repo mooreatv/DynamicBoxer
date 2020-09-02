@@ -1120,7 +1120,7 @@ function DB:ChatAddonMsg(event, prefix, data, channel, sender, zoneChannelID, lo
            event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
   if prefix == DB.chatPrefix and
     ((channel == "CHANNEL" and instanceID == DB.joinedChannel) or channel == "WHISPER" or channel == "PARTY" or channel ==
-      "RAID") then
+      "RAID" or channel == "GUILD") then
     DB:ProcessMessage(channel, sender, data)
     return
   end

@@ -4,6 +4,11 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v2.10.00 Sept 1st 2020
+- Classic: big change to use GUILD addon chat when possible; this makes 10+boxing work much better
+  as long as characters are in the guild.
+- Classic: change timeout for secure messages to 3 minutes to accommodate 10 boxing delays in msging.
+
 v2.09.01 July 8th 2020
 - Classic is now 1.13.5
 

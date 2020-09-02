@@ -22,6 +22,8 @@ end
 
 local L = DB.L
 
+DB.securePastThreshold = 180 -- 3mins for larger groups and/or reload
+
 function DB:NewestSameRealmMaster()
   local maxOthers = 10
   for v in DB.masterHistory[DB.faction]:iterateNewest() do
@@ -42,7 +44,7 @@ function DB:CheckMasterFaction()
     return false
   end
   if DB.crossRealmMaster then
-    DB:Debug(3, "already figured out cross realm master %", DB.crossRealmMaster)
+    DB:Debug(3, "already figured out classic master %", DB.crossRealmMaster)
     return true
   end
   DB.crossRealmMaster = "" -- so we don't print stuff again
@@ -59,7 +61,7 @@ function DB:CheckMasterFaction()
     master = DB:NewestCrossRealmMaster()
     if DB:SameRealmAsUs(DB.MasterName) then
       if master and #master > 0 then
-        DB:Warning("Trying crossrealm master % from master history as attempt to find our cross realm master", master)
+        DB:Warning("Trying classic master % from master history as attempt to find our classic master", master)
         DB.MasterName = master
         DB.crossRealmMaster = master
         return true
@@ -115,11 +117,27 @@ function DB:SendDirectMessage(to, payload)
   else
     inPartyMarker = "   "
   end
-  DB:DebugLogWrite(messageId .. " :   " .. inPartyMarker .. "    To: " .. to .. " : " .. payload)
+  local inSameGuild = UnitIsInMyGuild(DB:ShortName(to))
+  local inSameGuildMarker
+  if inSameGuild then
+    inSameGuildMarker = " *G* "
+  else
+    inSameGuildMarker = "     "
+  end
+  DB:DebugLogWrite(messageId .. " :   " .. inPartyMarker .. inSameGuildMarker .. "    To: " .. to ..
+    " : #" .. DB.sentMessageCount .. " " .. payload)
   local toSend = DB.whisperPrefix .. secureMessage
   -- must stay under 255 bytes, we are around 96 bytes atm (depends on character name (accentuated characters count double)
   -- and realm length, the hash alone is 16 bytes)
   DB:Debug(2, "About to send message #% id % to % len % msg=%", DB.sentMessageCount, messageId, to, #toSend, toSend)
+  if inSameGuild then
+    local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "GUILD")
+    DB:Debug("we are in guild with %, used guild msg, ret=%", to, ret)
+    if ret then
+      return messageId -- mission accomplished
+    end
+    DB:Warning("Can't send guild addon message #%, reverting to party or whisper", DB.sentMessageCount)
+  end
   if inParty then
     local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "RAID")
     DB:Debug("we are in party with %, used party/raid msg, ret=%", to, ret)
@@ -176,10 +194,10 @@ function DB.Sync() -- called as ticker so no :
       DB:Debug("Will postpone pinging master because we received a msg recently")
       DB.maxIter = DB.maxIter + 1
     else
-      DB:Debug("Cross realm sync and team incomplete/master unknown, pinging master % - %", DB.MasterName, DB.Team[1])
+      DB:Debug("Classic sync and team incomplete/master unknown, pinging master % - %", DB.MasterName, DB.Team[1])
       DB:SendDirectMessage(DB.MasterName, payload)
       if DB.firstMsg == 1 and DB.maxIter <= 0 then
-        DB:Debug("Cross realm sync, first time, increasing msg sync to 2 more")
+        DB:Debug("Classic sync, first time, increasing msg sync to 2 more")
         -- we have to sync twice to complete the team (if all goes well, but it's faster with party invite)
         DB.maxIter = 3 -- give it a couple extra attempts in case 1 slave is slow
       end
@@ -195,7 +213,7 @@ function DB.Sync() -- called as ticker so no :
             tryIt = not tryIt -- classic is reverse, need to use same realm
           end
           if tryIt and v ~= DB.MasterName then
-            DB:Warning("Also trying %s from master history as attempt to find our cross realm master", v)
+            DB:Warning("Also trying %s from master history as attempt to find our master", v)
             DB:SendDirectMessage(v, firstPayload)
             maxOthers = maxOthers - 1
             if maxOthers <= 0 then
@@ -559,7 +577,8 @@ function DB:ChatAddonMsgCLASSIC(event, prefix, data, channel, sender, zoneChanne
   DB:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", self:GetName(),
            event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
   if prefix == DB.chatPrefix and
-    ((channel == "CHANNEL" and instanceID == DB.joinedChannel) or channel == "WHISPER" or channel == "PARTY") then
+    ((channel == "CHANNEL" and instanceID == DB.joinedChannel) or channel == "WHISPER" or channel == "PARTY" or
+    channel == "GUILD") then
     DB:ProcessMessage(channel, sender, data)
     return
   end
