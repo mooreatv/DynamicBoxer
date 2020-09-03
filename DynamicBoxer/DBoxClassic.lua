@@ -22,6 +22,8 @@ end
 
 local L = DB.L
 
+DB:SetupGuildInfo() -- register additional event
+
 DB.securePastThreshold = 180 -- 3mins for larger groups and/or reload
 
 function DB:NewestSameRealmMaster()
@@ -106,7 +108,7 @@ function DB:SendDirectMessage(to, payload)
     return
   end
   if DB.sentMessageCount > 200 then
-    DB:Error("Sent too many messages (loop?) - stopping now")
+    DB:Error("Sent too many messages - not sending msg #% for %: %", DB.sentMessageCount, to, payload)
     return
   end
   local secureMessage, messageId = DB:CreateSecureMessage(payload, DB.Channel, DB.Secret)
@@ -117,7 +119,8 @@ function DB:SendDirectMessage(to, payload)
   else
     inPartyMarker = "   "
   end
-  local inSameGuild = UnitIsInMyGuild(DB:ShortName(to))
+  local inSameGuild = DB:IsInOurGuild(to)
+  DB:Debug(2, "About to send message #% id % to % - same guild: %", DB.sentMessageCount, messageId, to, inSameGuild)
   local inSameGuildMarker
   if inSameGuild then
     inSameGuildMarker = " *G* "
@@ -129,7 +132,7 @@ function DB:SendDirectMessage(to, payload)
   local toSend = DB.whisperPrefix .. secureMessage
   -- must stay under 255 bytes, we are around 96 bytes atm (depends on character name (accentuated characters count double)
   -- and realm length, the hash alone is 16 bytes)
-  DB:Debug(2, "About to send message #% id % to % len % msg=%", DB.sentMessageCount, messageId, to, #toSend, toSend)
+  DB:Debug(3, "About to send message #% id % to % len % msg=%", DB.sentMessageCount, messageId, to, #toSend, toSend)
   if inSameGuild then
     local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "GUILD")
     DB:Debug("we are in guild with %, used guild msg, ret=%", to, ret)

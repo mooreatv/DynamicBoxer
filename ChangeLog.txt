@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v2.10.01 Sept 2nd 2020
+- Classic: use new MoLib IsInOurGuild() which works better than UnitIsInMyGuild()
+
 v2.10.00 Sept 1st 2020
 - Classic: big change to use GUILD addon chat when possible; this makes 10+boxing work much better
   as long as characters are in the guild.
