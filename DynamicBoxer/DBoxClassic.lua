@@ -6,6 +6,8 @@
    With classic change in 1.13.3 we can't use a secret protected channel anymore, so we'll use direct
    whispers
 
+   We also use party/raid/guild addon communication as these haven't been yanked (yet)
+
    TODO: remember the current/last party and differentiate simple /reload from logout/login (player entering world vs login)
 
    ]] --
@@ -26,13 +28,17 @@ DB:SetupGuildInfo() -- register additional event
 
 DB.securePastThreshold = 180 -- 3mins for larger groups and/or reload
 
+function DB:IsGrouped()
+  local num = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME)
+  return num > 0
+end
+
+function DB:InGuild()
+  return IsInGuild() -- should also cache as it lags at login and returns false when it shouldn't
+end
+
 function DB:NewestSameRealmMaster()
-  local maxOthers = 10
   for v in DB.masterHistory[DB.faction]:iterateNewest() do
-    maxOthers = maxOthers - 1
-    if maxOthers <= 0 then
-      break
-    end
     if DB:SameRealmAsUs(v) then
       return v
     end
@@ -51,28 +57,12 @@ function DB:CheckMasterFaction()
   end
   DB.crossRealmMaster = "" -- so we don't print stuff again
   local master
-  if DB.isClassic then
-    master = DB:NewestSameRealmMaster()
-    if master and #master > 0 then
+  master = DB:NewestSameRealmMaster()
+  if master and #master > 0 then
       DB.MasterName = master
       DB.crossRealmMaster = master
       DB:PrintDefault("Trying most recent same realm and faction master %, for direct message sync.", DB.MasterName)
       return true
-    end
-  else
-    master = DB:NewestCrossRealmMaster()
-    if DB:SameRealmAsUs(DB.MasterName) then
-      if master and #master > 0 then
-        DB:Warning("Trying classic master % from master history as attempt to find our classic master", master)
-        DB.MasterName = master
-        DB.crossRealmMaster = master
-        return true
-      end
-      DB:PrintDefault(
-        "All recent masters, and the current token one (%), are from same realm, will not try direct messages.",
-        DB.MasterName)
-      return false
-    end
   end
   if DB.masterHistory[DB.faction]:exists(DB.MasterName) then
     DB:PrintDefault("Using previously seen (cross realm on bfa) master token as is.")
@@ -160,6 +150,38 @@ function DB:InfoPayload(slot, firstFlag)
   return DB:SlotCommand(slot, DB.Team[slot].fullName, firstFlag) -- classic == no xrealm so we can use the short name
 end
 
+function DB:MyInfo()
+  local firstFlag = 1
+  if DB.teamComplete then
+    firstFlag = 0
+  end
+  return DB:InfoPayload(DB.ISBIndex, firstFlag)
+end
+
+function DB:SendMyInfo()
+  local myInfo = DB:MyInfo()
+  local secureMessage, messageId = DB:CreateSecureMessage(myInfo, DB.Channel, DB.Secret)
+  -- send in say, party and guild
+  local ret = true
+  if DB:InGuild() then
+    if not C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "GUILD") then
+      ret = false
+    end
+    DB:Debug("we are in a guild sending our info there: %", ret)
+  end
+  if DB:IsGrouped() then
+    if not C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "RAID") then
+      ret = false
+    end
+    DB:Debug("we are in a group sending our info there: %", ret)
+  end
+  if not C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "SAY") then
+    ret = false
+  end
+  DB:Debug("Sending our info in SAY: % (mid %)", ret, messageId)
+  return ret
+end
+
 -- the first time, ie after /reload - we will force a resync
 DB.firstMsg = 1
 DB.syncNum = 1
@@ -187,6 +209,8 @@ function DB.Sync() -- called as ticker so no :
   end
   local now = GetTime() -- higher rez than seconds
   local payload = DB:InfoPayload(DB.ISBIndex, DB.firstMsg, DB.syncNum)
+   -- send info to guild, party and say
+  local ret = DB:SendMyInfo()
   -- check the master isn't from another faction
   -- redundant check but we can (and used to) have WeAreMaster true because of slot1/index
   -- and SameRealmAsMaster false because the master realm came from a previous token
@@ -212,9 +236,7 @@ function DB.Sync() -- called as ticker so no :
           DB:Debug("Checking % for next xrealm attempt (mastername %) samerealm %", v, DB.MasterName,
                    DB:SameRealmAsUs(v))
           local tryIt = not DB:SameRealmAsUs(v)
-          if DB.isClassic then
-            tryIt = not tryIt -- classic is reverse, need to use same realm
-          end
+          tryIt = not tryIt -- classic is reverse, need to use same realm
           if tryIt and v ~= DB.MasterName then
             DB:Warning("Also trying %s from master history as attempt to find our master", v)
             DB:SendDirectMessage(v, firstPayload)
@@ -275,14 +297,6 @@ function DB.Sync() -- called as ticker so no :
         end
       end)
     end
-  end
-  local ret = true
-  if DB.isClassic then
-    SendChatMessage(payload, "CHANNEL", nil, DB.channelId) -- returns nothing even if successful (!)
-    DB:Debug(2, "Sent classic Channel on chanId %", DB.channelId)
-  else
-    ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
-    DB:Debug(2, "Channel Message send retcode is % on chanId %", ret, DB.channelId)
   end
   if ret then
     DB.firstMsg = 0
@@ -351,11 +365,7 @@ end
 -- additional message if failed
 function DB:CheckChannelOk(msg)
   if not DB.joinedChannel or #DB.joinedChannel < 1 then
-    if DB.isClassic then
-      DB:Debug("No real channel on classic (" .. msg .. ")")
-    else
-      DB:Warning("We haven't calculated the channel yet, will retry (" .. msg .. ")")
-    end
+    DB:Debug("No real channel on classic (" .. msg .. ")")
     return false
   end
   DB.channelId = GetChannelName(DB.joinedChannel)
@@ -380,34 +390,32 @@ function DB:ProcessMessage(source, from, data)
     DB:Debug(2, "Skipping our own message on %: %", source, data)
     return
   end
-  if not channelMessage then
-    -- check authenticity (channel sends unsigned messages)
-    local valid, msg, lag, msgId = DB:VerifySecureMessage(data, DB.Channel, DB.Secret)
-    if valid then
-      DB:Debug(2, "Received valid secure direct=% message from % lag is %s, msg id is % part of full message %",
+  -- check authenticity (channel sends unsigned messages)
+  local valid, msg, lag, msgId = DB:VerifySecureMessage(data, DB.Channel, DB.Secret)
+  if valid then
+    DB:Debug(2, "Received valid secure direct=% message from % lag is %s, msg id is % part of full message %",
                directMessage, from, lag, msgId, data)
-      local isDup = false
-      if DB.duplicateMsg:exists(msgId) then
-        DB:Warning("!!!Received % duplicate msg from %, will ignore: %", source, from, data)
-        isDup = true
-      end
-      DB.duplicateMsg:add(msgId)
-      DB.lastDirectMessage = GetTime()
-      if isDup then
-        DB:DebugLogWrite(msgId .. " : From: " .. from .. "  DUP : " .. msg .. " (lag " .. tostring(lag) .. ")")
-        return
-      else
-        DB:DebugLogWrite(msgId .. " : From: " .. from .. "      : " .. msg .. " (lag " .. tostring(lag) .. ")")
-      end
-      if DB:WeAreMaster() then
-        doForward = msg
-      end
-    else
-      DB:Warning("Received invalid (" .. msg .. ") message from %: %", from, data)
-      return
+    local isDup = false
+    if DB.duplicateMsg:exists(msgId) then
+      DB:Debug("!!!Received % duplicate msg from %, will ignore: %", source, from, data)
+      isDup = true
     end
-    data = msg
+    DB.duplicateMsg:add(msgId)
+    DB.lastDirectMessage = GetTime()
+    if isDup then
+      DB:DebugLogWrite(msgId .. " : From: " .. from .. "  DUP : " .. msg .. " (lag " .. tostring(lag) .. ")")
+      return
+    else
+      DB:DebugLogWrite(msgId .. " : From: " .. from .. "      : " .. msg .. " (lag " .. tostring(lag) .. ")")
+    end
+    if DB:WeAreMaster() and directMessage then
+      doForward = msg
+    end
+  else
+    DB:Warning("Received invalid (" .. msg .. ") message from %: %", from, data)
+    return
   end
+  data = msg
   local idxStr, realname, forceStr = data:match("^S([^ ]+) ([^ ]+) ([^ ]+)") -- or strplit(" ", data)
   DB:Debug("on % from %, got idx=% realname=% first/force=%", source, from, idxStr, realname, forceStr)
   local idx = tonumber(idxStr)
@@ -576,18 +584,6 @@ function DB:ProcessMessage(source, from, data)
   end
 end
 
-function DB:ChatAddonMsgCLASSIC(event, prefix, data, channel, sender, zoneChannelID, localID, name, instanceID)
-  DB:Debug(7, "OnChatEvent called for % e=% channel=% p=% data=% from % z=%, lid=%, name=%, instance=%", self:GetName(),
-           event, channel, prefix, data, sender, zoneChannelID, localID, name, instanceID)
-  if prefix == DB.chatPrefix and
-    ((channel == "CHANNEL" and instanceID == DB.joinedChannel) or channel == "WHISPER" or channel == "PARTY" or
-    channel == "GUILD") then
-    DB:ProcessMessage(channel, sender, data)
-    return
-  end
-  DB:Debug(9, "wrong prefix % or channel % or instance % vs %, skipping!", prefix, channel, instanceID, DB.joinedChannel)
-  return -- not our message(s)
-end
 
 function DB:DynamicInit()
   DB:Debug("Delayed init called")
@@ -615,14 +611,14 @@ DB.stdChannelChecks = 0
 
 -- note: 2 sources of retry, the dynamic init and
 function DB:Join()
-  -- channel addon messaging is broken in 1.13.3 so we just bail
+  -- channel addon messaging is broken in 1.13.3 so we just do something else
   if not DB.joinDone then
     -- one time setup
     DB:ReconstructTeam()
   end
   DB.stdChannelChecks = 0
   DB.channelId = -1 -- classic hack for now to not loop into this
-  DB:Debug("Running on classic, no channel addon comms, no channel joining")
+  DB:Debug("Running on classic, no channel addon comms, no channel joining but guild/party comm")
   -- still need to register prefix though because of party/raid chat
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
   DB:Debug("Prefix register success % in dynamic setup", ret)

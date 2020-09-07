@@ -4,6 +4,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v2.11.00 Sept 7th 2020
+- Classic: use guild, party/raid and say for comms - pretty huge improvement, you can now /reload just the slot1
+  and it will resync fast etc... (best is guild but if your team is near one another it should sync fine too)
+
 v2.10.01 Sept 2nd 2020
 - Classic: use new MoLib IsInOurGuild() which works better than UnitIsInMyGuild()
 

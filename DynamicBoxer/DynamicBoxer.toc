@@ -16,6 +16,7 @@
 MoLib/MoLib.lua
 MoLib/MoLibUI.lua
 MoLib/Realms.lua
+MoLib/MoLibConv.lua
 DBoxInit.lua
 ISBoxerPatches.lua
 DynamicBoxer.lua

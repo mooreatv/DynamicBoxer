@@ -67,6 +67,7 @@ globals = {
     "GetNumBindings",
     "unpack",
     "UnitIsInMyGuild",
+    "IsInGuild",
 }
 max_line_length = 132
 ignore = {
