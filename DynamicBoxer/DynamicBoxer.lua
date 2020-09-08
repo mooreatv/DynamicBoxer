@@ -847,6 +847,9 @@ function DB:Disband()
   end
 end
 
+
+DB.firstDisabledWarning = true
+
 -- Too bad addon messages don't work cross realm even through whisper
 -- (and yet they work with BN friends BUT they don't work with yourself!)
 -- TODO: refactor, this is too long / complicated for 1 function
@@ -910,8 +913,13 @@ function DB:ProcessMessage(source, from, data)
     DB:Debug(3, "Fwded message from % about % (source is %)", from, realname, source)
   end
   if not DB.watched.enabled then
-    DB:Warning("Addon is disabled, so ignoring otherwise good % mapping for slot %: % from %", source, idx, realname,
-               from)
+    if DB.firstDisabledWarning then
+      DB:Warning("Addon is disabled, please enable it to process mapping. (|cFF99E5FF/dbox enable|r),"..
+       " until then ignoring otherwise good % mapping for slot %: % from % and future ones", source, idx, realname, from)
+      DB.firstDisabledWarning = false
+    else
+      DB:Debug("Addon is disabled, ignoring good % mapping for slot %: % from %", source, idx, realname, from)
+    end
     return
   end
   if doForward then -- we are master when we are forwarding
@@ -1485,6 +1493,7 @@ function DB:ForceInit()
   DB:SetupChange()
   DB:ReconstructTeam()
   DB:SetupUI()
+  DB.firstDisabledWarning = true
   DB.justInit = true
 end
 
