@@ -471,11 +471,11 @@ function DB:CreateOptionsPanel()
   local disablePopUps = p:addCheckBox("Pop ups disabled", "Disable prompts to copy paste the token. " ..
                 "This will typically prevent your team from completing" ..
                 " when adding new characters so should probably stay unchecked for most users.\n" ..
-                "|cFF99E5FF/dbox u off|r to disable popups,\n|cFF99E5FF/dbox u on|r to restore."):PlaceRight(10)
+                "|cFF99E5FF/dbox u off|r to disable popups,\n|cFF99E5FF/dbox u on|r to restore."):PlaceRight(24)
 
-  p:addButton("Bug Report", "Get Information to submit a bug.\n|cFF99E5FF/dbox bug|r", "bug"):PlaceRight(40, 1)
+  p:addButton("Bug Report", "Get Information to submit a bug.\n|cFF99E5FF/dbox bug|r", "bug"):PlaceRight(30, 1)
 
-  p:addButton("Export Keybindings", "Exports your current key bindings.\n|cFF99E5FF/dbox keys|r", "keys"):PlaceRight(40)
+  p:addButton("Export Keybindings", "Exports your current key bindings.\n|cFF99E5FF/dbox keys|r", "keys"):PlaceRight(30)
 
   p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):Place(0, 12)
   p:addButton("Join", "Attempts to resync the team by\nsending a message requiring reply\n|cFF99E5FF/dbox j|r", "join")
