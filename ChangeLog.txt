@@ -4,7 +4,7 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
-v2.11.02 Sept 8th 2020
+v2.11.03 Sept 8th 2020
 - Added option to disable all automatic popups at the cost of potentially not completing teams (see /dbox c or use /dbox u off)
 v2.11.01 Sept 8th 2020
 - Fix #77: if you disabled the addon (hitting escape for instance on the token prompt), don't flood with warning

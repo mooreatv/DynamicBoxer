@@ -468,9 +468,9 @@ function DB:CreateOptionsPanel()
                                   "Pausing helps if you would be logging in/out many cross realm characters without autoinvite\n" ..
                                   "|cFF99E5FF/dbox enable off|r\nor |cFF99E5FF/dbox enable on|r to toggle"):Place(4, 10)
 
-  local disablePopUps = p:addCheckBox("Pop ups disabled", "Disable prompts to enter or copy paste the token. " ..
+  local disablePopUps = p:addCheckBox("Pop ups disabled", "Disable prompts to copy paste the token. " ..
                 "This will typically prevent your team from completing" ..
-                "when adding new characters so should stay unchecked for most users.\n" ..
+                " when adding new characters so should probably stay unchecked for most users.\n" ..
                 "|cFF99E5FF/dbox u off|r to disable popups,\n|cFF99E5FF/dbox u on|r to restore."):PlaceRight(10)
 
   p:addButton("Bug Report", "Get Information to submit a bug.\n|cFF99E5FF/dbox bug|r", "bug"):PlaceRight(40, 1)
