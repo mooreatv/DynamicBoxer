@@ -298,10 +298,25 @@ end
 
 DB.uiShowWarning = true -- one time
 
+DB.disablePopUps = false
+
 -- this is called by automatic detection (and should stop when the user escaped out)
 function DB:ShowAutoExchangeTokenUI(msg, ...)
   if not DB.watched.enabled then
     DB:Debug("Not showing token exchange UI because we're now disabled (%)", msg)
+    return
+  end
+  if DB.disablePopUps then
+    if DB.uiShowWarning then
+      DB:Warning("Not showing automatic Pop Up exchange UI because you opted not too" ..
+        " (team may not complete, /dbox config to fix).", msg)
+      if msg then
+          DB:PrintDefault("NOT " .. msg, ...)
+      end
+      DB.uiShowWarning = false
+    else
+      DB:Debug("Not showing exchange token UI because of pop up disabled and also already shown once warning (%)", msg)
+    end
     return
   end
   if DB.uiEscaped then
@@ -319,7 +334,7 @@ function DB:ShowAutoExchangeTokenUI(msg, ...)
   DB:ExchangeTokenUI()
 end
 
--- this is called based on excplicit user action
+-- this is called based on explicit user action
 function DB:ExchangeTokenUI()
   if DB.inUI then
     DB:Debug(1, "ExchangeTokenUI(): Already in UI, skipping")
@@ -453,9 +468,14 @@ function DB:CreateOptionsPanel()
                                   "Pausing helps if you would be logging in/out many cross realm characters without autoinvite\n" ..
                                   "|cFF99E5FF/dbox enable off|r\nor |cFF99E5FF/dbox enable on|r to toggle"):Place(4, 10)
 
-  p:addButton("Bug Report", "Get Information to submit a bug.\n|cFF99E5FF/dbox bug|r", "bug"):PlaceRight(48, 1)
+  local disablePopUps = p:addCheckBox("Pop ups disabled", "Disable prompts to enter or copy paste the token. " ..
+                "This will typically prevent your team from completing" ..
+                "when adding new characters so should stay unchecked for most users.\n" ..
+                "|cFF99E5FF/dbox u off|r to disable popups,\n|cFF99E5FF/dbox u on|r to restore."):PlaceRight(10)
 
-  p:addButton("Export Keybindings", "Exports your current key bindings.\n|cFF99E5FF/dbox keys|r", "keys"):PlaceRight(48)
+  p:addButton("Bug Report", "Get Information to submit a bug.\n|cFF99E5FF/dbox bug|r", "bug"):PlaceRight(40, 1)
+
+  p:addButton("Export Keybindings", "Exports your current key bindings.\n|cFF99E5FF/dbox keys|r", "keys"):PlaceRight(40)
 
   p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):Place(0, 12)
   p:addButton("Join", "Attempts to resync the team by\nsending a message requiring reply\n|cFF99E5FF/dbox j|r", "join")
@@ -555,6 +575,7 @@ function DB:CreateOptionsPanel()
     idAtStart:SetChecked(DB.showIdAtStart)
     fullViewButton:SetChecked(DB.watched.fullTeamInfo)
     maxParty:SetValue(DB.maxParty)
+    disablePopUps:SetChecked(DB.disablePopUps)
   end
 
   function p:HandleOk()
@@ -591,6 +612,7 @@ function DB:CreateOptionsPanel()
     DB:SetSaved("maxParty", maxP)
     DB:SetSaved("showIdAtStart", idAtStart:GetChecked())
     DB:SetSaved("delayAccept", delayAccept:GetChecked())
+    DB:SetSaved("disablePopUps", disablePopUps:GetChecked())
     DB:PrintDefault("DynamicBoxer configuration: auto invite is " .. (ainv and "ON" or "OFF") ..
                       " for slot %, auto raid is " .. (raid and "ON" or "OFF") .. " max party is " ..
                       (maxP == 5 and "unlimited" or tostring(maxP)), ainvSlot)

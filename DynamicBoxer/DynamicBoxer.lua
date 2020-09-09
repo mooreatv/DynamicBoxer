@@ -1543,6 +1543,13 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
   elseif cmd == "i" then
     DB:PrintDefault("Showing the identify info for 6 (more) seconds")
     DB:ShowBigInfo(6)
+  elseif cmd == "u" then
+    if rest == "off" then
+      DB:SetSaved("disablePopUps", true)
+    else
+      DB:SetSaved("disablePopUps", false)
+    end
+    DB:PrintDefault("Disabled popup setting for token exchange is now: %", DB.disablePopUps)
   elseif cmd == "p" then
     if DB:StartsWith(rest, "d") or DB:StartsWith(rest, "u") then
       -- party disband/uninvite
