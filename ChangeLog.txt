@@ -4,6 +4,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v2.12.00 Sept 9th 2020
+- Fix #78: For brand new characters, escaping the cinematic caused lua error
+- Classic: use whisper addon message instead of bfa xrealm style real (non addon) message
+
 v2.11.04 Sept 8th 2020
 - Workaround ElvUI bug in tooltip display
 - (MoLib) Fixed tooltip anchor for option menu in Classic

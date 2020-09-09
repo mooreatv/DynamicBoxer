@@ -119,10 +119,10 @@ function DB:SendDirectMessage(to, payload)
   end
   DB:DebugLogWrite(messageId .. " :   " .. inPartyMarker .. inSameGuildMarker .. "    To: " .. to ..
     " : #" .. DB.sentMessageCount .. " " .. payload)
-  local toSend = DB.whisperPrefix .. secureMessage
+  -- local toSend = DB.whisperPrefix .. secureMessage
   -- must stay under 255 bytes, we are around 96 bytes atm (depends on character name (accentuated characters count double)
   -- and realm length, the hash alone is 16 bytes)
-  DB:Debug(3, "About to send message #% id % to % len % msg=%", DB.sentMessageCount, messageId, to, #toSend, toSend)
+  DB:Debug(3, "About to send message #% id % to % len % msg=%", DB.sentMessageCount, messageId, to, #secureMessage, secureMessage)
   if inSameGuild then
     local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "GUILD")
     DB:Debug("we are in guild with %, used guild msg, ret=%", to, ret)
@@ -139,7 +139,9 @@ function DB:SendDirectMessage(to, payload)
     end
     DB:Warning("Can't send party/raid addon message #%, reverting to whisper", DB.sentMessageCount)
   end
-  SendChatMessage(toSend, "WHISPER", nil, to) -- returns nothing even if successful (!)
+  local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", to)
+  DB:Debug("Whisper to %, ret=%", to, ret)
+  -- SendChatMessage(toSend, "WHISPER", nil, to) -- returns nothing even if successful (!)
   -- We would need to watch (asynchronously, for how long ?) for CHAT_MSG_WHISPER_INFORM for success or CHAT_MSG_SYSTEM for errors
   -- instead we'll expect to get a reply from the master and if we don't then we'll try another/not have mapping
   -- use the signature as message id, put it in our LRU for queue of msg waiting ack

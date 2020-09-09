@@ -78,6 +78,11 @@ function DB.OnSetupUIAccept(widget, data, data2)
 end
 
 function DB.OnUICancel(widget, _data)
+  if not widget then
+    DB:Warning("Esc called when not in widget - cinematic escape maybe? - ignoring")
+    DB.inUI = false
+    return
+  end
   DB.watched.enabled = false -- avoids a loop where we keep trying to ask user
   DB.inUI = false
   widget:Hide()
