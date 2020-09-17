@@ -313,7 +313,7 @@ function DB:ShowAutoExchangeTokenUI(msg, ...)
   end
   if DB.disablePopUps then
     if DB.uiShowWarning then
-      DB:Warning("Not showing automatic Pop Up exchange UI because you opted not too" ..
+      DB:Warning("Not showing automatic Pop Up exchange UI because you opted not to" ..
         " (team may not complete, /dbox config to fix).", msg)
       if msg then
           DB:PrintDefault("NOT " .. msg, ...)

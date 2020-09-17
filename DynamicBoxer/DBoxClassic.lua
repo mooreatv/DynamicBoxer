@@ -414,7 +414,8 @@ function DB:ProcessMessage(source, from, data)
       doForward = msg
     end
   else
-    DB:Warning("Received invalid (" .. msg .. ") message from %: %", from, data)
+    -- in theory warning if the source isn't guild/say/...
+    DB:Debug("Received invalid (" .. msg .. ") message % from %: %", source, from, data)
     return
   end
   data = msg

@@ -4,6 +4,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+
+v2.12.01 Sept 16th 2020
+- Classic: Fix bogus warnings from guildies or nearby sync. fixed english typo.
+
 v2.12.00 Sept 9th 2020
 - Fix #78: For brand new characters, escaping the cinematic caused lua error
 - Classic: use whisper addon message instead of bfa xrealm style real (non addon) message
