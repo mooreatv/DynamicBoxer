@@ -60,6 +60,7 @@ globals = {
     "UnitIsGroupLeader",
     "UnitInParty",
     "UninviteUnit",
+    "C_PartyInfo"
     "WorldFrame",
     "OKAY",
     "CANCEL",

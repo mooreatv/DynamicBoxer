@@ -761,7 +761,11 @@ function DB:Invite(fullName, rescheduled, retries)
     end
   end
   DB.numInvites = DB.numInvites + 1
-  InviteUnit(fullName)
+  if self.isClassic then
+    InviteUnit(fullName)
+  else
+    C_PartyInfo.InviteUnit(fullName)
+  end
 end
 
 function DB:PartyToggle()
