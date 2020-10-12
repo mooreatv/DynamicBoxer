@@ -4,7 +4,7 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
-v2.13.00 Oct 12th 2020
+v2.13.01 Oct 12th 2020
 - Shadowland compatibility!
 
 v2.12.01 Sept 16th 2020
