@@ -847,7 +847,11 @@ function DB:Disband()
   else
     -- just leave
     DB:PrintDefault(L["Disband requested, we aren't party leader so we're just leaving"])
-    LeaveParty()
+    if self.isClassic then
+      LeaveParty()
+    else
+      C_PartyInfo.LeaveParty()
+    end
   end
 end
 
