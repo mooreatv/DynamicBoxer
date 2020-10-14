@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v2.13.03 Oct 14th 2020
+- Also fix auto raid/party conversion (and decided to provide compatibility global versions back)
+
 v2.13.02 Oct 13th 2020
 - (minor) LeaveParty() fix
 

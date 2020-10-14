@@ -761,11 +761,7 @@ function DB:Invite(fullName, rescheduled, retries)
     end
   end
   DB.numInvites = DB.numInvites + 1
-  if self.isClassic then
-    InviteUnit(fullName)
-  else
-    C_PartyInfo.InviteUnit(fullName)
-  end
+  InviteUnit(fullName)
 end
 
 function DB:PartyToggle()
@@ -847,11 +843,7 @@ function DB:Disband()
   else
     -- just leave
     DB:PrintDefault(L["Disband requested, we aren't party leader so we're just leaving"])
-    if self.isClassic then
-      LeaveParty()
-    else
-      C_PartyInfo.LeaveParty()
-    end
+    LeaveParty()
   end
 end
 

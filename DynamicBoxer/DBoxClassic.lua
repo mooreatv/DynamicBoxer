@@ -19,6 +19,20 @@ local _addon, _ns = ...
 local DB = DynBoxer
 
 if not DB.isClassic then
+  -- put back basic global functions gone in 9.0
+  function ConvertToRaid()
+    C_PartyInfo.ConvertToRaid()
+  end
+  function ConvertToParty()
+    C_PartyInfo.ConvertToParty()
+  end
+  function InviteUnit(fullName)
+    C_PartyInfo.InviteUnit(fullName)
+  end
+  function LeaveParty()
+    C_PartyInfo.LeaveParty()
+  end
+  -- don't process the rest of this file
   return
 end
 
