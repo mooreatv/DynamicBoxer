@@ -69,6 +69,7 @@ globals = {
     "unpack",
     "UnitIsInMyGuild",
     "IsInGuild",
+    "TargetUnit",
 }
 max_line_length = 132
 ignore = {

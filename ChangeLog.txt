@@ -4,6 +4,16 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v2.14.00 Oct 24th 2020
+- Change to the status frame:
+  - the slot number is clickable to get the identify window
+    (replaces Tab, you can bind a key in keybindings if you want or still do /dbox identify)
+  - Each party name in full (default) view is clickable/start of a unitframe
+    (so to get the old behavior of invite/disband/... make sure to click in the title part)
+  - New config option to disable tooltips.
+  - If you want to anchor to dbox slots, the global table/fontstring region
+    DynamicBoxer_Status_Slot_x can help (where x is slot#)
+
 v2.13.03 Oct 14th 2020
 - Also fix auto raid/party conversion (and decided to provide compatibility global versions back)
 

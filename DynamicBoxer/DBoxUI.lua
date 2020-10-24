@@ -12,6 +12,8 @@ local L = DB.L
 
 DB.fontString = DB:CreateFontString() -- used for width calculations
 
+DB.infoTexture = 374216 -- yellow 🛈
+
 -- this file already has widget as "self" so we still use . in the definitions here
 -- for all the On*(widget...)
 
@@ -392,7 +394,7 @@ function DB:CreateOptionsPanel()
   local autoInvite = p:addCheckBox("Auto invite",
                                    "Whether one of the slot should auto invite the others\n" ..
                                      "it also helps with cross realm teams sync\n" ..
-                                     "|cFF99E5FF/dbox autoinvite|r to toggle or set slot"):Place(4, 30)
+                                     "|cFF99E5FF/dbox autoinvite|r to toggle or set slot"):Place(4, 20)
 
   -- TODO tooltip formatting and maybe auto add the /dbox command
 
@@ -429,9 +431,10 @@ function DB:CreateOptionsPanel()
     end
   end)
 
+  p:addTexture():Place(0,20):SetTexture(DB.infoTexture)
   p:addButton("Identify",
               "Shows the big identification text (faction, slot, name, realm)\n" .. "|cFF99E5FF/dbox identify|r",
-              "identify"):Place(0, 18)
+              "identify"):PlaceRight(1, -3)
   local idAtStart = p:addCheckBox("Show slot info at start",
                                   "Shows the big identification text (faction, slot, name, realm) during startup")
                       :PlaceRight()
@@ -458,7 +461,7 @@ function DB:CreateOptionsPanel()
 
   p:addButton("Exchange Token", "Shows the token on master and empty ready to paste on slaves\n" ..
                 "Allows for very fast broadcast KeyBind, Ctrl-C (copy) Ctrl-V (paste) Return, 4 keys and done!\n" ..
-                "|cFF99E5FF/dbox xchg|r or better, set a Key Binding", "xchg"):Place(0, 24)
+                "|cFF99E5FF/dbox xchg|r or better, set a Key Binding", "xchg"):Place(0, 18)
 
   p:addButton("Show Token", "Shows the UI to show or set the current token string\n" ..
                 "(if you need to copy from slave to brand new master, otherwise use xchg)\n" ..
@@ -478,14 +481,18 @@ function DB:CreateOptionsPanel()
                 " when adding new characters so should probably stay unchecked for most users.\n" ..
                 "|cFF99E5FF/dbox u off|r to disable popups,\n|cFF99E5FF/dbox u on|r to restore."):PlaceRight(24)
 
-  p:addButton("Bug Report", "Get Information to submit a bug.\n|cFF99E5FF/dbox bug|r", "bug"):PlaceRight(30, 1)
+  local disableTooltips = p:addCheckBox("Tooltip disabled", "Disable tooltips\n" ..
+                "If you remember in and out all the functions of DynamicBoxer frame and don't want to see the tooltips. " ..
+                "/reload needed for change to fully take effect"):PlaceRight(24)
+
+  p:addButton("Bug Report", "Get Information to submit a bug.\n|cFF99E5FF/dbox bug|r", "bug"):Place(0, 12)
 
   p:addButton("Export Keybindings", "Exports your current key bindings.\n|cFF99E5FF/dbox keys|r", "keys"):PlaceRight(30)
 
   p:addButton("Re Init", "Re initializes like the first time setup.\n|cFF99E5FF/dbox init|r", "init"):Place(0, 12)
   p:addButton("Join", "Attempts to resync the team by\nsending a message requiring reply\n|cFF99E5FF/dbox j|r", "join")
-    :PlaceRight()
-  p:addButton("Ping", "Attempts to resync the team by\nsending a message\n|cFF99E5FF/dbox m|r", "message"):PlaceRight()
+    :PlaceRight(24)
+  p:addButton("Ping", "Attempts to resync the team by\nsending a message\n|cFF99E5FF/dbox m|r", "message"):PlaceRight(24)
 
   local debugLevel = p:addSlider("Debug level", "Sets the debug level\n|cFF99E5FF/dbox debug X|r", 0, 9, 1, "Off")
                        :Place(16, 30)
@@ -581,6 +588,7 @@ function DB:CreateOptionsPanel()
     fullViewButton:SetChecked(DB.watched.fullTeamInfo)
     maxParty:SetValue(DB.maxParty)
     disablePopUps:SetChecked(DB.disablePopUps)
+    disableTooltips:SetChecked(DB.disableTooltips)
   end
 
   function p:HandleOk()
@@ -618,6 +626,7 @@ function DB:CreateOptionsPanel()
     DB:SetSaved("showIdAtStart", idAtStart:GetChecked())
     DB:SetSaved("delayAccept", delayAccept:GetChecked())
     DB:SetSaved("disablePopUps", disablePopUps:GetChecked())
+    DB:SetSaved("disableTooltips", disableTooltips:GetChecked())
     DB:PrintDefault("DynamicBoxer configuration: auto invite is " .. (ainv and "ON" or "OFF") ..
                       " for slot %, auto raid is " .. (raid and "ON" or "OFF") .. " max party is " ..
                       (maxP == 5 and "unlimited" or tostring(maxP)), ainvSlot)
@@ -672,15 +681,16 @@ local slotInfo = function(slot, last)
     fmt = "%02d"
   end
   if not name then
-    return string.format("|cFFFF4C43" .. fmt .. "|r  |cFFF4A042???|r", slot), "" -- "|cFFA040FF?|r"
+    return string.format("|cFFFF4C43" .. fmt .. "|r  |cFFF4A042???|r", slot), "", nil -- "|cFFA040FF?|r"
   end
   local short, realm = DB:SplitFullName(name)
   local color = "40C0FF"
   if realm == DB.myRealm then
     color = "A040FF"
   end
+  --local macro = "/targetexact " .. DB:ShortName(name)
   return string.format("|cFF33E526" .. fmt .. "|r  |cFFF2D80C%s|r", slot, short),
-         string.format("|cFF%s%s|r", color, realm)
+         string.format("|cFF%s%s|r", color, realm), DB:ShortName(name)
 end
 
 --- *** Status and runtime frame *** ---
@@ -766,16 +776,33 @@ function DB:AddPartyLines(f, mySlot)
   local yOffset = 2
   local last = DB.expectedCount
   for i = 1, last do
-    local left, right = slotInfo(i, last)
-    local w = f:addText(left):Place(3, yOffset)
+    local left, right, macro = slotInfo(i, last)
+    local ttip =  L["|cFF99E5FFLeft click|r to target"] ..
+    "\n" .. L["|cFF99E5FFLeft click|r unit menu"]
+    if DB.disableTooltips then
+      ttip = nil
+    end
+    local w = f:addTextButton(left, nil, ttip, nil, "SecureUnitButtonTemplate"):Place(3, yOffset)
+    local wF = w.button
+    _G["DynamicBoxer_Status_Slot_" .. tostring(i)] = w
+    wF.slot = i
+    wF:RegisterForClicks("AnyUp")
+    wF:SetAttribute("*type1", "target")
+    wF:SetAttribute("*type2", "togglemenu")
+    DB:Debug("Setting unit for % to %", i, macro)
+    if macro then
+      wF:SetAttribute("unit", macro)
+    end
     local wR = f:addText(right)
     wR:SetJustifyH("RIGHT")
     wR:SetHeight(wR:GetStringHeight()) -- this is key to prevent multiline / wrapped text; avoids having to do 2 passes
     yOffset = 0
     DB.watched:AddWatch(i, function(k, _v, _oldVal)
-      local l, r = slotInfo(k, last)
+      local l, r, macroI = slotInfo(k, last)
       w:SetText(l)
       wR:SetText(r)
+      wF:SetAttribute("unit", macroI)
+      DB:Debug("Setting unit for % to %", i, macroI)
       f:Snap()
     end)
     if i == mySlot then
@@ -959,7 +986,7 @@ function DB:SetupStatusUI()
   f.defaultTooltipText = heading .. "|cFF99E5FFLeft click|r to invite\n" .. "|cFF99E5FFMiddle|r click to disband\n" ..
                            "|cFF99E5FFRight|r click for options\n\n" .. "Drag the frame to move it anywhere.\n" ..
                            "Mousewheel to resize it\n\n" ..
-                           "Press |cFF99E5FFTAB|r to see large on-screen slot information.\n" ..
+                           "Click slot number see large on-screen slot information.\n" ..
                            "Hold |cFF99E5FFShift|r, |cFF99E5FFControl|r, |cFF99E5FFAlt|r keys for more tips."
   f.tooltipTextMods = {}
   f.tooltipTextMods.LSHIFT = heading .. "|cFF99E5FFShift Left click|r to toggle party/raid\n" ..
@@ -975,34 +1002,22 @@ function DB:SetupStatusUI()
   f.tooltipText = f.defaultTooltipText
   f:SetScript("OnEnter", function()
     -- f:SetPropagateKeyboardInput(false)
-    f:EnableKeyboard(true)
+    -- f:EnableKeyboard(true)
+    DB:Debug("Enter status...")
+    if DB.disableTooltips then
+      return
+    end
     f:RegisterEvent("MODIFIER_STATE_CHANGED")
     DB:ShowToolTip(f)
   end)
   f:SetScript("OnLeave", function()
+    DB:Debug("Leave status...")
     -- f:SetPropagateKeyboardInput(true)
     f:UnregisterEvent("MODIFIER_STATE_CHANGED")
-    f:EnableKeyboard(false)
+    -- f:EnableKeyboard(false)
     GameTooltip:Hide()
-    DB:Debug("Hide tool tip...")
   end)
-  f:SetPropagateKeyboardInput(true)
-  f:SetScript("OnKeyDown", function(w, k)
-    DB:Debug("Onkeydown % % %", w:GetName(), k)
-    if k == "TAB" then
-      DB:ShowBigInfo()
-      w:SetPropagateKeyboardInput(false)
-    else
-      w:SetPropagateKeyboardInput(true)
-    end
-  end)
-  f:SetScript("OnKeyUp", function(w, k)
-    DB:Debug("Onkeyup % % %", w:GetName(), k)
-    if k == "TAB" then
-      DB.bigInfo:Hide()
-    end
-  end)
-  f:EnableKeyboard(false) -- starts off
+  f:EnableKeyboard(false)
   DB:MakeMoveable(f, DB.SavePositionCB)
   f:EnableMouse(true)
   f:EnableMouseWheel(true)
@@ -1022,7 +1037,7 @@ function DB:SetupStatusUI()
     end)
   end)
   f:SetScript("OnMouseUp", function(_w, mod)
-    DB:Debug("Clicked on party size %", mod)
+    DB:Debug("Clicked on dbox window %", mod)
     if mod == "LeftButton" then
       if IsControlKeyDown() then
         DB.Slash("autoinvite toggle")
@@ -1068,7 +1083,11 @@ function DB:SetupStatusUI()
   f:SetAlpha(.75)
   local title = f:addText(self.name, f.font):Place(4, 4) -- that also defines the bottom right padding
   f:addText(" on ", f.font):PlaceRight(0, 0):SetTextColor(0.9, 0.9, 0.9)
-  f.slotNum = f:addText("?", f.font):PlaceRight(0, 0)
+  local ttip = "Identify slot\n|cFF99E5FF/dbox identify|r"
+  if DB.disableTooltips then
+    ttip = nil
+  end
+  f.slotNum = f:addTextButton("?", f.font, ttip,"identify"):PlaceRight(0, 0)
   f.slotNum.slotToText = slotToText
   f.slotNum:slotToText(self.watched.slot)
   DB.watched:AddWatch("slot", function(_k, v, _oldVal)
