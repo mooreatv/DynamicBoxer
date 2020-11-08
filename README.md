@@ -22,6 +22,8 @@ The source of the addon resides at https://github.com/mooreatv/DynamicBoxer
 
 Releases detail/changes are on https://github.com/mooreatv/DynamicBoxer/releases and the ChangeLog.txt
 
+**New** You can now get DynamicBoxer benefits without requiring the use of the banned ISBoxer: just add MAMA: https://www.curseforge.com/wow/addons/mama-multiboxing
+
 ### Q&A
 
 #### Q: What does it do ?
