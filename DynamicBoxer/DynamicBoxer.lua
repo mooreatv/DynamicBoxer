@@ -234,7 +234,7 @@ function DB:ManualExtendTeam(oldSize, newSize)
   end
   DB.manualTeamSize = newSize
   DB.expectedCount = newSize
-  DB:AddTeamStatusUI(DB.statusFrame)
+  DB:AddTeamStatusUI(DB.statusFrame, true)
 end
 
 function DB:ManualSetup()

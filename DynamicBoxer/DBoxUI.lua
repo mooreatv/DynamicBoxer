@@ -699,21 +699,23 @@ DB.statusUp = false
 
 DB.watched.fullTeamInfo = true
 
-function DB:AddTeamStatusUI(f)
+function DB:AddTeamStatusUI(f, force)
   if not f then
     return
   end
-  if DB.expectedCount <= 0 or DB.statusUp then
+  if (DB.expectedCount <= 0 or DB.statusUp) and not force then
     DB:RestorePosition(f, DB.statusPos, DB.statusScale)
     return -- already done
   end
   DB.statusUp = true
   -- save state of first line done
-  DB.statusXn = f.numObjects
-  DB.statusXa = f.lastAdded
-  DB.statusXl = f.lastLeft
-  DB.statusXm = f.leftMargin
-  DB:RestorePosition(f, DB.statusPos, DB.statusScale)
+  if not DB.statusXn then
+    DB.statusXn = f.numObjects
+    DB.statusXa = f.lastAdded
+    DB.statusXl = f.lastLeft
+    DB.statusXm = f.leftMargin
+    DB:RestorePosition(f, DB.statusPos, DB.statusScale)
+  end
   local viewSelect = function(_k, v, _oldVal)
     -- remove current lower status
     for i = #f.children, DB.statusXn + 1, -1 do
@@ -1003,7 +1005,7 @@ function DB:SetupStatusUI()
   f:SetScript("OnEnter", function()
     -- f:SetPropagateKeyboardInput(false)
     -- f:EnableKeyboard(true)
-    DB:Debug("Enter status...")
+    DB:Debug(8, "Enter status...")
     if DB.disableTooltips then
       return
     end
@@ -1011,7 +1013,7 @@ function DB:SetupStatusUI()
     DB:ShowToolTip(f)
   end)
   f:SetScript("OnLeave", function()
-    DB:Debug("Leave status...")
+    DB:Debug(8, "Leave status...")
     -- f:SetPropagateKeyboardInput(true)
     f:UnregisterEvent("MODIFIER_STATE_CHANGED")
     -- f:EnableKeyboard(false)

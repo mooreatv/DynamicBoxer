@@ -4,6 +4,12 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.00.00 November 8th 2020
+- Support for MAMA so DynamicBoxer features can be used without requiring ISBoxer
+  Get MAMA at https://www.curseforge.com/wow/addons/mama-multiboxing
+  to manually set your slot # once in its config and enjoy the rest of the Dbox features
+  as well as additional Mama features like follow me, lead change etc
+
 v2.14.00 Oct 24th 2020
 - Change to the status frame:
   - the slot number is clickable to get the identify window
