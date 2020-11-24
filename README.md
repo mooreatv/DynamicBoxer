@@ -2,7 +2,12 @@
 
 # DynamicBoxer
 
-The way [ISBoxer](http://isboxer.com/wiki/WoW:Quicker_Start_Guide?from=DynamicBoxer) works currently
+DynamicBoxer now works without ISBoxer (which is banned from WoW) thanks to [MAMA](https://www.curseforge.com/wow/addons/mama-multiboxing) and even better when using the only and best (and compliant with blizzard's rules) multiboxing software [www.WowOpenBox.org](https://www.WowOpenBox.org).
+
+
+Older information:
+
+The way ISBoxer works currently
 is you need to go back outside of the game into the windows isboxer suite program each time you want
 to create a new character or change whichever combination of characters you may want to be multi-boxing
 with at the time.
