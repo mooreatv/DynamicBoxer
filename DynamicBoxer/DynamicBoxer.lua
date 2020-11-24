@@ -1306,6 +1306,10 @@ DB.EventHdlrs = {
       self.savedVar = dynamicBoxerSaved -- by ref
       -- always clear the one time log
       dynamicBoxerSaved.debugLog = {}
+      -- Merge in WowOpenBox settings
+      if DB.WOB and DB.WOB.savedVar then
+        DB:deepmerge(dynamicBoxerSaved, nil, DB.WOB.savedVar)
+      end
       if not dynamicBoxerSaved.configVersion or dynamicBoxerSaved.configVersion ~= DB.configVersion then
         -- Support conversion from 1 to 2 etc...
         DB:Error(

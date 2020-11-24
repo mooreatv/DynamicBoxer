@@ -29,3 +29,6 @@ elseif SetCVar then
   -- classic version
   SetCVar("scriptErrors", 1)
 end
+
+-- WowOpenBox
+DB.WOB = _G.WowOpenBox

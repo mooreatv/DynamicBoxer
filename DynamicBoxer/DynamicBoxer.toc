@@ -1,16 +1,16 @@
 #@retail@
-## Interface: 90001
+## Interface: 90002
 #@end-retail@
 #@non-retail@
 # ## Interface: 11305
 #@end-non-retail@
 ## Title: DynamicBoxer
-## Notes: Augments ISBoxer to manage multiboxing teams dynamically
+## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
 ## Author: MooreaTV moorea@ymail.com
 ## Version: @project-version@
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
-## OptionalDeps: ISBoxer, EMA, EMA-Classic, Jamba
+## OptionalDeps: WowOpenBox, ISBoxer, EMA, EMA-Classic, Jamba
 ## SavedVariables: dynamicBoxerSaved
 ## Globe: check-classic
 MoLib/MoLib.lua

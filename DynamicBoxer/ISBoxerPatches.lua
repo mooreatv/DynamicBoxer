@@ -5,8 +5,14 @@
 -- Created by DBoxInit
 local DB = DynBoxer
 
+if DB.WOB then
+  DB:PrintDefault("Congratulations on using www.WowOpenBox.org instead of ISBoxer!")
+  isboxer = {}
+  return
+end
+
 if not isboxer then
-  DB:Warning("ISBoxer is not present, install and configure MAMA or expect much limited/reduced functionality!")
+  DB:Warning("ISBoxer is not present, install and configure MAMA, use www.WowOpenBox.org or expect much limited/reduced functionality!")
   isboxer = {}
   return
 end

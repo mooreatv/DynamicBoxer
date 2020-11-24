@@ -4,6 +4,11 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.01.00 November 24th 2020
+- Shadowlands TOC update
+- Fix for addon config CheckBoxes 9.0.2 SetValue error (fix in MoLib)
+- Prepare for https://www.WowOpenBox.org/ the only free open-source wow multiboxing software.
+
 v3.00.00 November 8th 2020
 - Support for MAMA so DynamicBoxer features can be used without requiring ISBoxer
   Get MAMA at https://www.curseforge.com/wow/addons/mama-multiboxing
