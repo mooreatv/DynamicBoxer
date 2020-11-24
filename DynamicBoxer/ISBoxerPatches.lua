@@ -12,7 +12,8 @@ if DB.WOB then
 end
 
 if not isboxer then
-  DB:Warning("ISBoxer is not present, install and configure MAMA, use www.WowOpenBox.org or expect much limited/reduced functionality!")
+  DB:Warning("ISBoxer is not present, install and configure MAMA," ..
+    " use www.WowOpenBox.org or expect much limited/reduced functionality!")
   isboxer = {}
   return
 end
