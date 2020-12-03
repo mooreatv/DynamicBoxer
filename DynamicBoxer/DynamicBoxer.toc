@@ -2,7 +2,7 @@
 ## Interface: 90002
 #@end-retail@
 #@non-retail@
-# ## Interface: 11305
+# ## Interface: 11306
 #@end-non-retail@
 ## Title: DynamicBoxer
 ## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
@@ -13,6 +13,9 @@
 ## OptionalDeps: WowOpenBox, ISBoxer, EMA, EMA-Classic, Jamba
 ## SavedVariables: dynamicBoxerSaved
 ## Globe: check-classic
+## X-OpenSource-License: LPGLv3
+## X-OpenSource-Releases: https://github.com/mooreatv/DynamicBoxer/releases
+## X-Curse-Project-ID: 323794
 MoLib/MoLib.lua
 MoLib/MoLibUI.lua
 MoLib/Realms.lua

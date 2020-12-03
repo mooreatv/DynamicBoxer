@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.01.02 December 2nd 2020
+- Classic 1.13.06 and TOC addition for other addon managers
+
 v3.01.01 November 24th 2020
 - Shadowlands TOC update
 - Fix for addon config CheckBoxes 9.0.2 SetValue error (fix in MoLib)
