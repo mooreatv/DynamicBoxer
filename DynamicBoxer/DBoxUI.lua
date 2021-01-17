@@ -59,11 +59,11 @@ function DB.OnSetupUIAccept(widget, data, data2)
   widget.editBox:SetMaxLetters(0)
   widget:Hide()
   DB.inUI = false
-  if DB.MasterToken == token and DB.watched.enabled then
+  if DB.MasterToken == token and DB.watched.enabled and not DB.newToken then
     DB:Debug("Exact same token set, done with setup")
     return
   end
-  DB:SetSaved("MasterToken", token)
+  DB:SaveMasterToken(token)
   DB.Channel = tok1
   DB.Secret = tok2
   DB.MasterName = masterName
@@ -117,12 +117,14 @@ function DB.OnMasterUIShow(widget, data)
     if DB:WeAreMaster() then
       widget.button3:Disable() -- remove Cancel on master as there is nothing to cancel
     end
+    DB.newToken = false
   else
     -- we are generating a new token, we are the master
     masterName = DB.fullName
     tok1 = DB:RandomId(DB.randomIdLen)
     tok2 = DB:RandomId(DB.randomIdLen)
     widget.button2:Enable()
+    DB.newToken = true
   end
   local newText = DB:CreateToken(masterName, tok1, tok2)
   e:SetText(newText)
@@ -246,7 +248,11 @@ function DB:ParseToken(token)
 end
 
 function DB:CreateToken(masterName, tok1, tok2)
-  return self:AddHashKey(masterName .. " " .. tok1 .. " " .. tok2 .. " ")
+  local token = self:AddHashKey(masterName .. " " .. tok1 .. " " .. tok2 .. " ")
+  if not DB.MasterToken or #DB.MasterToken == 0 then
+    DB:SaveMasterToken(token)
+  end
+  return token
 end
 
 DB.inUI = false
@@ -525,7 +531,7 @@ function DB:CreateOptionsPanel()
       value = "reset all"
     }, {
       text = "Reset Team",
-      tooltip = "Reset the isboxer team detection\n(for next login)\n|cFF99E5FF/dbox reset teams|r",
+      tooltip = "Reset the (isboxer) team detection\n(for next login)\n|cFF99E5FF/dbox reset teams|r",
       value = "reset teams"
     }, {
       text = "Reset Token",

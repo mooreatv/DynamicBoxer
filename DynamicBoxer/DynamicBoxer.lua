@@ -246,7 +246,11 @@ function DB:ManualSetup()
     DB.manualTeamSize = math.max(2, DB.manual)
     DB:Debug("Guessing manual team size = %", DB.manualTeamSize)
   end
-  DB:Warning("Manual mode, no isboxer binding, simulating slot % / %", DB.manual, DB.manualTeamSize)
+  if _G["Mama"] then
+    DB:PrintDefault("DynamicBoxer: Mama mode slot % / %", DB.manual, DB.manualTeamSize)
+  else
+    DB:Warning("Manual mode, no isboxer binding, simulating slot % / %", DB.manual, DB.manualTeamSize)
+  end
   DB.ISBIndex = DB.manual
   DB.watched.slot = DB.ISBIndex
   if DB.manual == 1 then
@@ -282,7 +286,11 @@ function DB:ReconstructTeam()
       DB:Error("Your isboxer.Character.ActualName is not set. please report your config/setup/how to reproduce.")
       return
     end
-    DB:Warning("No isboxer.Character.ActualName but we have manual override for slot %", DB.manual)
+    if _G["Mama"] then
+      DB:PrintDefault("Mama setup detected for slot %.", DB.manual)
+    else
+      DB:Warning("No isboxer.Character.ActualName but we have manual override for slot %", DB.manual)
+    end
   end
   local prev = isboxer.SetMacro
   DB.ISBTeam = {}
@@ -958,7 +966,7 @@ function DB:ProcessMessage(source, from, data)
   local shortName = DB:ShortName(realname)
   -- we should do that after we joined our channel to get a chance to get completion
   if channelMessage and DB.newTeam and (not DB.justInit) and DB:WeAreMaster() and (DB.currentCount < DB.expectedCount) then
-    DB:Warning("New (isboxer) team detected, on master, showing current token")
+    DB:Warning("New team detected, on master, showing current token")
     DB:ShowAutoExchangeTokenUI()
   end
   if idx == DB.ISBIndex then
@@ -1306,16 +1314,16 @@ DB.EventHdlrs = {
       self.savedVar = dynamicBoxerSaved -- by ref
       -- always clear the one time log
       dynamicBoxerSaved.debugLog = {}
-      -- Merge in WowOpenBox settings
-      if DB.WOB and DB.WOB.savedVar then
-        DB:deepmerge(dynamicBoxerSaved, nil, DB.WOB.savedVar)
-      end
       if not dynamicBoxerSaved.configVersion or dynamicBoxerSaved.configVersion ~= DB.configVersion then
-        -- Support conversion from 1 to 2 etc...
+        -- Support conversion from 1 to 2 when we change version etc...
         DB:Error(
           "Invalid/unexpected config version (%, we expect %), sorry conversion not available, starting from scratch!",
           dynamicBoxerSaved.configVersion, DB.configVersion)
       else
+        -- Merge in WowOpenBox settings
+        if DB.WOB and DB.WOB.savedVar then
+          DB:deepmerge(dynamicBoxerSaved, nil, DB.WOB.savedVar)
+        end
         dynamicBoxerSaved.addonVersion = DB.manifestVersion
         dynamicBoxerSaved.addonHash = "@project-abbreviated-hash@"
         local valid, masterName, tok1, tok2 -- start nil
@@ -1352,8 +1360,27 @@ DB.EventHdlrs = {
       end
     end
     -- (re)Init saved vars
-    self:Debug("Initialized empty saved vars")
+    self:PrintDefault("Initialized empty saved vars")
     dynamicBoxerSaved = {}
+    -- Merge in global machine wide settings
+    if DB.GSV and DB.GSV["DynamicBoxer"] then
+      DB:deepmerge(dynamicBoxerSaved, nil, DB.GSV["DynamicBoxer"])
+    end
+    -- Merge in WowOpenBox settings
+    if DB.WOB and DB.WOB.savedVar then
+      DB:deepmerge(dynamicBoxerSaved, nil, DB.WOB.savedVar)
+    end
+    if dynamicBoxerSaved.MasterToken and #dynamicBoxerSaved.MasterToken > 1 then
+      local valid, masterName, tok1, tok2 = DB:ParseToken(dynamicBoxerSaved.MasterToken)
+      if valid then
+        DB.MasterName = masterName
+        DB.Channel = tok1
+        DB.Secret = tok2
+      else
+        dynamicBoxerSaved.MasterToken = nil
+      end
+    end
+    DB:deepmerge(DB, nil, dynamicBoxerSaved)
     self.savedVar = dynamicBoxerSaved -- by ref
     dynamicBoxerSaved.configVersion = DB.configVersion
     dynamicBoxerSaved.debugLog = {}
@@ -1493,12 +1520,22 @@ function DB:SetupChange()
 end
 
 function DB:ForceInit()
+  DB:Debug("ForceInit called")
   DB.watched.enabled = true
   DB:SetupChange()
   DB:ReconstructTeam()
   DB:SetupUI()
   DB.firstDisabledWarning = true
   DB.justInit = true
+end
+
+function DB:SaveMasterToken(token)
+  DB:SetSaved("MasterToken", token)
+  if not DB.GSV["DynamicBoxer"] then
+    DB.GSV["DynamicBoxer"] = {}
+    DB.GSV["DynamicBoxer"]["configVersion"] = DB.configVersion
+  end
+  DB.GSV["DynamicBoxer"]["MasterToken"] = token
 end
 
 function DB:StartBugReport(text)
@@ -1621,6 +1658,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
       end
     elseif rest == "all" then
       dynamicBoxerSaved = nil -- any subsequent DB:SetSaved will fail...
+      DB.GSV["DynamicBoxer"] = nil
       DB:Warning("State all reset per request, please /reload !")
       -- C_UI.Reload() -- in theory we could reload for them but that seems bad form
     else
@@ -1659,7 +1697,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
         DB:Warning("Invalid token set attempt for % !", rest)
       else
         DB:Warning("Valid token, change accepted")
-        DB:SetSaved("MasterToken", rest)
+        DB:SaveMasterToken(rest)
         DB.Channel = tok1
         DB.Secret = tok2
         DB.MasterName = masterName

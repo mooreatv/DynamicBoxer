@@ -6,7 +6,7 @@
 local DB = DynBoxer
 
 if DB.WOB then
-  DB:PrintDefault("Congratulations on using www.WowOpenBox.org instead of ISBoxer!")
+  DB:PrintDefault("Congratulations on using WowOpenBox.org instead of ISBoxer!")
   isboxer = {}
   return
 end

@@ -32,3 +32,5 @@ end
 
 -- WowOpenBox
 DB.WOB = _G.WowOpenBox
+-- Global machine wide SavedVars
+DB.GSV = _G.Blizzard_Console_SavedVars

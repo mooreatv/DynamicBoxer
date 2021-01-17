@@ -494,7 +494,7 @@ function DB:ProcessMessage(source, from, data)
   local shortName = DB:ShortName(realname)
   -- we should do that after we joined our channel to get a chance to get completion
   if channelMessage and DB.newTeam and (not DB.justInit) and DB:WeAreMaster() and (DB.currentCount < DB.expectedCount) then
-    DB:Warning("New (isboxer) team detected, on master, showing current token")
+    DB:Warning("New team detected, on master, showing current token")
     DB:ShowAutoExchangeTokenUI()
   end
   if idx == DB.ISBIndex then
@@ -578,10 +578,10 @@ function DB:ProcessMessage(source, from, data)
     self.ISBO.LoadBinds()
   end
   if previousMapping then
-    DB:PrintInfo("Change of mapping for slot %, dynamically set ISBoxer character to % (%, was % before)", idx,
+    DB:PrintInfo("Change of mapping for slot %, dynamically set Team character to % (%, was % before)", idx,
                  shortName, realname, previousMapping.fullName)
   else
-    DB:PrintInfo("New mapping for slot %, dynamically set ISBoxer character to % (%)", idx, shortName, realname)
+    DB:PrintInfo("New mapping for slot %, dynamically set Team character to % (%)", idx, shortName, realname)
   end
   DB.watched[idx] = realname
   if idx == 1 then
@@ -639,7 +639,7 @@ function DB:Join()
   -- still need to register prefix though because of party/raid chat
   local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
   DB:Debug("Prefix register success % in dynamic setup", ret)
-  DB:PrintInfo(L["DynBoxer running on classic. This is slot % and dynamically setting ISBoxer character to %"],
+  DB:PrintInfo(L["DynBoxer running on classic. This is slot % and dynamically setting Team character to %"],
                DB.ISBIndex, DB.fullName)
   DB.firstMsg = 1
   DB.noMoreExtra = nil
