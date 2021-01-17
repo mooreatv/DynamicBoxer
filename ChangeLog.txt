@@ -4,7 +4,7 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
-v3.02.00 Jan 17th 2021
+v3.02.01 Jan 17th 2021
 - Easier initial setup for additional accounts.
   If you log in your slot 1 first and /reload before starting the other wow, 
   all the other will pickup the machine wide token automatically.
