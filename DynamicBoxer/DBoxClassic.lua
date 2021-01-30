@@ -397,7 +397,7 @@ end
 -- TODO: refactor, this is too long / complicated for 1 function
 function DB:ProcessMessage(source, from, data)
   if not DB.ISBTeam then
-    DB.ISBH.LoadBinds() -- we can get messages events before the normal reconstruct team flow
+    DB:ReconstructTeam() -- we can get messages events before the normal reconstruct team flow
   end
   local doForward = nil
   local channelMessage = (source == "CHANNEL")

@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.02.02 Jan 30th 2021
+- Classic: avoid lua error in early message receive and no isboxer
+
 v3.02.01 Jan 17th 2021
 - Easier initial setup for additional accounts.
   If you log in your slot 1 first and /reload before starting the other wow, 
