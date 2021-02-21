@@ -13,6 +13,9 @@ local L = DB.L
 DB.fontString = DB:CreateFontString() -- used for width calculations
 
 DB.infoTexture = 374216 -- yellow 🛈
+-- Until 3.3 we used pixel sizes which work well for same render size but not
+-- when swapping windows of different sizes. Set to true to revert to old behavior.
+DB.useUIScale = true
 
 -- this file already has widget as "self" so we still use . in the definitions here
 -- for all the On*(widget...)
@@ -453,8 +456,11 @@ function DB:CreateOptionsPanel()
     DB.statusFrame:Snap()
   end
 
+  local useUIScaleButton = p:addCheckBox("Use UI Scale", "Use UI scale instead of fixed pixels size" ..
+                                        "\nfor the status window, uncheck for pre 3.3 behavior."):PlaceRight(20, -6)
+
   local fullViewButton = p:addCheckBox("Full view", "Selects full or compact view\nfor the status window"):PlaceRight(
-                           16, -8)
+                           32)
 
   p:addButton("Reset Window",
               "Resets the DynamicBoxer status window position back to default\n|cFF99E5FF/dbox reset status|r",
@@ -592,6 +598,7 @@ function DB:CreateOptionsPanel()
     autoRaid:SetChecked(DB.autoRaid)
     idAtStart:SetChecked(DB.showIdAtStart)
     fullViewButton:SetChecked(DB.watched.fullTeamInfo)
+    useUIScaleButton:SetChecked(DB.useUIScale)
     maxParty:SetValue(DB.maxParty)
     disablePopUps:SetChecked(DB.disablePopUps)
     disableTooltips:SetChecked(DB.disableTooltips)
@@ -626,6 +633,7 @@ function DB:CreateOptionsPanel()
     DB:SetSaved("autoInviteSlot", ainvSlot)
     local raid = autoRaid:GetChecked()
     DB:SetWatchedSaved("fullTeamInfo", fullViewButton:GetChecked())
+    DB:SetSaved("useUIScale", useUIScaleButton:GetChecked())
     DB:SetSaved("autoRaid", raid)
     local maxP = maxParty:GetValue()
     DB:SetSaved("maxParty", maxP)
@@ -1032,9 +1040,9 @@ function DB:SetupStatusUI()
   f.mouseWheelTimer = nil
   f:SetScript("OnMouseWheel", function(_w, direction)
     if direction > 0 then
-      f:ChangeScale(f:GetScale() * 1.05)
+      f:ChangeScale(f:GetScale()/DB:ScaleAdjustment() * 1.05)
     else
-      f:ChangeScale(f:GetScale() * .95)
+      f:ChangeScale(f:GetScale()/DB:ScaleAdjustment() * .95)
     end
     -- don't keep saving, only when adjustments quiet down
     if f.mouseWheelTimer then
