@@ -4,6 +4,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.03.01 March 9th 2021
+- Retail/Shadowlands TOC update. Continue to use MAMA and its new /click MamaAssist
+  to use DynamicBoxer
+
 v3.03.00 Feb 21st 2021
 - New behavior during change of resolution/wow window resize: until this version
   the DynamicBoxer/Mama window would keep the exact same pixel size; it now varies in
