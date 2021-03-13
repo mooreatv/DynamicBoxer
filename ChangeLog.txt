@@ -4,6 +4,11 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.03.02 March 13th 2021
+- Eliminate EMA api errors causing MAMA/DynamicBoxer to get stuck not completing
+  the team (work around for https://github.com/ebonyfaye/ema-classic/issues/2
+  by doing the EMA api last instead of in the middle of Dbox logic)
+
 v3.03.01 March 9th 2021
 - Retail/Shadowlands TOC update. Continue to use MAMA and its new /click MamaAssist
   to use DynamicBoxer

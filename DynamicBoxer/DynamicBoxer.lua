@@ -1025,14 +1025,6 @@ function DB:ProcessMessage(source, from, data)
     DB:Debug("Slot % not inviting slot % - auto inv slot is %, auto invite is %", DB.ISBIndex, idx, DB.autoInviteSlot,
              DB.autoInvite)
   end
-  if EMAApi then
-    DB:Debug(">>>Calling ema AddMember %", realname)
-    EMAApi.AddMember(realname)
-  end
-  if DB.Jamba then
-    DB:Warning(">>>Calling Jamba AddMember %", realname)
-    DB.Jamba:AddMemberCommand(nil, realname)
-  end
   local oldCount = DB.currentCount
   DB.currentCount = DB:SortTeam()
   local teamComplete = (DB.currentCount >= DB.expectedCount and DB.currentCount ~= oldCount)
@@ -1061,11 +1053,19 @@ function DB:ProcessMessage(source, from, data)
     DB:AddToMembersHistory(realname)
   end
   if teamComplete then
-    DB:TeamIsComplete() -- will also do OtherAddonsSync so we can return here
-    return
+    DB:TeamIsComplete()
+  end
+  -- Avoid that EMA/... bugs break us so we do this last
+  if EMAApi then
+    DB:Debug(">>>Calling ema AddMember %", realname)
+    EMAApi.AddMember(realname)
+  end
+  if DB.Jamba then
+    DB:Debug(">>>Calling Jamba AddMember %", realname)
+    DB.Jamba:AddMemberCommand(nil, realname)
   end
   -- lastly once we have the full team (and if it changes later), set the EMA team to match the slot order, if EMA is present:
-  if DB.currentCount == DB.expectedCount then
+  if DB.currentCount == DB.expectedCount or teamComplete then
     DB:OtherAddonsSync()
   end
 end
@@ -1076,7 +1076,6 @@ function DB:TeamIsComplete()
   DB.needRaid = false
   DB.teamComplete = true
   DB:HideTokenUI()
-  DB:OtherAddonsSync()
 end
 
 function DB:OtherAddonsSync()
@@ -1626,6 +1625,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
         DB:Warning("Forcing team to be complete while slots are missing")
       end
       DB:TeamIsComplete()
+      DB:OtherAddonsSync()
       return
     end
     DB:Help("Unknown team command")
