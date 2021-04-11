@@ -397,7 +397,12 @@ end
 -- TODO: refactor, this is too long / complicated for 1 function
 function DB:ProcessMessage(source, from, data)
   if not DB.ISBTeam then
-    DB:ReconstructTeam() -- we can get messages events before the normal reconstruct team flow
+    -- we can get messages events before the normal reconstruct team flow
+    -- but sometimes too early to get player faction for instance
+    if not DB:ReconstructTeam() then
+      DB:Debug(1, "Skipping early message % % %", source, from, data)
+      return
+    end
   end
   local doForward = nil
   local channelMessage = (source == "CHANNEL")

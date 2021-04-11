@@ -265,26 +265,30 @@ function DB:ReconstructTeam()
   if DB.ISBTeam then
     DB:Debug(3, "Already know team to be % and my index % (isb members %)", DB.ISBTeam, DB.ISBIndex,
              isboxer.CharacterSet and isboxer.CharacterSet.Members)
-    return
+    return true
   end
   DB.fullName = DB:GetMyFQN()
   DB.faction = UnitFactionGroup("player")
+  if not DB.faction then
+    DB:Warning("Unexpected nil faction %", DB.fullName)
+    return false
+  end
   DB.shortName, DB.myRealm = DB:SplitFullName(DB.fullName)
   if not DB.watched.enabled then
     DB:Warning("Not enabled, not doing any mapping")
-    return
+    return false
   end
   DB.SortedTeam = {}
   if not DB:IsActive() then
     DB:PrintDefault(
       "DynamicBoxer skipping team reconstruction as there is no isboxer team (not running under innerspace).")
-    return
+    return false
   end
   local searchingFor = DB.originalSlotName or isboxer.Character and isboxer.Character.ActualName
   if not searchingFor or #searchingFor == 0 then
     if DB.manual <= 0 then
       DB:Error("Your isboxer.Character.ActualName is not set. please report your config/setup/how to reproduce.")
-      return
+      return false
     end
     if _G["Mama"] then
       DB:PrintDefault("Mama setup detected for slot %.", DB.manual)
@@ -333,7 +337,7 @@ function DB:ReconstructTeam()
     DB:Error("Problem identifying this character isboxer.Character.ActualName=% " ..
                "in the isboxer macro FTLAssist=% - make sure all chars have FTL modifier or report this problem with /dbox bug",
              searchingFor, DB.ISBAssistMacro)
-    return
+    return false
   end
   DB:Debug("Found isbteam to be % and my index % (while isb members is %)", DB.ISBTeam, DB.ISBIndex,
            isboxer.CharacterSet and isboxer.CharacterSet.Members)
@@ -376,6 +380,7 @@ function DB:ReconstructTeam()
     EMAApi.AddMember(DB.fullName)
     DB:Debug("Cleared EMA team, set team to %", DB.fullName)
   end
+  return true
 end
 
 DB.crossRealmMaster = nil
@@ -863,7 +868,12 @@ DB.firstDisabledWarning = true
 -- TODO: refactor, this is too long / complicated for 1 function
 function DB:ProcessMessage(source, from, data)
   if not DB.ISBTeam then
-    DB:ReconstructTeam() -- we can get messages events before the normal reconstruct team flow
+    -- we can get messages events before the normal reconstruct team flow
+    -- but sometimes too early to get player faction for instance
+    if not DB:ReconstructTeam() then
+      DB:Debug(1, "Skipping early message % % %", source, from, data)
+      return
+    end
   end
   local doForward = nil
   local channelMessage = (source == "CHANNEL")
