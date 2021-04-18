@@ -224,8 +224,8 @@ function DB.Sync() -- called as ticker so no :
     return
   end
   local now = GetTime() -- higher rez than seconds
-  local payload = DB:InfoPayload(DB.ISBIndex, DB.firstMsg, DB.syncNum)
-   -- send info to guild, party and say
+  local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
+  -- send info to guild, party and say
   local ret = DB:SendMyInfo()
   -- check the master isn't from another faction
   -- redundant check but we can (and used to) have WeAreMaster true because of slot1/index
@@ -238,7 +238,7 @@ function DB.Sync() -- called as ticker so no :
       DB.maxIter = DB.maxIter + 1
     else
       DB:Debug("Classic sync and team incomplete/master unknown, pinging master % - %", DB.MasterName, DB.Team[1])
-      DB:SendDirectMessage(DB.MasterName, payload)
+      DB:SendDirectMessage(DB.MasterName, firstPayload)
       if DB.firstMsg == 1 and DB.maxIter <= 0 then
         DB:Debug("Classic sync, first time, increasing msg sync to 2 more")
         -- we have to sync twice to complete the team (if all goes well, but it's faster with party invite)
@@ -247,7 +247,6 @@ function DB.Sync() -- called as ticker so no :
       -- on last attempt [TODO: split channel retries from this], also ping some older/previous masters for our faction
       if DB.maxIter == 0 then
         local maxOthers = 3
-        local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
         for v in DB.masterHistory[DB.faction]:iterateNewest() do
           DB:Debug("Checking % for next xrealm attempt (mastername %) samerealm %", v, DB.MasterName,
                    DB:SameRealmAsUs(v))
@@ -301,12 +300,8 @@ function DB.Sync() -- called as ticker so no :
           DB:Debug("% sec later we have a team complete %", delay, DB.teamComplete)
           return
         end
-        if DB.lastDirectMessage and (now <= DB.lastDirectMessage + DB.refresh) then
-          DB:Debug("Will postpone pinging master because we received a msg recently")
-        end
         if DB.Team[1] then
           DB:PrintDefault("Team not yet complete after %s, sending 1 extra re-sync", delay)
-          local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
           DB:SendDirectMessage(DB.Team[1].fullName, firstPayload)
         else
           DB:Warning("No team / no master response after % sec, please fix slot 1 and/or paste token", delay)
@@ -422,7 +417,9 @@ function DB:ProcessMessage(source, from, data)
       isDup = true
     end
     DB.duplicateMsg:add(msgId)
-    DB.lastDirectMessage = GetTime()
+    if directMessage then
+      DB.lastDirectMessage = GetTime()
+    end
     if isDup then
       DB:DebugLogWrite(msgId .. " : From: " .. from .. "  DUP : " .. msg .. " (lag " .. tostring(lag) .. ")")
       return

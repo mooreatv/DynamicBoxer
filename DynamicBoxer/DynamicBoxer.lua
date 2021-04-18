@@ -269,6 +269,7 @@ function DB:ReconstructTeam()
   end
   DB.fullName = DB:GetMyFQN()
   DB.faction = UnitFactionGroup("player")
+  DB:Debug("Our faction is %", DB.faction)
   if not DB.faction then
     DB:Warning("Unexpected nil faction %", DB.fullName)
     return false
@@ -630,9 +631,6 @@ function DB.Sync() -- called as ticker so no :
           DB:Debug("% sec later we have a team complete %", delay, DB.teamComplete)
           return
         end
-        if DB.lastDirectMessage and (now <= DB.lastDirectMessage + DB.refresh) then
-          DB:Debug("Will postpone pinging master because we received a msg recently")
-        end
         if DB.Team[1] then
           DB:PrintDefault("Team not yet complete after %s, sending 1 extra re-sync", delay)
           local firstPayload = DB:InfoPayload(DB.ISBIndex, 1, DB.syncNum)
@@ -894,7 +892,9 @@ function DB:ProcessMessage(source, from, data)
         isDup = true
       end
       DB.duplicateMsg:add(msgId)
-      DB.lastDirectMessage = GetTime()
+      if directMessage then
+        DB.lastDirectMessage = GetTime()
+      end
       if isDup then
         DB:DebugLogWrite(msgId .. " : From: " .. from .. "  DUP : " .. msg .. " (lag " .. tostring(lag) .. ")")
         return

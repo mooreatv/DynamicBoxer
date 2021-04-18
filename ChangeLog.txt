@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.04.00 April 17th 2021
+- (Classic) If slot 1 is not in guild but others are, sync out of say range would not always work
+
 v3.03.03 April 11th 2021
 - Avoid error with nil faction and race condition when receiving messages too early
 
