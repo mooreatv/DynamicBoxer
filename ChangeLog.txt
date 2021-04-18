@@ -4,6 +4,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.04.01 April 18th 2021
+- Implemented #81 (in MoLib): help message is output as individual chat entries so it can be scrolled
+  back properly
+
 v3.04.00 April 17th 2021
 - (Classic) If slot 1 is not in guild but others are, sync out of say range would not always work
 
