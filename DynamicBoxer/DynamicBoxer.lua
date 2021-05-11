@@ -1270,6 +1270,10 @@ DB.EventHdlrs = {
 
   PARTY_INVITE_REQUEST = function(self, ev, from, ...)
     self:DebugEvCall(1, ev, from, ...)
+    if not DB.myRealm then
+      DB:Debug("Early invite, ignoring")
+      return
+    end
     local n = DB:NormalizeName(from) -- invite from same realm will have the realm missing in from
     if n == DB.MasterName then
       DB:PrintDefault("Auto accepting invite from current master % (%)", from, n)

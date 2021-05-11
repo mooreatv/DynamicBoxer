@@ -1,6 +1,7 @@
 ## Interface: 11307
 ## Title: DynamicBoxer
-## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r) - Classic (Era)
+## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
+## Notes: Classic (era) edition
 ## Author: MooreaTV moorea@ymail.com
 ## Version: @project-version@
 ## DefaultState: Enabled

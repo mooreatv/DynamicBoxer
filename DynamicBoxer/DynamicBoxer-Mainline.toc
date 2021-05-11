@@ -1,6 +1,7 @@
 ## Interface: 90005
 ## Title: DynamicBoxer
-## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r) - Mainline
+## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
+## Notes: Shadowlands edition
 ## Author: MooreaTV moorea@ymail.com
 ## Version: @project-version@
 ## DefaultState: Enabled

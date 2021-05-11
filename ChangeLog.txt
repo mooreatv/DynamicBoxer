@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.05.01 May 11th 2021
+- Avoid lua error when invite comes in before setup is done.
+
 v3.05.00 May 10th 2021
 - Support for Burning Crusade Classic (through MoLib v8)
 - Added -Classic, -BCC, -Mainline TOCs

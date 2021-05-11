@@ -1,6 +1,7 @@
 ## Interface: 20501
 ## Title: DynamicBoxer
-## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r) - Burning Crusade Classic
+## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
+## Notes: Burning Crusade Classic edition
 ## Author: MooreaTV moorea@ymail.com
 ## Version: @project-version@
 ## DefaultState: Enabled
