@@ -1,0 +1,23 @@
+## Interface: 11307
+## Title: DynamicBoxer
+## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r) - Classic (Era)
+## Author: MooreaTV moorea@ymail.com
+## Version: @project-version@
+## DefaultState: Enabled
+## LoadOnDemand: 0
+## OptionalDeps: WowOpenBox, ISBoxer, EMA, EMA-Classic, Jamba
+## SavedVariables: dynamicBoxerSaved
+## Globe: check-classic
+## X-OpenSource-License: LPGLv3
+## X-OpenSource-Releases: https://github.com/mooreatv/DynamicBoxer/releases
+## X-Curse-Project-ID: 323794
+MoLib/MoLib.lua
+MoLib/MoLibUI.lua
+MoLib/Realms.lua
+MoLib/MoLibConv.lua
+DBoxInit.lua
+ISBoxerPatches.lua
+DynamicBoxer.lua
+DBoxClassic.lua
+DBoxUI.lua
+DBoxChat.lua

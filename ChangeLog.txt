@@ -4,6 +4,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.05.00 May 10th 2021
+- Support for Burning Crusade Classic (through MoLib v8)
+- Added -Classic, -BCC, -Mainline TOCs
+
 v3.04.02 April 21st 2021
 - Bump classic TOC for 1.13.7
 
@@ -37,7 +41,7 @@ v3.02.02 Jan 30th 2021
 
 v3.02.01 Jan 17th 2021
 - Easier initial setup for additional accounts.
-  If you log in your slot 1 first and /reload before starting the other wow, 
+  If you log in your slot 1 first and /reload before starting the other wow,
   all the other will pickup the machine wide token automatically.
 
 v3.01.02 December 2nd 2020
@@ -173,7 +177,7 @@ v2.05.00 Aug 11th 2019
 v2.04.01 Aug 9th 2019
 - Pick up wow classic fix from MoLib for bug report and keybinds frame
 v2.04.00 Aug 7th 2019
-- Added Jamba support (DynamicBoxer will auto set your Jamba team like 
+- Added Jamba support (DynamicBoxer will auto set your Jamba team like
   it has been doing for your EMA team so far)
 - Fixed typo in invite code (only affecting debug-ish printing)
 
@@ -239,7 +243,7 @@ v2.00.01 July 17th 2019
 - Moved both of these ^ to the same line as slot #
 - Fixed up size/border calculation (border is % of height and width instead of fixed)
 - Fix for rare case of lua error when getting a whisper without isboxer team. (Issue #56)
-- Moved (more) reusable code to MoLib 6.00.xx 
+- Moved (more) reusable code to MoLib 6.00.xx
   (including greatly simplified addTexture and no manual hack for offset)
 - (minor) Added special case of "1" offset in the font we are using it isn't centered otherwise
 - (minor) Changed max slider scale to 2.5
@@ -250,7 +254,7 @@ v2.00.01 July 17th 2019
 
 1.9.8 July 15th 2019
 - Status window size can be change with mousewheel (and saved like the position), also changeable
-  (better if broadcasting to all windows to sync the size for later mouse broadcasts) using 
+  (better if broadcasting to all windows to sync the size for later mouse broadcasts) using
   the options menu. Quite some work to get cancel to restore previous scale etc.
 - Fixed issue with enabled/disabled flow (some use of old variable weren't renamed to the new watched one)
 
@@ -261,7 +265,7 @@ v2.00.01 July 17th 2019
 - Handle "Escape"/Cancel from the token UI popup such as it won't pop again automatically after that
   (until you explicitly ask for it eg `/dbox x` or the mouse/key bindings for it)
 - Added `/dbox team complete` to force a team to be marked as complete despite missing slots
-  (for instance if you log only 3 out of your usual 5 characters and want to sync the shorter 
+  (for instance if you log only 3 out of your usual 5 characters and want to sync the shorter
   EMA team anyway). Also bound to control-middle click on the status frame. (Issue #44)
 
 1.9.6 July 13 2019
@@ -276,7 +280,7 @@ v2.00.01 July 17th 2019
 
 1.9.5 July 12 2019
 - Added tooltip for status frame (Issue #46)
-- New (discoverable) Ctrl-Click for toggle autoinvite and Shift-Click to 
+- New (discoverable) Ctrl-Click for toggle autoinvite and Shift-Click to
   convert to raid/party toggle (and new `/dbox party toggle`)
   Alt-click to send a re-sync message (`dbox join`)
 - Very very nice (if I may say so) window/slot info display when hitting tab
@@ -286,7 +290,7 @@ v2.00.01 July 17th 2019
 - Fixed masterName->MasterName typo. Who doesn't love runtime errors like
   that... that could be detected by a compiler
 1.9.3 July 11th 2019 - aka 3rd time's the charm : nope
-- All the cross realm master memory refactoring was broken for the 
+- All the cross realm master memory refactoring was broken for the
   simple case of entering a token for a new master (!) (need automated test case/regression testing!)
 1.9.2 July 11th 2019 - bad release
 - Put our frame higher on the stack, and about midway to the right instead of just centered
@@ -301,7 +305,7 @@ v2.00.01 July 17th 2019
   (unless it's the first msg) and don't show the xchgUI in that case
 - Changes to cross realm retry/sync/master attempts
 1.9.1 July 9th 2019 - bad release
-- Now try the 4 most recent masters per faction for cross realm syncing, 
+- Now try the 4 most recent masters per faction for cross realm syncing,
   this should all but eliminate the need for `/dbox xchg` (Issue #23)
   Also fixed case where on /reload the cross realm masters weren't tried.
 
@@ -313,7 +317,7 @@ v2.00.01 July 17th 2019
 
 1.8.7 July 8th 2019
 - Better detection of character not found / unexpected isboxer config. (Fix for #42)
-- Only test for 1 channel (from 2 before) before joining ours (as non en locale client 
+- Only test for 1 channel (from 2 before) before joining ours (as non en locale client
   on en servers only get LFG for instance)
 
 1.8.6 July 8th 2019
@@ -321,7 +325,7 @@ v2.00.01 July 17th 2019
 
 1.8.5 July 7th 2019
 - Fix issue #36: if an addon took /1 (like elvui) or you deleted /1, dynamic boxer would wait forever
-for it to show up. Now we use a better check for std channels and give up after 1 minute 
+for it to show up. Now we use a better check for std channels and give up after 1 minute
 (to let new characters cinematic end) with an error, please report it if you see that warning
 
 1.8.4 July 7th 2019
@@ -448,9 +452,9 @@ for it to show up. Now we use a better check for std channels and give up after 
 - adding `/dbox show` to show the current master token (Issue #16)
 - adding `/dbox reset` to clear all saved variables (start from scratch) this has similar effect to prexisting /dbox init but
   allows to completely clear all state (follow with /reload for it to take effect)
-- removed `/dbox channel` and `/dbox secret` as the token is now handled through ui; adding `/dbox set` to 
+- removed `/dbox channel` and `/dbox secret` as the token is now handled through ui; adding `/dbox set` to
   set token string from the command line instead of the UI (but /dbox show/init is better)
-- Master automatically enables "show token" (/dbox show) when it detects a change in team, 
+- Master automatically enables "show token" (/dbox show) when it detects a change in team,
   so you can add members/copy existing token. Issue #17.
   And it automatically closes it once the team is complete !
   (broadcast the existing since 1.0 `/dbox init` if you want to change tokens across windows instead of reuse the last one)
