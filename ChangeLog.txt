@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.05.02 June 29th 2021
+- Update TOC for ShadowLands 9.1 (Chains of Domination)
+
 v3.05.01 May 11th 2021
 - Avoid lua error when invite comes in before setup is done.
 
