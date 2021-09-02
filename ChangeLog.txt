@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.05.03 Sept 2nd 2021
+- Update TOC for Burning Crusade 2.5.2
+
 v3.05.02 June 29th 2021
 - Update TOC for ShadowLands 9.1 (Chains of Domination)
 
