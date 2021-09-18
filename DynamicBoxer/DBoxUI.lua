@@ -794,7 +794,7 @@ function DB:AddPartyLines(f, mySlot)
   for i = 1, last do
     local left, right, macro = slotInfo(i, last)
     local ttip =  L["|cFF99E5FFLeft click|r to target"] ..
-    "\n" .. L["|cFF99E5FFLeft click|r unit menu"]
+    "\n" .. L["|cFF99E5FFRight click|r unit menu"]
     if DB.disableTooltips then
       ttip = nil
     end
@@ -974,6 +974,7 @@ function DB:SetupStatusUI()
   end
   local f = DB:Frame("DynamicBoxer_Status", "DynamicBoxer_Status")
   DB.statusFrame = f
+  f.isCombatFrame = true
   f:SetFrameStrata("FULLSCREEN")
   f.Modifiers = {}
   f:SetScript("OnEvent", function(w, _ev, key, state)
@@ -1039,6 +1040,9 @@ function DB:SetupStatusUI()
   f:EnableMouseWheel(true)
   f.mouseWheelTimer = nil
   f:SetScript("OnMouseWheel", function(_w, direction)
+    if InCombatLockdown() then
+      return
+    end
     if direction > 0 then
       f:ChangeScale(f:GetScale()/DB:ScaleAdjustment() * 1.05)
     else

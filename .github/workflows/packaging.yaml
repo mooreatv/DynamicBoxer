@@ -28,8 +28,8 @@ jobs:
          CF_API_KEY: ${{ secrets.CF_API_KEY }}
          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
          WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
-      - name: Create Classic Package
-        run: ./release.sh -m pkgmeta.yaml -g 1.13.7 -p 323794
+      - name: Create BCC Classic Package
+        run: ./release.sh -m pkgmeta.yaml -g 2.5.2 -p 323794
         env:
          CF_API_KEY: ${{ secrets.CF_API_KEY }}
          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}

@@ -70,6 +70,7 @@ globals = {
     "UnitIsInMyGuild",
     "IsInGuild",
     "TargetUnit",
+    "InCombatLockdown",
 }
 max_line_length = 132
 ignore = {

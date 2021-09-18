@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.06.00 Sept 18th 2021
+- Avoid error from resize in combat (support for checking InCombatLockdown() also in molib 8.1)
+
 v3.05.03 Sept 2nd 2021
 - Update TOC for Burning Crusade 2.5.2
 
