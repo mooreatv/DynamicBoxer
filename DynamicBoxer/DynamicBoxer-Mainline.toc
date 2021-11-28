@@ -1,7 +1,7 @@
-## Interface: 90100
+## Interface: 90105
 ## Title: DynamicBoxer
 ## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
-## Notes: Shadowlands Chains of Domination edition
+## Notes: Shadowlands edition
 ## Author: MooreaTV moorea@ymail.com
 ## Version: @project-version@
 ## DefaultState: Enabled

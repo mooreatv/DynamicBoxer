@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.06.01 Nov 28th 2021
+- TOC updates for SoM and SL 9.1.5
+
 v3.06.00 Sept 18th 2021
 - Avoid error from resize in combat (support for checking InCombatLockdown() also in molib 8.1)
 
