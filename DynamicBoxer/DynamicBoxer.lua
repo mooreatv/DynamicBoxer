@@ -1245,7 +1245,7 @@ DB.EventHdlrs = {
 
   GROUP_ROSTER_UPDATE = function(self, ...)
     local num = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME)
-    DB:Debug("Rooster udate, num party %, needRaid %", num, DB.needRaid)
+    DB:Debug("Rooster update, num party %, needRaid %", num, DB.needRaid)
     if DB.numInvitesAdjust and num > DB.numInvites then
       -- only adjust once (player login doesn't have party yet upon real login (vs reload))
       -- don't keep adjusting as we are decrementing numInvites when we uninvite toons
