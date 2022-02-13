@@ -12,6 +12,7 @@
 ## X-OpenSource-License: LPGLv3
 ## X-OpenSource-Releases: https://github.com/mooreatv/DynamicBoxer/releases
 ## X-Curse-Project-ID: 323794
+## X-Wago-ID: VBNBjqNx
 MoLib/MoLib.lua
 MoLib/MoLibUI.lua
 MoLib/Realms.lua

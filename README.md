@@ -18,8 +18,8 @@ Likewise it lets you create new characters and teams dynamically without having 
 
 This is quite important for instance in classic when you can't create your teams ahead of time and want to get going asap with your teams
 
-Get the binary release using curse/twitch client or on 
-https://www.curseforge.com/wow/addons/dynamicboxer or 
+Get the binary release using curse/twitch client or on
+https://www.curseforge.com/wow/addons/dynamicboxer or
 on [WowInterface](https://www.wowinterface.com/downloads/info25009-DynamicBoxer.html)
 
 The source of the addon resides at https://github.com/mooreatv/DynamicBoxer
@@ -53,7 +53,7 @@ A bunch of small utility things (and I can add more of you ask):
 
 #### Q: How big/complicated is the setup?
 A:
-Turn on broadcasting and 3 keystrokes: Ctrl-C, Ctrl-V, Enter 
+Turn on broadcasting and 3 keystrokes: Ctrl-C, Ctrl-V, Enter
 do that once, and you're done forever, even if you login 100 different teams!
 
 #### Q: Does it work cross realm ?
@@ -63,13 +63,13 @@ In that setup I recommend you don't change the slot1 but change the other slot(s
 
 
 #### Q: I prefer to watch videos than read a wall of text !
-A: 
+A:
 
 That's not a question, but a statement  You can watch this mini series:
 https://www.youtube.com/watch?v=TseQzm4Ktb4&list=PLlutLO8wozeIy0U2htIL3O12bIE5cB1VA&index=1
 
 #### Q: Do you have a demo?
-A: 
+A:
 
 Yes (though it's a bit old, doesn't show the config UI or new commands, etc... and volume is low
 https://www.youtube.com/watch?v=rWGP20xmXTI&list=PLlutLO8wozeIy0U2htIL3O12bIE5cB1VA
@@ -99,5 +99,5 @@ ps: "sold" for free and opensource (it's here on github!)
 
 #### Q: How do I ask more questions?
 
-A: 
+A:
 Ask here or catch me on discord
