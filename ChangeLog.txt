@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.08.00 Feb 22nd 2022
+- Updated for Eternity's End (9.2.0) and newest community packager
+
 v3.07.00 Feb 12th 2022
 - Single zip build, toc updates and wago ids
 
