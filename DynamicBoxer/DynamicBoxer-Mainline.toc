@@ -1,4 +1,4 @@
-## Interface: 90200
+## Interface: 90205
 ## Title: DynamicBoxer
 ## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
 ## Notes: Shadowlands Eternity's End edition
