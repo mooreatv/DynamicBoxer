@@ -1168,7 +1168,6 @@ DB.EventHdlrs = {
       DB.ticker:Cancel() -- cancel previous one to resync timer
     end
     DB.Sync() -- first one at load
-    DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync) -- and one every refresh
     -- re register for later UPDATE_BINDINGS now that we got to initialize (Issue #19)
     if isboxer.frame then
       isboxer.frame:RegisterEvent("UPDATE_BINDINGS")
@@ -1177,6 +1176,7 @@ DB.EventHdlrs = {
     DB.numInvites = math.max(GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1)
     DB:Debug("Set initial inv count to %", DB.numInvites)
     DB.numInvitesAdjust = true
+    DB.ticker = C_Timer.NewTicker(DB.refresh, DB.Sync) -- and one every refresh
   end,
 
   CHANNEL_COUNT_UPDATE = function(self, _event, displayIndex, count) -- Note: never seem to fire

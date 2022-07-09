@@ -34,3 +34,10 @@ end
 DB.WOB = _G.WowOpenBox
 -- Global machine wide SavedVars
 DB.GSV = _G.Blizzard_Console_SavedVars
+
+if DB.isLegacy then
+  C_ChatInfo = {}
+  C_ChatInfo.RegisterAddonMessagePrefix = function (...)
+    return true
+  end
+end
