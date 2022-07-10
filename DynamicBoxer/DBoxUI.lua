@@ -44,7 +44,9 @@ function DB.OnSlaveUIShow(widget, data)
   DB:Debug("Width is % for %", width, newText)
   e:SetWidth(width)
   e:SetMaxLetters(0)
-  e.Instructions:SetText("  Paste here from Slot 1")
+  if not DB.isLegacy then
+    e.Instructions:SetText("  Paste here from Slot 1")
+  end
   e:HighlightText()
   -- e:SetCursorPosition(#newText)
 end
@@ -972,7 +974,7 @@ function DB:SetupStatusUI()
   if not DB.statusPos then
     DB:StatusInitialPos()
   end
-  local f = DB:Frame("DynamicBoxer_Status", "DynamicBoxer_Status")
+  local f = DB:Frame("DynamicBoxer_Status", "DynamicBoxer_Status", nil, nil, "Button")
   DB.statusFrame = f
   f.isCombatFrame = true
   f:SetFrameStrata("FULLSCREEN")
@@ -1056,8 +1058,9 @@ function DB:SetupStatusUI()
       DB:SavePosition(f) -- might save the wrong anchor one
     end)
   end)
-  f:SetScript("OnMouseUp", function(_w, mod)
-    DB:Debug("Clicked on dbox window %", mod)
+  f:RegisterForClicks("AnyUp")
+  f:SetScript("OnClick", function(_w, mod, down)
+    DB:Debug("Clicked on dbox window % %", mod, down)
     if mod == "LeftButton" then
       if IsControlKeyDown() then
         DB.Slash("autoinvite toggle")

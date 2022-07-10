@@ -21,6 +21,6 @@ MoLib\MoLibConv.lua
 DBoxInit.lua
 ISBoxerPatches.lua
 DynamicBoxer.lua
-DBoxClassic.lua
+DBoxLegacy.lua
 DBoxUI.lua
 DBoxChat.lua

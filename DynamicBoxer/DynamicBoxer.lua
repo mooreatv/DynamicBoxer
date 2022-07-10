@@ -772,7 +772,11 @@ function DB:Invite(fullName, rescheduled, retries)
     end
   end
   DB.numInvites = DB.numInvites + 1
-  InviteUnit(fullName)
+  if DB.isLegacy then
+    InviteUnit(shortName)
+  else
+    InviteUnit(fullName)
+  end
 end
 
 function DB:PartyToggle()
@@ -844,7 +848,7 @@ function DB:Disband()
       if k == DB.ISBIndex then
         DB:Debug("Slot %: is us, not uninviting ourselves.", k)
       elseif UnitInParty(v.new) then -- need to check using the shortname
-        DB:PrintDefault("Uninviting #%: %", k, v.fullName)
+        DB:PrintDefault("Uninviting #%: % (%)", k, v.fullName, v.new)
         UninviteUnit(v.new) -- also need to be shortname
         DB.numInvites = DB.numInvites - 1
       else
