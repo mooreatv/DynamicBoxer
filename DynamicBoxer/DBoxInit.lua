@@ -33,11 +33,17 @@ end
 -- WowOpenBox
 DB.WOB = _G.WowOpenBox
 -- Global machine wide SavedVars
-DB.GSV = _G.Blizzard_Console_SavedVars
+DB.GSV = _G.Blizzard_Console_SavedVars or {}
 
 if DB.isLegacy then
   C_ChatInfo = {}
-  C_ChatInfo.RegisterAddonMessagePrefix = function (...)
+  C_ChatInfo.RegisterAddonMessagePrefix = function()
     return true
+  end
+  C_ChatInfo.GetNumActiveChannels = function()
+    return 3
+  end
+  C_ChatInfo.SendAddonMessage = function(...)
+    return SendAddonMessage(...)
   end
 end

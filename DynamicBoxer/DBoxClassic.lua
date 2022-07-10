@@ -18,6 +18,10 @@ local _addon, _ns = ...
 -- Created by DBoxInit
 local DB = DynBoxer
 
+if DB.isLegacy then
+  return
+end
+
 if not DB.isClassic then
   -- put back basic global functions gone in 9.0
   function ConvertToRaid()
