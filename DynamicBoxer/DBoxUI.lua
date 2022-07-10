@@ -854,7 +854,8 @@ function DB:SetupHugeFont(height)
   end
   height = height or 120 -- doesn't get bigger than 120 anyway
   DB.hugeFont = CreateFont("DynBoxerHuge")
-  local baseFont = Game120Font:GetFont()
+  local bf = Game120Font or SystemFont_Huge1
+  local baseFont = bf:GetFont()
   DB:Debug("base font is %", baseFont)
   local ret = DB.hugeFont:SetFont(baseFont, height) -- "THICKOUTLINE")
   DB:Debug("Set font for height % : %", height, ret)
@@ -867,6 +868,10 @@ end
 DB:PreloadTextures(516953, 516949, 616345)
 
 function DB:GetFactionTexture(p, faction)
+  -- TODO: isLegacy: these don't work/do anything visible.
+  if DB.isLegacy then
+    return nil
+  end
   local t
   local baseId, glowId
   local size = 90
@@ -886,7 +891,9 @@ function DB:GetFactionTexture(p, faction)
   t:SetSize(size, size)
   t.linked:SetSize(size, size)
   t:SetVertexColor(.85, .85, .85) -- darken the base
-  t:SetIgnoreParentAlpha(true)
+  if not DB.isLegacy then
+    t:SetIgnoreParentAlpha(true)
+  end
   return t
 end
 
@@ -918,6 +925,9 @@ function DB:ShowBigInfo(autohide)
   -- TODO: add a "recenter" to molib after scale()
   DB:Debug("w % h % s % %", WorldFrame:GetWidth(), WorldFrame:GetHeight(), f:GetScale(), f:GetEffectiveScale())
   local percent = 95 / 100.
+  if DB.isLegacy then
+    percent = 0.3333
+  end
   local parent = f:GetParent()
   f:SetSize(parent:GetWidth() * percent, parent:GetHeight() * percent) -- margin in proportion with aspect ratio
   f:SetPoint("TOP", 0, -parent:GetHeight() * (1. - percent) / 2.)
@@ -943,7 +953,7 @@ function DB:ShowBigInfo(autohide)
     t:PlaceLeft(offx, offy, "RIGHT", "LEFT") -- won't change lastLeft
   end
   local class = f:addTexture()
-  if DB.isClassic then
+  if DB.isClassic or DB.isLegacy then
     local _, className = UnitClass("player")
     class:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
     class:SetTexCoord(unpack(CLASS_ICON_TCOORDS[className]))
