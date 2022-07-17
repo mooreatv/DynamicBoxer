@@ -1,7 +1,7 @@
-## Interface: 90205
+## Interface: 30400
 ## Title: DynamicBoxer
 ## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
-## Notes: Shadowlands Eternity's End edition
+## Notes: Wrath of the Lich King Classic Edition
 ## Author: MooreaTV moorea@ymail.com
 ## Version: @project-version@
 ## DefaultState: Enabled
@@ -14,10 +14,10 @@
 ## X-Curse-Project-ID: 323794
 ## X-Wago-ID: VBNBjqNx
 ## X-WoWI-ID: 25009
-MoLib\MoLib.lua
-MoLib\MoLibUI.lua
-MoLib\Realms.lua
-MoLib\MoLibConv.lua
+MoLib/MoLib.lua
+MoLib/MoLibUI.lua
+MoLib/Realms.lua
+MoLib/MoLibConv.lua
 DBoxInit.lua
 ISBoxerPatches.lua
 DynamicBoxer.lua

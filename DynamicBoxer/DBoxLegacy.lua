@@ -3,12 +3,10 @@
    Licensed under LGPLv3 - No Warranty
    (contact the author if you need a different license)
 
-   With classic change in 1.13.3 we can't use a secret protected channel anymore, so we'll use direct
-   whispers
+   Legacy (e.g Wow 3.3.5a) doesn't support channel addon messages (nor say/yell like classic),
+   so third way is to use normal chat messages on our channel.
 
-   We also use party/raid/guild addon communication as these haven't been yanked (yet)
-
-   TODO: remember the current/last party and differentiate simple /reload from logout/login (player entering world vs login)
+   We also use party/raid/guild addon communication as these do exist in legacy.
 
    ]] --
 --
@@ -18,36 +16,21 @@ local _addon, _ns = ...
 -- Created by DBoxInit
 local DB = DynBoxer
 
-if DB.isLegacy then
+if not DB.isLegacy then
   return -- shouldn't be reached given the toc but...
 end
-
-if not DB.isClassic then
-  -- put back basic global functions gone in 9.0
-  function ConvertToRaid()
-    C_PartyInfo.ConvertToRaid()
-  end
-  function ConvertToParty()
-    C_PartyInfo.ConvertToParty()
-  end
-  function InviteUnit(fullName)
-    C_PartyInfo.InviteUnit(fullName)
-  end
-  function LeaveParty()
-    C_PartyInfo.LeaveParty()
-  end
-  -- don't process the rest of this file
-  return
-end
-
-local L = DB.L
 
 DB:SetupGuildInfo() -- register additional event
 
 DB.securePastThreshold = 180 -- 3mins for larger groups and/or reload
 
+function DB:SendChannelMessage(msg)
+  SendChatMessage(msg, "CHANNEL", nil, DB.channelId)
+  return true
+end
+
 function DB:IsGrouped()
-  local num = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME)
+  local num = GetNumGroupMembers()
   return num > 0
 end
 
@@ -195,10 +178,10 @@ function DB:SendMyInfo()
     end
     DB:Debug("we are in a group sending our info there: %", ret)
   end
-  if not C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "SAY") then
+  if not DB:SendChannelMessage(secureMessage) then
     ret = false
   end
-  DB:Debug("Sending our info in SAY: % (mid %)", ret, messageId)
+  DB:Debug("Sent our info in channel: % (mid %)", ret, messageId)
   return ret
 end
 
@@ -335,61 +318,7 @@ function DB.Sync() -- called as ticker so no :
   end
 end
 
-function DB:AddToMasterHistory(masterName)
-  DB.masterHistory[DB.faction]:add(masterName)
-  if not dynamicBoxerSaved.serializedMasterHistory then
-    dynamicBoxerSaved.serializedMasterHistory = {}
-  end
-  dynamicBoxerSaved.serializedMasterHistory[DB.faction] = DB.masterHistory[DB.faction]:toTable()
-  self:Debug(5, "New master % list newest at the end: %", masterName, dynamicBoxerSaved.serializedMasterHistory)
-end
 
-function DB:AddToMembersHistory(memberName)
-  DB.memberHistory[DB.faction]:add(memberName)
-  if not dynamicBoxerSaved.serializedMemberHistory then
-    dynamicBoxerSaved.serializedMemberHistory = {}
-  end
-  dynamicBoxerSaved.serializedMemberHistory[DB.faction] = DB.memberHistory[DB.faction]:toTable()
-  self:Debug(5, "New member % list newest at the end: %", memberName, dynamicBoxerSaved.serializedMemberHistory)
-end
-
--- Deal with issue#10 by sorting by inverse of length, to replace most specific first (step 1/2)
-
-function DB:SortTeam()
-  local presentCount = 0
-  self.SortedTeam = {}
-  self.TeamIdxByName = {}
-  -- remove holes before sorting (otherwise it doesn't work in a way that is usuable, big gotcha)
-  for _, v in pairs(self.Team) do
-    if v then
-      table.insert(self.SortedTeam, v)
-      presentCount = presentCount + 1
-      -- while at it create/maintains the reverse mapping name->index
-      DB:Debug(3, "v is %, v.fullName %", v, v.fullName)
-      self.TeamIdxByName[v.fullName] = v.slot
-    end
-  end
-  table.sort(self.SortedTeam, function(a, b)
-    return #a.orig > #b.orig
-  end)
-  self:Debug(1, "Team map (sorted by longest orig name first) is now % - size %; reverse index is %", self.SortedTeam,
-             presentCount, self.TeamIdxByName)
-  return presentCount
-end
-
--- additional message if failed
-function DB:CheckChannelOk(msg)
-  if not DB.joinedChannel or #DB.joinedChannel < 1 then
-    DB:Debug("No real channel on classic (" .. msg .. ")")
-    return false
-  end
-  DB.channelId = GetChannelName(DB.joinedChannel)
-  if not DB.channelId then
-    DB:Warning("Couldn't get channel id for our channel %, will retry (" .. msg .. ")", DB.joinedChannel)
-    return false
-  end
-  return true
-end
 
 -- [bfa] Too bad addon messages don't work cross realm even through whisper
 -- (and yet they work with BN friends BUT they don't work with yourself!)
@@ -478,7 +407,7 @@ function DB:ProcessMessage(source, from, data)
     -- TODO: we count direct messages now but maybe also count channel messages to detect possible loop/dup msg issues
     if DB:CheckChannelOk("Msg Fwd") then
       local payload = DB:SlotCommand(idx, realname, 0) -- drop/patch the force flag out
-      local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, payload, "CHANNEL", DB.channelId)
+      local ret = DB:SendChannelMessage(payload)
       DB:Debug(2, "Channel Message FWD retcode is % on chanId %", ret, DB.channelId)
       if not ret then
         DB:Debug(1, "FAILED to send % long FWD for % (% -> %)", #payload, DB.channelId, doForward, payload)
@@ -605,72 +534,4 @@ function DB:ProcessMessage(source, from, data)
   if DB.currentCount == DB.expectedCount or teamComplete then
     DB:OtherAddonsSync()
   end
-end
-
-
-function DB:DynamicInit()
-  DB:Debug("Delayed init called")
-  DB:MoLibInit()
-  if DB.inUI then
-    DB:Debug(3, "Still in UI, skipping init/join...")
-    return
-  end
-  if not DB:IsActive() then
-    DB:PrintDefault("DynamicBoxer: No static team/not running under innerspace or user abort... skipping...")
-    return
-  end
-  if not DB.MasterToken or #DB.MasterToken == 0 then
-    DB:ForceInit()
-    return -- Join will be called at the positive end of the dialog
-  end
-  DB:Join()
-end
-
-DB.joinDone = false -- because we reschedule the join from multiple place, lets do that only once
-
--- wait up to 1min 10s for channels to show upcharacter creation cinematic to end (dwarf one is ~ 1min)
-DB.maxStdChannelCheck = 70 / DB.refresh + 1
-DB.stdChannelChecks = 0
-
--- note: 2 sources of retry, the dynamic init and
-function DB:Join()
-  -- channel addon messaging is broken in 1.13.3 so we just do something else
-  if not DB.joinDone then
-    -- one time setup
-    DB:ReconstructTeam()
-  end
-  DB.stdChannelChecks = 0
-  DB.channelId = -1 -- classic hack for now to not loop into this
-  DB:Debug("Running on classic, no channel addon comms, no channel joining but guild/party comm")
-  -- still need to register prefix though because of party/raid chat
-  local ret = C_ChatInfo.RegisterAddonMessagePrefix(DB.chatPrefix)
-  DB:Debug("Prefix register success % in dynamic setup", ret)
-  DB:PrintInfo(L["DynBoxer running on classic. This is slot % and dynamically setting Team character to %"],
-               DB.ISBIndex, DB.fullName)
-  DB.firstMsg = 1
-  DB.noMoreExtra = nil
-  if DB.maxIter <= 0 then
-    DB.maxIter = 1
-  end
-  DB.joinDone = true
-  return DB.channelId
-end
-
-function DB:SetupChange()
-  -- re do initialization
-  if DB.joinedChannel then
-    DB:Debug("Re-init requested, leaving %: %", DB.joinedChannel, LeaveChannelByName(DB.joinedChannel))
-    DB.watched.enabled = false
-    DB.joinedChannel = nil
-    DB.channelId = nil
-    DB.joinDone = false
-  end
-end
-
-function DB:ForceInit()
-  DB.watched.enabled = true
-  DB:SetupChange()
-  DB:ReconstructTeam()
-  DB:SetupUI()
-  DB.justInit = true
 end

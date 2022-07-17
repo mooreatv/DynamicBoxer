@@ -71,6 +71,7 @@ globals = {
     "IsInGuild",
     "TargetUnit",
     "InCombatLockdown",
+    "SystemFont_Huge1"
 }
 max_line_length = 132
 ignore = {
