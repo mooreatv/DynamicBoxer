@@ -20,10 +20,10 @@ jobs:
           exec /home/runner/.luarocks/bin/luacheck DynamicBoxer/ --no-color --config ./DynamicBoxer/.luacheckrc -q
       - name: Get the packager
         run: |
-          curl -s https://raw.githubusercontent.com/mooreatv/packager/v2m/release.sh > ./release.sh
+          curl -s https://raw.githubusercontent.com/mooreatv/packager/fix_130/release.sh > ./release.sh
           chmod 755 ./release.sh
       - name: Create Multitoc Package
-        run: ./release.sh -m pkgmeta.yaml
+        run: ./release.sh -d
         env:
          CF_API_KEY: ${{ secrets.CF_API_KEY }}
          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
