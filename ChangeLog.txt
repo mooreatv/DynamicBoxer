@@ -4,7 +4,7 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
-v3.09.00 July 17th 2022
+v3.09.01 July 7th-23rd 2022
 - Wrath Classic (beta) compatible
 - Version compatible with legacy 3.3.5a client
 
