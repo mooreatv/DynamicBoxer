@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.09.06 Sept 4th 2022
+- Pick up MoLib fix for missing constant
+
 v3.09.05 Sept 1st 2022
 - Shadowland 9.2.7
 
