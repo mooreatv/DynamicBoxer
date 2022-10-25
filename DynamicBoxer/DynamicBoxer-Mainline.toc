@@ -1,7 +1,7 @@
-## Interface: 90207
+## Interface: 100000
 ## Title: DynamicBoxer
 ## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
-## Notes: Shadowlands Eternity's End edition
+## Notes: Dragonflight edition
 ## Author: MooreaTV moorea@ymail.com
 ## Version: @project-version@
 ## DefaultState: Enabled
