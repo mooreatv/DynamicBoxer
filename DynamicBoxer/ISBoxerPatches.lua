@@ -52,6 +52,7 @@ function isboxer.SetMacro(usename, key, macro, conditionalshift, conditionalalt,
   else
     DB:Debug(2, "Creating button %", name)
     button = CreateFrame("Button", name, nil, "SecureActionButtonTemplate")
+    button:RegisterForClicks("AnyUp", "AnyDown")
   end
   -- End of change compared to original
   button:SetAttribute("type", "macro")

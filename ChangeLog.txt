@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.10.01 Oct 27th 2022
+- Dragonflight fixes (Font, Click: remaining: Options panel)
+
 v3.10.00 Oct 25th 2022
 - Initial update for Dragonflight
 

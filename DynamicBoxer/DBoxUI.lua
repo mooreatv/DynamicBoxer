@@ -857,7 +857,7 @@ function DB:SetupHugeFont(height)
   local bf = Game120Font or SystemFont_Huge1
   local baseFont = bf:GetFont()
   DB:Debug("base font is %", baseFont)
-  local ret = DB.hugeFont:SetFont(baseFont, height) -- "THICKOUTLINE")
+  local ret = DB.hugeFont:SetFont(baseFont, height, "") -- "THICKOUTLINE")
   DB:Debug("Set font for height % : %", height, ret)
   DB.hugeFont:SetTextColor(.95, .85, .05, .9)
   DB.hugeFont:SetShadowOffset(3, -3)
