@@ -2,10 +2,13 @@
 
 # DynamicBoxer
 
-DynamicBoxer now works without ISBoxer (which is banned from WoW) thanks to [MAMA](https://www.curseforge.com/wow/addons/mama-multiboxing) and even better when using the only and best (and compliant with blizzard's rules) multiboxing software [www.WowOpenBox.org](https://www.WowOpenBox.org).
+DynamicBoxer now also works without ISBoxer thanks to [MAMA](https://www.curseforge.com/wow/addons/mama-multiboxing) and even better when using the only and best (and compliant with blizzard's rules) open source multiboxing software [www.WowOpenBox.org](https://www.WowOpenBox.org).
 
+Note you can use all 3/combinations as well (Isboxer+DynamicBoxer+Mama or WOB+DynamicBoxer+Mama or Isboxer+DynamicBoxer...)
 
-Older information:
+Works with all World of Warcraft versions: Dragonflight, Classic Era, Wrath of the Lich King Classic etc...
+
+ISBoxer information:
 
 The way ISBoxer works currently
 is you need to go back outside of the game into the windows isboxer suite program each time you want

@@ -1729,10 +1729,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     DB:ShowTokenUI()
     -- for debug, needs exact match (of start of "debug ..."):
   elseif cmd == "c" then
-    -- Show config panel
-    -- InterfaceOptionsList_DisplayPanel(DB.optionsPanel)
-    InterfaceOptionsFrame:Show() -- onshow will clear the category if not already displayed
-    InterfaceOptionsFrame_OpenToCategory(DB.optionsPanel) -- gets our name selected
+    DB:ShowConfigPanel(DB.optionsPanel)
   elseif cmd == "e" then
     if DB:StartsWith(arg, "enable") then
       -- enable

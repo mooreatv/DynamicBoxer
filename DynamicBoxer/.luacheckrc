@@ -30,8 +30,6 @@ globals = {
     "IsControlKeyDown",
     "IsShiftKeyDown",
     "IsAltKeyDown",
-    "InterfaceOptionsFrame",
-    "InterfaceOptionsFrame_OpenToCategory",
     "InviteUnit",
     "IsInRaid",
     "JoinTemporaryChannel",
