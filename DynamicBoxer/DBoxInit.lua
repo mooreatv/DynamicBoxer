@@ -25,6 +25,8 @@ if C_CVar then
   -- bfa onward
   C_CVar.SetCVar("scriptErrors", 1)
   C_CVar.SetCVar("fstack_preferParentKeys", 0)
+  -- horrible hack to get /click to work for DragonFlight 10.00.00 until they fix it
+  C_CVar.SetCVar("ActionButtonUseKeyDown", 0)
 elseif SetCVar then
   -- classic version
   SetCVar("scriptErrors", 1)

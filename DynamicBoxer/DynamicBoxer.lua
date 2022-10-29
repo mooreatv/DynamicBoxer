@@ -1,5 +1,5 @@
 --[[
-   DynamicBoxer: Dynamic Team Multiboxing by MooreaTV moorea@ymail.com (c) 2019 All rights reserved
+   DynamicBoxer: Dynamic Team Multiboxing by MooreaTV moorea@ymail.com (c) 2019-2022 All rights reserved
    Licensed under LGPLv3 - No Warranty
    (contact the author if you need a different license)
 
@@ -303,6 +303,7 @@ function DB:ReconstructTeam()
   DB.IsbAssistMacro = "<not found>"
   -- parse the text which looks like (note the ]xxx; delimiters for most but \n at the end)
   -- "/assist [nomod:alt,mod:lshift,nomod:ctrl]FIRST;[nomod:alt,mod:rshift,nomod:ctrl]SECOND;...[nomod:alt...,mod:lctrl]LAST\n"
+  -- this changed for dragonflight - we could try to use FLAssist1...N instead.
   isboxer.SetMacro = function(macro, key, text)
     if macro ~= "FTLAssist" then
       return
@@ -333,6 +334,24 @@ function DB:ReconstructTeam()
     DB:ManualSetup()
   end
   isboxer.SetMacro = prev
+  -- Dragonflight way/fallback, try just the isboxer.CharacterSet.Members
+  if DB.ISBIndex <= 0 and isboxer.CharacterSet and isboxer.CharacterSet.Members then
+    searchingFor = isboxer.Character.QualifiedName or isboxer.Character.ActualName
+    DB:Debug(3, "Searching for % in isboxer.CharacterSet.Members is %", searchingFor, isboxer.CharacterSet.Members)
+    for i, v in ipairs(isboxer.CharacterSet.Members) do
+      DB:Debug(3, "isboxer.CharacterSet.Members[%] = %", i, v)
+      table.insert(DB.ISBTeam, v)
+      if v == searchingFor then
+        if DB.ISBIndex > 0 then
+          DB:Warning("Duplicate entry for % found in isboxer.CharacterSet.Members! team so far %", searchingFor,
+                     DB.ISBTeam)
+        else
+          DB.ISBIndex = i
+          DB.watched.slot = DB.ISBIndex
+        end
+      end
+    end
+  end
   if DB.ISBIndex <= 0 then
     DB.ISBIndex = nil -- set if back to unset
     DB:Error("Problem identifying this character isboxer.Character.ActualName=% " ..
