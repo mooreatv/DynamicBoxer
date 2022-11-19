@@ -1,4 +1,4 @@
-## Interface: 100000
+## Interface: 100002
 ## Title: DynamicBoxer
 ## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
 ## Notes: Dragonflight edition
