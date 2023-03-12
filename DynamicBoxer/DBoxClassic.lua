@@ -1,5 +1,6 @@
 --[[
-   DynamicBoxer: Dynamic Team Multiboxing by MooreaTV moorea@ymail.com (c) 2019 All rights reserved
+   DynamicBoxer: Dynamic Team Multiboxing by MooreaTV moorea@ymail.com
+   (c) 2019-2023 All rights reserved
    Licensed under LGPLv3 - No Warranty
    (contact the author if you need a different license)
 
@@ -202,10 +203,6 @@ function DB:SendMyInfo()
   return ret
 end
 
--- the first time, ie after /reload - we will force a resync
-DB.firstMsg = 1
-DB.syncNum = 1
-
 -- TODO: separate / disentangle  channel and direct message sync
 function DB.Sync() -- called as ticker so no :
   DB:Debug(9, "DB:Sync #% maxIter %", DB.syncNum, DB.maxIter)
@@ -333,48 +330,6 @@ function DB.Sync() -- called as ticker so no :
       DB.maxIter = 1
     end
   end
-end
-
-function DB:AddToMasterHistory(masterName)
-  DB.masterHistory[DB.faction]:add(masterName)
-  if not dynamicBoxerSaved.serializedMasterHistory then
-    dynamicBoxerSaved.serializedMasterHistory = {}
-  end
-  dynamicBoxerSaved.serializedMasterHistory[DB.faction] = DB.masterHistory[DB.faction]:toTable()
-  self:Debug(5, "New master % list newest at the end: %", masterName, dynamicBoxerSaved.serializedMasterHistory)
-end
-
-function DB:AddToMembersHistory(memberName)
-  DB.memberHistory[DB.faction]:add(memberName)
-  if not dynamicBoxerSaved.serializedMemberHistory then
-    dynamicBoxerSaved.serializedMemberHistory = {}
-  end
-  dynamicBoxerSaved.serializedMemberHistory[DB.faction] = DB.memberHistory[DB.faction]:toTable()
-  self:Debug(5, "New member % list newest at the end: %", memberName, dynamicBoxerSaved.serializedMemberHistory)
-end
-
--- Deal with issue#10 by sorting by inverse of length, to replace most specific first (step 1/2)
-
-function DB:SortTeam()
-  local presentCount = 0
-  self.SortedTeam = {}
-  self.TeamIdxByName = {}
-  -- remove holes before sorting (otherwise it doesn't work in a way that is usuable, big gotcha)
-  for _, v in pairs(self.Team) do
-    if v then
-      table.insert(self.SortedTeam, v)
-      presentCount = presentCount + 1
-      -- while at it create/maintains the reverse mapping name->index
-      DB:Debug(3, "v is %, v.fullName %", v, v.fullName)
-      self.TeamIdxByName[v.fullName] = v.slot
-    end
-  end
-  table.sort(self.SortedTeam, function(a, b)
-    return #a.orig > #b.orig
-  end)
-  self:Debug(1, "Team map (sorted by longest orig name first) is now % - size %; reverse index is %", self.SortedTeam,
-             presentCount, self.TeamIdxByName)
-  return presentCount
 end
 
 -- additional message if failed
@@ -608,30 +563,6 @@ function DB:ProcessMessage(source, from, data)
 end
 
 
-function DB:DynamicInit()
-  DB:Debug("Delayed init called")
-  DB:MoLibInit()
-  if DB.inUI then
-    DB:Debug(3, "Still in UI, skipping init/join...")
-    return
-  end
-  if not DB:IsActive() then
-    DB:PrintDefault("DynamicBoxer: No static team/not running under innerspace or user abort... skipping...")
-    return
-  end
-  if not DB.MasterToken or #DB.MasterToken == 0 then
-    DB:ForceInit()
-    return -- Join will be called at the positive end of the dialog
-  end
-  DB:Join()
-end
-
-DB.joinDone = false -- because we reschedule the join from multiple place, lets do that only once
-
--- wait up to 1min 10s for channels to show upcharacter creation cinematic to end (dwarf one is ~ 1min)
-DB.maxStdChannelCheck = 70 / DB.refresh + 1
-DB.stdChannelChecks = 0
-
 -- note: 2 sources of retry, the dynamic init and
 function DB:Join()
   -- channel addon messaging is broken in 1.13.3 so we just do something else
@@ -656,21 +587,4 @@ function DB:Join()
   return DB.channelId
 end
 
-function DB:SetupChange()
-  -- re do initialization
-  if DB.joinedChannel then
-    DB:Debug("Re-init requested, leaving %: %", DB.joinedChannel, LeaveChannelByName(DB.joinedChannel))
-    DB.watched.enabled = false
-    DB.joinedChannel = nil
-    DB.channelId = nil
-    DB.joinDone = false
-  end
-end
 
-function DB:ForceInit()
-  DB.watched.enabled = true
-  DB:SetupChange()
-  DB:ReconstructTeam()
-  DB:SetupUI()
-  DB.justInit = true
-end

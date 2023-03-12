@@ -1,5 +1,6 @@
 --[[
-   DynamicBoxer: Dynamic Team Multiboxing by MooreaTV moorea@ymail.com (c) 2019-2022 All rights reserved
+   DynamicBoxer: Dynamic Team Multiboxing by MooreaTV moorea@ymail.com
+   (c) 2019-2023 All rights reserved
    Licensed under LGPLv3 - No Warranty
    (contact the author if you need a different license)
 
@@ -242,7 +243,7 @@ function DB:ManualSetup()
   if not DB.manual or DB.manual < 1 then
     return
   end
-  if DB.manualTeamSize == 0 then
+  if DB.manualTeamSize < DB.manual then
     DB.manualTeamSize = math.max(2, DB.manual)
     DB:Debug("Guessing manual team size = %", DB.manualTeamSize)
   end

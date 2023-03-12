@@ -4,6 +4,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.10.07 March 11 2023
+- Bug fix on team sort lua error when adding a 6th+ slot
+- Removed duplicate code from DBoxClassic.lua that is same in DynamicBoxer.lua
+
 v3.10.06 Jan 27th 2023
 - Wrath toc update
 
