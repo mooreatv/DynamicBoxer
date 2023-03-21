@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.10.09 March 21st 2023
+- Dragonflight 10.0.7 toc update
+
 v3.10.08 March 11 2023
 - Bug fix on team sort lua error when adding a 6th+ slot
 - Removed duplicate code from DBoxClassic.lua that is same in DynamicBoxer.lua
