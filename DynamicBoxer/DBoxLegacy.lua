@@ -53,7 +53,7 @@ function DB:CheckMasterFaction()
     return false
   end
   if DB.crossRealmMaster then
-    DB:Debug(3, "already figured out classic master %", DB.crossRealmMaster)
+    DB:Debug(3, "already figured out Legacy master %", DB.crossRealmMaster)
     return true
   end
   DB.crossRealmMaster = "" -- so we don't print stuff again
@@ -140,8 +140,9 @@ function DB:SendDirectMessage(to, payload)
     end
     DB:Warning("Can't send party/raid addon message #%, reverting to whisper", DB.sentMessageCount)
   end
-  local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", to)
-  DB:Debug("Whisper to %, ret=%", to, ret)
+  local shortTo = DB:ShortName(to)
+  local ret = C_ChatInfo.SendAddonMessage(DB.chatPrefix, secureMessage, "WHISPER", shortTo)
+  DB:Debug("Whisper to % (%), ret=%", shortTo, to, ret)
   -- SendChatMessage(toSend, "WHISPER", nil, to) -- returns nothing even if successful (!)
   -- We would need to watch (asynchronously, for how long ?) for CHAT_MSG_WHISPER_INFORM for success or CHAT_MSG_SYSTEM for errors
   -- instead we'll expect to get a reply from the master and if we don't then we'll try another/not have mapping
@@ -224,10 +225,10 @@ function DB.Sync() -- called as ticker so no :
       DB:Debug("Will postpone pinging master because we received a msg recently")
       DB.maxIter = DB.maxIter + 1
     else
-      DB:Debug("Classic sync and team incomplete/master unknown, pinging master % - %", DB.MasterName, DB.Team[1])
+      DB:Debug("Legacy sync and team incomplete/master unknown, pinging master % - %", DB.MasterName, DB.Team[1])
       DB:SendDirectMessage(DB.MasterName, firstPayload)
       if DB.firstMsg == 1 and DB.maxIter <= 0 then
-        DB:Debug("Classic sync, first time, increasing msg sync to 2 more")
+        DB:Debug("Legacy sync, first time, increasing msg sync to 2 more")
         -- we have to sync twice to complete the team (if all goes well, but it's faster with party invite)
         DB.maxIter = 3 -- give it a couple extra attempts in case 1 slave is slow
       end

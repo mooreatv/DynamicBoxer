@@ -1,0 +1,594 @@
+Older ChangeLog for DynamicBoxer by MooreaTv (moorea@ymail.com)
+
+v3.08.04 June 4th 2022
+- Updated for Classic Era 1.14.3 and ShadowLands 9.2.5
+- Put back WowInterface ID
+
+v3.08.02 March 26th 2022
+- Updated for Burning Crusade 2.5.4
+- peg luacheck to 0.23.0
+
+v3.08.00 Feb 22nd 2022
+- Updated for Eternity's End (9.2.0) and newest community packager
+
+v3.07.00 Feb 12th 2022
+- Single zip build, toc updates and wago ids
+
+v3.06.01 Nov 28th 2021
+- TOC updates for SoM and SL 9.1.5
+
+v3.06.00 Sept 18th 2021
+- Avoid error from resize in combat (support for checking InCombatLockdown() also in molib 8.1)
+
+v3.05.03 Sept 2nd 2021
+- Update TOC for Burning Crusade 2.5.2
+
+v3.05.02 June 29th 2021
+- Update TOC for ShadowLands 9.1 (Chains of Domination)
+
+v3.05.01 May 11th 2021
+- Avoid lua error when invite comes in before setup is done.
+
+v3.05.00 May 10th 2021
+- Support for Burning Crusade Classic (through MoLib v8)
+- Added -Classic, -BCC, -Mainline TOCs
+
+v3.04.02 April 21st 2021
+- Bump classic TOC for 1.13.7
+
+v3.04.01 April 18th 2021
+- Implemented #81 (in MoLib): help message is output as individual chat entries so it can be scrolled
+  back properly
+
+v3.04.00 April 17th 2021
+- (Classic) If slot 1 is not in guild but others are, sync out of say range would not always work
+
+v3.03.03 April 11th 2021
+- Avoid error with nil faction and race condition when receiving messages too early
+
+v3.03.02 March 13th 2021
+- Eliminate EMA api errors causing MAMA/DynamicBoxer to get stuck not completing
+  the team (work around for https://github.com/ebonyfaye/ema-classic/issues/2
+  by doing the EMA api last instead of in the middle of Dbox logic)
+
+v3.03.01 March 9th 2021
+- Retail/Shadowlands TOC update. Continue to use MAMA and its new /click MamaAssist
+  to use DynamicBoxer
+
+v3.03.00 Feb 21st 2021
+- New behavior during change of resolution/wow window resize: until this version
+  the DynamicBoxer/Mama window would keep the exact same pixel size; it now varies in
+  proportion of the actual window width change, thus allowing WowOpenBox big<->small swap
+  to work well.
+
+v3.02.02 Jan 30th 2021
+- Classic: avoid lua error in early message receive and no isboxer
+
+v3.02.01 Jan 17th 2021
+- Easier initial setup for additional accounts.
+  If you log in your slot 1 first and /reload before starting the other wow,
+  all the other will pickup the machine wide token automatically.
+
+v3.01.02 December 2nd 2020
+- Classic 1.13.06 and TOC addition for other addon managers
+
+v3.01.01 November 24th 2020
+- Shadowlands TOC update
+- Fix for addon config CheckBoxes 9.0.2 SetValue error (fix in MoLib)
+- Prepare for https://www.WowOpenBox.org/ the only free open-source wow multiboxing software.
+
+v3.00.00 November 8th 2020
+- Support for MAMA so DynamicBoxer features can be used without requiring ISBoxer
+  Get MAMA at https://www.curseforge.com/wow/addons/mama-multiboxing
+  to manually set your slot # once in its config and enjoy the rest of the Dbox features
+  as well as additional Mama features like follow me, lead change etc
+
+v2.14.00 Oct 24th 2020
+- Change to the status frame:
+  - the slot number is clickable to get the identify window
+    (replaces Tab, you can bind a key in keybindings if you want or still do /dbox identify)
+  - Each party name in full (default) view is clickable/start of a unitframe
+    (so to get the old behavior of invite/disband/... make sure to click in the title part)
+  - New config option to disable tooltips.
+  - If you want to anchor to dbox slots, the global table/fontstring region
+    DynamicBoxer_Status_Slot_x can help (where x is slot#)
+
+v2.13.03 Oct 14th 2020
+- Also fix auto raid/party conversion (and decided to provide compatibility global versions back)
+
+v2.13.02 Oct 13th 2020
+- (minor) LeaveParty() fix
+
+v2.13.01 Oct 12th 2020
+- Shadowland compatibility!
+
+v2.12.01 Sept 16th 2020
+- Classic: Fix bogus warnings from guildies or nearby sync. fixed english typo.
+
+v2.12.00 Sept 9th 2020
+- Fix #78: For brand new characters, escaping the cinematic caused lua error
+- Classic: use whisper addon message instead of bfa xrealm style real (non addon) message
+
+v2.11.04 Sept 8th 2020
+- Workaround ElvUI bug in tooltip display
+- (MoLib) Fixed tooltip anchor for option menu in Classic
+
+v2.11.03 Sept 8th 2020
+- Added option to disable all automatic popups at the cost of potentially not completing teams (see /dbox c or use /dbox u off)
+
+v2.11.01 Sept 8th 2020
+- Fix #77: if you disabled the addon (hitting escape for instance on the token prompt), don't flood with warning
+
+v2.11.00 Sept 7th 2020
+- Classic: use guild, party/raid and say for comms - pretty huge improvement, you can now /reload just the slot1
+  and it will resync fast etc... (best is guild but if your team is near one another it should sync fine too)
+
+v2.10.01 Sept 2nd 2020
+- Classic: use new MoLib IsInOurGuild() which works better than UnitIsInMyGuild()
+
+v2.10.00 Sept 1st 2020
+- Classic: big change to use GUILD addon chat when possible; this makes 10+boxing work much better
+  as long as characters are in the guild.
+- Classic: change timeout for secure messages to 3 minutes to accommodate 10 boxing delays in msging.
+
+v2.09.01 July 8th 2020
+- Classic is now 1.13.5
+
+v2.09.00 June 27th 2020
+Classic fixes:
+- Fix bug with race condition at start and isboxer complaining about wrong slot (Issue #75)
+- Workaround reinvite bug (trying to invite already in party toon) by delaying auto invites
+
+v2.08.02 March 3rd 2020
+- Updated TOC for Classic 1.13.4
+
+v2.08.01 Feb 21st 2020
+- Updated TOC for BfA/mainline 8.3
+
+v2.08.00 Dec 10th 2019
+- Handle classic API changes:
+  - can't use addon messages on private secure channel anymore
+  - use bfa xrealm like whisper based sync instead
+  - started refactor for classic only into new DBoxClassic.lua file (overriding some functions from the main file)
+  - todo:
+    - there are still some rough edges with or requiring broadcast /reload or selective resync (alt left click) to be fixed
+      (specially with a mix of in and out of party toons)
+    - refactor/cleanup
+    - add guild/say/yell option for faster/more efficient reach
+- Slightly better error and options text
+
+v2.07.02 Nov 16th 2019
+- Fix for error finding last toon for modified FTL assist case (when using /targetexact {FTL}\n/assist)
+  Many thanks to Termi for the help finding and debugging this issue!
+  In order to be more able to detect characters in modified ISboxer macros (that may contain extra spaces)
+  we now use space as a possible separator as that is illegal for wow characters but was working for versions before this one
+  NOTE: that means you should not use spaces in the name of your characters (ie if you have "Character 1" please
+  rename that to "Character1" or "Character_1")
+v2.07.01 Oct 5th 2019
+- Fix for some other addon emulating only partially bfa api in classic ()
+  (attempt to call global 'GetSpecializationInfo' (a nil value))
+v2.07.00 Sept 24th 2019
+- BfA 8.2.5 toc update (everything seems to be working from my testing)
+
+v2.06.03 Sept 22nd 2019
+- Fixed packager bug/changelog being mangled on cf
+v2.06.02 Sept 21st 2019
+- Switch to community/bigwigs packager as CF build was stuck/broken, also lets us
+  have classic and non classic toc without retagging and upload to wowi automatically too
+  Thanks Nebula and Nev for their help. (rebuilt as .02 to avoid double file confusion)
+v2.06.00 Sept 21st 2019
+- Option to delay a bit accept of auto invite in order to have team in slot order.
+  (you need to set the option on all the windows, not just the lead, also disable auto accept
+  in other addons like EMA to use this feature; lastly it may not work at login time, if so,
+  middle click to disband and left click to reinvite, in order)
+
+v2.05.03 Sept 12th 2019
+- Fixed bug for case where there was duplicate binding of isboxer FTLAssist macro
+v2.05.02 Aug 24th 2019
+- Fixed bogus realm mismatch warning
+v2.05.01 Aug 24th 2019
+- Moved some common code to MoLib (event registration)
+- Trigger rebuild with latest MoLib for Classic
+v2.05.00 Aug 11th 2019
+- Option to limit invite to a set max party size. eg. 4 so a 8box can be 2x4 (Issue #61)
+  if you have 12 and set max to 4 you will have 3 groups of 4 (1-4, 5-8, 9-12) automatically at login
+  configure with `/dbox c` or `/dbox partymax N` (make sure to broadcast)
+  if you are 15 boxing and unset autoRaid, you'll end up with 3 parties of 5, etc...
+  (works for any party size 2 to 5)
+- Get a warning when failing to convert to raid (because characters are too low to raid for instance)
+- Moved :SetSaved handling to MoLib (by setting self.savedVar)
+- WIP: support for Mama
+
+v2.04.01 Aug 9th 2019
+- Pick up wow classic fix from MoLib for bug report and keybinds frame
+v2.04.00 Aug 7th 2019
+- Added Jamba support (DynamicBoxer will auto set your Jamba team like
+  it has been doing for your EMA team so far)
+- Fixed typo in invite code (only affecting debug-ish printing)
+
+v2.03.03 Aug 4th 2019
+- Latest MoLib and re-tagging with correct TOC for classic
+- new classictag.sh to auto sync the classic tags (take 2)
+v2.03.01 July 31st 2019
+- Filter and truncate bug reports as needed (MoLib fix)
+- use MoLib's new NormalizeFont and font object param
+
+v2.03.00 July 29th 2019
+- New feature: Export your keybinds to CSV (Excel, Google docs, gist.github.com...)
+  `/dbox keys` and copy paste from the new frame that pops up. (Issue #60)
+- New feature integrated from MoLib: `/dbox bug` to submit bug information for bug reports!
+  post them to https://bit.ly/dboxbug (which redirects to curse bug, or email me or discord or github)
+- (beta2) Much better look for the bug report frame (MoLib fix)
+- No need for double snap pass if setting the height of strings first
+- Smoother zoom with less shimmering (newer MoLib)
+- Fix lua error when receiving mapping while disabled
+- Fix case where receiving long realm name for last slot was changing the height incorrectly (MoLib fix)
+
+v2.02.01 July 28th 2019
+- In molib fixes for Issues #65, #66 (status window forced to stay on screen)
+- Fixes for #67 (initial view off and also wrapping right aligned text fix to not wrap)
+- Fixed #64 in MoLib (at the cost of not as good behavior when resizing the main wow window)
+
+v2.02.00 July 27th 2019
+- Right indent and align the realms in the status window
+- Typo fix in EMAsync (I wish lua had better tooling to find typos)
+- Optional DynBoxer.teamCompleteCallBack called if set when the team is complete (Issue #63)
+
+v2.01.00 July 25th 2019
+- Use MoLib v7 for pixel perfect operations: Exactly 1 pixel border (using :addBorder).
+  Use new shared code MakeMoveable, SavePosition, RestorePosition now in MoLib
+- Handle screen resize and UI scale changes (we do keep our internal scale though)
+- moved ShowToolTip and SplitFullName to MoLib, use WipeFrame from MoLib
+- fixed bug with slot watch
+- fixed small bug with error when trying to complete team or send sync message when
+  the addon is disabled, also made sure `/dbox init` reenables if needed (not that
+  one should ever need to init again but...)
+- changed border to black, and default position to 2 pixels below top edge of screen
+  let me know how you like it
+- Small fix for all same realm master case
+
+v2.00.04 July 20th 2019
+{minor update to help any troubleshooting/ensure it's clear which version is running}
+- Fix version number not showing, dev placeholder X.YY.ZZ showing instead
+  (if you see bugs like this please report them)
+- Make sure lua errors are shown in case there are any (not likely from DynamicBoxer
+  but can affect DynamicBoxer so better to investigate) - please report any LUA error seen
+  while using dynamic boxer.
+
+v2.00.03 July 18th 2019 (v2.00.02 has the classic 1.13.2 compatibility toc)
+- Add support for classic/no specialization icon
+- Center the faction and class/spec icons better
+
+v2.00.01 July 17th 2019
+{2.00.00-beta1 to beta3 were pre-releases, with beta3 identical to this one}
+- Status window now includes the whole team details; shift right click to switching
+  between full and compact view. Different color for same realm vs other realm. (Issue #14)
+- Faction is now a glowing animation on identify splash screen.
+- Added specialization, if available, to identify.
+- Moved both of these ^ to the same line as slot #
+- Fixed up size/border calculation (border is % of height and width instead of fixed)
+- Fix for rare case of lua error when getting a whisper without isboxer team. (Issue #56)
+- Moved (more) reusable code to MoLib 6.00.xx
+  (including greatly simplified addTexture and no manual hack for offset)
+- (minor) Added special case of "1" offset in the font we are using it isn't centered otherwise
+- (minor) Changed max slider scale to 2.5
+- (minor) Changed mousewheel zoom in/out steps to 5% instead of 8%
+
+1.9.9 July 15th 2019
+- Fixed lua error when the token UI is through a warning (no msg to print as already warned)
+
+1.9.8 July 15th 2019
+- Status window size can be change with mousewheel (and saved like the position), also changeable
+  (better if broadcasting to all windows to sync the size for later mouse broadcasts) using
+  the options menu. Quite some work to get cancel to restore previous scale etc.
+- Fixed issue with enabled/disabled flow (some use of old variable weren't renamed to the new watched one)
+
+1.9.7 July 14th 2019
+- Added option in settings to turn off the start up identification, show for only 3s at start
+  and 6s later
+- Handle solo / team of 1 properly (Issue #55)
+- Handle "Escape"/Cancel from the token UI popup such as it won't pop again automatically after that
+  (until you explicitly ask for it eg `/dbox x` or the mouse/key bindings for it)
+- Added `/dbox team complete` to force a team to be marked as complete despite missing slots
+  (for instance if you log only 3 out of your usual 5 characters and want to sync the shorter
+  EMA team anyway). Also bound to control-middle click on the status frame. (Issue #44)
+
+1.9.6 July 13 2019
+- Minor adjustment to big slot display for better centering and layout
+- Let DB.enabled set to false work from startup (Issue #53, #54)
+  adding `/dbox enable off` to disable (and anything else to reenable, eg. `/dbox enable`)
+  alt-shift-right click on status window to disable
+  alt-right click to (re)enable (not using toggle so it's safer to broadcast set the same state)
+- adding Ctrl-Right click on status for popping up the token xchg dialog
+- adding slash command (`/dbox id`), key binding and options button for slot identification command
+  in addition to previous TAB when mousing over status window. Make it visible also when alt-z'ed.
+
+1.9.5 July 12 2019
+- Added tooltip for status frame (Issue #46)
+- New (discoverable) Ctrl-Click for toggle autoinvite and Shift-Click to
+  convert to raid/party toggle (and new `/dbox party toggle`)
+  Alt-click to send a re-sync message (`dbox join`)
+- Very very nice (if I may say so) window/slot info display when hitting tab
+  and mouse over status (and briefly at login) - (Issue #52)
+
+1.9.4 July 11th 2019 - The good one!
+- Fixed masterName->MasterName typo. Who doesn't love runtime errors like
+  that... that could be detected by a compiler
+1.9.3 July 11th 2019 - aka 3rd time's the charm : nope
+- All the cross realm master memory refactoring was broken for the
+  simple case of entering a token for a new master (!) (need automated test case/regression testing!)
+1.9.2 July 11th 2019 - bad release
+- Put our frame higher on the stack, and about midway to the right instead of just centered
+  to not cover blizzard headings like in the order hall and some other topbar addons (Issue #47)
+- Fix the padding around frame to be precisely the same in each corner and using
+  MoLib pixel perfect alignment of frame
+- Reset the max 200 message counter at each team complete event (for long running cross realm sessions)
+- `/dbox reset status` puts it back to default right away without needing /reload
+- Fix isboxer less manual/testing mode error
+- Fix: clear raid flag when needed.
+- Fix: don't try to cross realm contact [older] master[s] if we already know Slot 1
+  (unless it's the first msg) and don't show the xchgUI in that case
+- Changes to cross realm retry/sync/master attempts
+1.9.1 July 9th 2019 - bad release
+- Now try the 4 most recent masters per faction for cross realm syncing,
+  this should all but eliminate the need for `/dbox xchg` (Issue #23)
+  Also fixed case where on /reload the cross realm masters weren't tried.
+
+1.9.0 July 9th 2019
+- Initial moveable, position saved, status frame, shows connected slots
+  left click invite, middle click disband, right click options (Issue #14)
+  (uses MoLib WatchedTable, ie tables with callback on change)
+- Print a message while we wait for standard channels (Issue #43)
+
+1.8.7 July 8th 2019
+- Better detection of character not found / unexpected isboxer config. (Fix for #42)
+- Only test for 1 channel (from 2 before) before joining ours (as non en locale client
+  on en servers only get LFG for instance)
+
+1.8.6 July 8th 2019
+- Automatic conversion to Raid when needed is now very solid and very fast (fastest raid forming ever?)
+
+1.8.5 July 7th 2019
+- Fix issue #36: if an addon took /1 (like elvui) or you deleted /1, dynamic boxer would wait forever
+for it to show up. Now we use a better check for std channels and give up after 1 minute
+(to let new characters cinematic end) with an error, please report it if you see that warning
+
+1.8.4 July 7th 2019
+- new Auto Raid option (Issue #40)
+- start of Localization support (mostly initial tiny infrastructure in MoLib)
+
+1.8.3 July 6th 2019
+- fix for tainting (Issue #38) by delaying init  (most of the fix in MoLib)
+- manual mode improvements
+
+1.8.2 July 5th 2019
+- fix for lua error when isboxer isn't loaded (the fix for #19 broke it in 1.8.1)
+
+1.8.1 July 4th 2019
+- new `/dbox autoinvite x` where x is toggle to toggle, off to turn off, N to turn on for slot N (Issue #35)
+- new `/dbox xchg` command and keybindings (please set a binding, like Ctrl-Shift-X) so you can broadcast
+  Ctrl-Shift-X Ctrl-C Ctrl-V return   for any new team that doesn't auto sync
+  note that current wow has a bug where it looses the default bindings upon reload...
+- Fixed Issue #34 (switching to the faction master shouldn't be a warning)
+- Fixed Issue #19 (UPDATE_BINDINGS event not delivered to isboxer)
+- Moved UI library code to MoLibGUI https://github.com/mooreatv/MoLib
+- Adding Realms database from MoLib ( generated by https://github.com/mooreatv/WowApiClient )
+
+1.8.0 July 3rd 2019
+- Adding optional key bindings for `/dbox show`, `/dbox party invite`, `/dbox party disband` and more (Issue #32)
+- GUI library now supports dropdowns too; used for `/dbox reset` options/UI
+- Changed tooltip color for `/dbox` commands to steel blue (same as the "Team complete" and other PrintInfo color)
+
+1.7.0 July 2nd 2019
+- Now uses raid/party addon chat when possible to speed up cross realm team synchronization (Issue #28)
+- Added some anti-loop/flood protections
+- DynamicBoxer options panel is more complete and better UI (mouse over show the slash command too)
+- Added :PlaceRight() to the UI library to place an widget on the right of the previous one.
+  Place() is still "place below previous"
+
+1.6.1 July 2nd 2019
+- add history of team mates so auto accepts of invite from non master works
+- UI library: the x offset for place is now relative to left margin so widget can be changed order
+  and still appear at the same horizontal offset
+1.6.0 July 2nd 2019
+- `dbox config` shows the config panel, which is also in standard addon interface tab (Issue #13)
+  - Auto invite can be turned off in the UI and inviting slot can be changed
+  - Debug level can be set in the UI
+- New Auto Invite option/feature (from slot 1 by default, changeable) (Issue #20)
+- New `/dbox party invite` (or you can short it as `/dbox p`) and `/dbox party disband`
+- Start of a (specialized for now, will move to MoLib UI eventually) UI library
+  - Slider widget is better than st ock (optional list of values/min/max labels/no wobbling (left indented))
+  - Switched to more natural positive y offsets to match x offsets
+  - Sliders have a nice looking effect on DoDisable DoEnable
+- added `/dbox e[trace] s[ave]|c[clear]` to save current /etrace filters and /dbox e to start it with
+  restoring the last saved filters -- only useful for devs/debugging
+- Bug fix: the dbox show dialog wasn't properly auto hiding when team is complete
+
+1.5.0 June 29th 2019
+- Bug fix: chat message filters should drop duplicate consecutive line ids
+- Make VerifySecureMessage problems only 1 instead of 2 warnings (changed signature in MoLib)
+- Duplicate message detection and logging of messageIds in the debugLog
+- Auto hide show token on slaves too when team completes
+- Remember masters, by faction. Starts to use it to keep the last Slot1 memory per faction to automatically switch to.
+  (uses new MoLib functions)
+- downgrade priority/broadcast capability of fwded messages.
+- Change the on-the-wire protocol and encoding to support a Single slot message vs a Team positional message
+- EMA: also sets the master in addition to the team order (to slot 1)
+- tweaked debug levels so `/dbox debug 2` is both informative but not too floody.
+  (run at least with `/dbox debug 1` if troubleshooting something)
+- lowered retry/refresh to 3s
+- don't popup the master dialog if we just did a full init `/dbox init`, take 2
+- don't reset max retries when trying to re join every 5 failures
+
+1.4.4 June 28th 2019
+- More checks for bad channel which seems to happen _sometimes_
+
+1.4.3 June 28th 2019
+- Moved now unnecessary random token generator UI out of DynamicBoxer into its own Addon
+  https://github.com/mooreatv/RandomGenerator
+  (making this one 12k lighter)
+- Fixed issue where if the original isboxer team was cross realm the substitution was incorrect
+  also added more safeguard for unexpected issues with isboxer generated lua
+- Make "/dbox show" accept ensure initial handshake is retried
+- Address the fact that joining channel can succeed at first, then fail later (!) so we rejoin
+
+1.4.2 June 27th 2019
+- Significantly reduced resend/retries thus also reducing throttling and lag (Issue #26)
+- Adding EMA and EMA-Classic to optional deps so we can get handle to EMA at load time
+- Clear EMA team at start to avoid extra messages
+- Refreshes EMA team display order once team is complete
+- Fixed issue #25 where optimization added in 1.4.1 broke the simple reload in same realm case
+- Use MoLib to/fromTable in LRU class and new 100th second log timestamp
+
+1.4.1 June 27th 2019
+- Fixes for Issue #22 (Thanks Darknight for the debugging session)
+- Use (broadcast) `/dbox show` when logging in new cross realm characters, copy from slot 1,
+  paste and hit enter everywhere (broadcast Ctrl-V and return key)
+- Use new MoLib with 35s default (changeable) threshold for invalidating messages (from 15s before)
+- Better printing of new vs changing team slot assignment
+- Fixed unable to paste (longer) token after using a shorter one in /dbox init or show
+- adding `/dbox version` to confirm/echo the version. pruned the list of commands shown from help ("/dbox")
+- fix background lua error and failure to detect EMA isn't present
+- fix case where popup on master wouldn't auto close (cross message trigger instead of channel)
+- fix bug where new master would try to message the old master (if token points to old master)
+- when cross realm try to sync up to 3 times to get full team, this fixes the most common cases of sync
+
+1.4.0 June 26th 2019
+- Cross realm support: Added new communication/sync direct channel to allow for cross realm boxing (message the slot1/master).
+  - Check if we are on the same realm and use alternate direct messaging when we're not.
+  - Use the new MoLib CreateSecureMessage() and VerifySecureMessage() to create signed secured messages
+  - We use regular chat whispers as the addon whispers do not work cross realm (!), with a `whisperPrefix`)
+    We forward authenticated, new messages to the channel and we reply with our own known set.
+  - Loop/misconfiguration(bug) detection
+  - Limitations in this version (to be improved soon but it's already very usable/big step from 1.3):
+    - You may need to issue "/dbox m" on the slaves that aren't in master realm if you reload the master
+    - You may need to type "/dbox show" on the master to copy paste to the out of realm slaves "/dbox init" when changing master
+- Implemented issue #15: Reset the EMA team to be exactly the dynamic team, in slot order
+- Updated toc for BfA patch 8.2 (still works on classic too!)
+- Changed all functions to use : so I spent less time chasing silly error where I called with . instead of : or vice versa
+- Changed hashing to be 64 bits (2 32 bits hashes to be precise). It means your previous token will be invalidated (sorry!)
+- `/dbox reset` now takes a mandatory extra argument: `/dbox reset all` for previous all reset behavior and
+  new `team` and `token` options to clear the team history and the token, respectively.
+- Integrated MoLib's LRU for keeping last N masters
+- Fixed bug when changing master to longer one, the dbox show would be truncated to old length
+- Fixed bug where even on channel comm the data was sent twice
+
+1.3.0 June 22nd 2019
+- adding `/dbox show` to show the current master token (Issue #16)
+- adding `/dbox reset` to clear all saved variables (start from scratch) this has similar effect to prexisting /dbox init but
+  allows to completely clear all state (follow with /reload for it to take effect)
+- removed `/dbox channel` and `/dbox secret` as the token is now handled through ui; adding `/dbox set` to
+  set token string from the command line instead of the UI (but /dbox show/init is better)
+- Master automatically enables "show token" (/dbox show) when it detects a change in team,
+  so you can add members/copy existing token. Issue #17.
+  And it automatically closes it once the team is complete !
+  (broadcast the existing since 1.0 `/dbox init` if you want to change tokens across windows instead of reuse the last one)
+- Fixed #18 (bug with extra GetParent():Hide() causing master cancel button to hide UI)
+
+
+1.2.0 June 18th 2019
+- Revamped simpler yet better and safer setup UI. One time setup is now only 3 broadcasted keystrokes:
+   Ctrl-C , Ctrl-V , Return  (copy, paste, enter; that's it !)
+- Fixed potential issue (as previously cross realm wasn't working anyway) issue with name-realm search and replace
+  now using MoLib's ReplaceAll which properly escapes all lua gsub characters for literal search and replace.
+
+1.1.2 June 17th 2019
+- Fix issue #10 to allow original isboxer characters to be substring of one another, as well as new team characters
+  (normalizes team in 2 passes)
+- Also address another TODO to remove unnecessary realm when same as self, earlier
+
+1.1.1 June 13th 2019
+- Avoid rejoining the same channel right away while doing /dbox init setup UI (needed to clear a few more state)
+
+1.1.0 June 13th 2019
+- Added optional id/password generator, you can tab between the 2 copy/paste etc (can be used for channel
+but mostly for the secret, it must be pasted on all windows, if copied, `/dbox random` to get just this utility)
+(Issue #8) with lots of work/learning to get a cool fixed width narrow display and handle tab, escape, click, select,
+typing etc as one may expect.
+- Handle trial accounts where BattleNet info is nil (Issue #7)
+  as part of fix prefix provided channel name with DynamicBoxer4, if left empty (but don't) uses "demo"
+- Static dialogs are reusing widgets without reinitializing them (!) so changes made in UI config
+ need to be reverted on OnHide (like clearing password field)
+- make sure we leave previous channel when doing "/dbox init"
+- fix bug on macro rewrite when missing slots (lua ipairs stops at first hole)
+
+1.0.0 June 11th 2019 - ***1.0*** After 6 alpha/beta releases
+- Added UI (2 step dialog boxes, ran only once per account) to set channel/secret pair (Issue #2)
+- Also re runnable using `/dbox init` later
+- Limit maximum number of times we'll try sending/syncing (to 20 times/20s after channel join or /dbox m command)
+- DynBoxer.enabled boolean to turn off dynboxer even if loaded/running (used when user cancels out of the setup UI)
+- Luacheck'ed and some reformatting to 120 columns
+- Ensure `/dbox j` always sends the sync message
+- With all the above and testing showing things working, we are I believe feature complete for 1.0 and out of prototype mode!
+
+0.1.5 June 10th 2019
+- Fix for lua error when not running in multiboxing setup (Issue #3)
+- Fix duplicate join event/messages
+- Debug output now has multiple verbosity level, use /dbox debug 9 for most verbose (new MoLib support for it)
+- Cleanup retries
+- Handle message send failure
+
+0.1.4 June 10th 2019
+- Fix /reload on one character needing to rebroadcast from others (Issue #1)
+- Better color scheme
+- Only show isboxer warnings about bindings the first time
+- Split into 3 files for clarity and keeping ISBoxer code changes in one place
+- Refactor hooking to be cleaner and more generic and not conflict with our own functions
+- Globe lint fixes
+
+0.1.3 June 7th 2019
+- Auto resync on channel join
+
+0.1.2 June 7th 2019
+- First working version !! (and loads correctly along ISBoxer as independent addon)
+- Support for saved variables
+- Fix for ISBoxer loading bindings too early (when realm name isn't yet available), unregister its UPDATE_BINDINGS
+- updated /dbox help and commands
+- patches to isboxer.SetMacro so it can be ran more than once
+- need to use short name without realm when realm is same (!)
+
+0.1.1 June 7th 2019
+- Same as 0.1.0 without the logo in the addon zip
+
+0.1.0 June 7th 2019
+- Initial build as separate addon
+
+commit 5434f70c5f4242488513368f4587b60030c6a504
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Sat Jun 8 05:32:21 2019 -0700
+
+make dynamicboxer its own addon
+
+commit 1c8247560579b349e16bef77197310d3514f6a4c
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Sat Jun 8 05:25:24 2019 -0700
+
+new working  DB.ReconstructTeam()
+
+using hooks into isboxer
+
+so we can move to be independant addon instead of patching isboxer
+
+commit 2735bc9aa31b8360769ee5fd18fb5d04b8686b03
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Thu Jun 6 21:17:43 2019 -0700
+
+use MoLib
+
+commit 0a7ff2de92973b7b0af9c10ff0d7dad61e2445f2
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Tue Jun 4 23:43:28 2019 -0700
+
+use bnet for channel
+
+commit 96c741aeb8d9d07fd00786a17f91baf6559ebbd1
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Thu May 30 03:21:37 2019 -0700
+
+delay initialization (avoids the channel end up being /1)
+
+commit 5d770e3f539c220f695613f8691e274c0d8e78d1
+Author: Moorea Tv <moorea@ymail.com>
+Date:   Thu May 30 01:52:59 2019 -0700
+
+wip
