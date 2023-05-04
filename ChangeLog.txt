@@ -4,6 +4,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.11.00 May 3rd 2023
+- DragongFlight 10.1.0 toc update + new addon icon (artist contributions welcome for a better one)
+- Fix for legacy with reset of options
+
 v3.10.10 March 26th 2023
 - Legacy (3.3.5a) compatibility: fixed whispers to work (drop realm)
 

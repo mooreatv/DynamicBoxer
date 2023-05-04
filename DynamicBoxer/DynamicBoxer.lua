@@ -837,7 +837,7 @@ function DB:PartyInvite(continueFrom, retries)
     if k < continueFrom then
       DB:Debug("skipping % as we are continuing from %", k, continueFrom)
     elseif k > lastInv then
-      DB:Debug("Done with % invites", DB.maxParty)
+      DB:Debug("Done with % invites (lastInv %)", DB.maxParty, lastInv)
       return
     elseif k == DB.ISBIndex then
       DB:Debug("Slot %: is us, not inviting ourselves.", k)

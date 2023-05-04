@@ -638,6 +638,9 @@ function DB:CreateOptionsPanel()
     DB:SetSaved("useUIScale", useUIScaleButton:GetChecked())
     DB:SetSaved("autoRaid", raid)
     local maxP = maxParty:GetValue()
+    if maxP == 0 then
+      maxP = 5
+    end
     DB:SetSaved("maxParty", maxP)
     DB:SetSaved("showIdAtStart", idAtStart:GetChecked())
     DB:SetSaved("delayAccept", delayAccept:GetChecked())

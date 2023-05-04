@@ -1,4 +1,4 @@
-## Interface: 100007
+## Interface: 100100
 ## Title: DynamicBoxer
 ## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
 ## Notes: Dragonflight edition
@@ -14,6 +14,7 @@
 ## X-Curse-Project-ID: 323794
 ## X-Wago-ID: VBNBjqNx
 ## X-WoWI-ID: 25009
+## IconTexture: Interface\AddOns\DynamicBoxer\DynamicBoxerIcon.png
 MoLib\MoLib.lua
 MoLib\MoLibUI.lua
 MoLib\Realms.lua
