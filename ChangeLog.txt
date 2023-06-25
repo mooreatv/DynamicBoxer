@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.11.01 June 24th 2023
+- Wrath 3.4.2
+
 v3.11.00 May 3rd 2023
 - DragongFlight 10.1.0 toc update + new addon icon (artist contributions welcome for a better one)
 - Fix for legacy with reset of options
