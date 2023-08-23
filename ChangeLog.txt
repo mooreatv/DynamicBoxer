@@ -4,6 +4,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.11.02 Aug 22nd 2023
+- Update for Classic 1.14.4 - in time for Classic Hardcore launch!
+- and also DF 10.1.5 toc
+
 v3.11.01 June 24th 2023
 - Wrath 3.4.2
 

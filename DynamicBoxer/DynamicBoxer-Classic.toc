@@ -1,4 +1,4 @@
-## Interface: 11403
+## Interface: 11404
 ## Title: DynamicBoxer
 ## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
 ## Notes: Classic (Era and SoM) edition
