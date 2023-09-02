@@ -1750,6 +1750,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     -- for debug, needs exact match (of start of "debug ..."):
   elseif cmd == "c" then
     DB:ShowConfigPanel(DB.optionsPanel)
+--[[
   elseif cmd == "e" then
     if DB:StartsWith(arg, "enable") then
       -- enable
@@ -1783,6 +1784,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
       DB:Debug("Calling  EventTraceFrame_HandleSlashCmd(%)", rest)
       EventTraceFrame_HandleSlashCmd(rest)
     end
+]]--
   elseif DB:StartsWith(arg, "debug") then
     -- debug
     if rest == "on" then

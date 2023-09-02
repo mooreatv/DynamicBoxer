@@ -510,6 +510,7 @@ function DB:CreateOptionsPanel()
 
   local debugLevel = p:addSlider("Debug level", "Sets the debug level\n|cFF99E5FF/dbox debug X|r", 0, 9, 1, "Off")
                        :Place(16, 30)
+--[[
 
   p:addButton("Event Trace", "Starts the blizzard Event Trace with DynamicBoxer saved filters\n|cFF99E5FF/dbox event|r",
               "event"):Place(0, 20)
@@ -518,6 +519,8 @@ function DB:CreateOptionsPanel()
     :PlaceRight()
 
   p:addButton("Clear Filters", "Clear saved filtered Events\n|cFF99E5FF/dbox event clear|r", "event clear"):PlaceRight()
+
+]] --
 
   p:addText("Choose a |cFFFF1010reset|r option:"):Place(0, 30)
 
