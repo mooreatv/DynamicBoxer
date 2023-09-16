@@ -1750,9 +1750,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
     -- for debug, needs exact match (of start of "debug ..."):
   elseif cmd == "c" then
     DB:ShowConfigPanel(DB.optionsPanel)
---[[
   elseif cmd == "e" then
-    if DB:StartsWith(arg, "enable") then
       -- enable
       if rest == "off" then
         DB:Warning("Now PAUSED.")
@@ -1761,8 +1759,7 @@ function DB.Slash(arg) -- can't be a : because used directly as slash command
         DB:PrintDefault("DynamicBoxer is enabled")
         DB:SetWatchedSaved("enabled", true)
       end
-      return
-    end
+--[[
     UIParentLoadAddOn("Blizzard_DebugTools")
     -- hook our code, only once/if there are no other hooks
     if EventTraceFrame:GetScript("OnShow") == EventTraceFrame_OnShow then

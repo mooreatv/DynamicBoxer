@@ -4,6 +4,9 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.11.05 Sept 16th 2023
+- Bug fix: restore the `/dbox enable` command (got lost in 3.11.3 when I removed the etrace code under same prefix)
+
 v3.11.04 Sept 6th 2023
 - Dragonflight is now 10.1.7 (please report any issue as I am personally mostly Hardcore classic currently)
 
