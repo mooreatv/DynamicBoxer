@@ -1214,6 +1214,7 @@ DB.EventHdlrs = {
       self["maxIter"] = 1
     end
   end,
+--[[ Once upon a time we use to look at / debug events - comment out for now as for instance EXECUTE_CHAT_LINE is gone.
 
   CHAT_MSG_CHANNEL_LEAVE = function(self, ...)
     self:DebugEvCall(1, ...)
@@ -1266,6 +1267,8 @@ DB.EventHdlrs = {
   CHAT_MSG_BN_WHISPER = function(self, ...)
     self:DebugEvCall(3, ...)
   end,
+
+  --]]
 
   GROUP_ROSTER_UPDATE = function(self, ...)
     local num = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME)

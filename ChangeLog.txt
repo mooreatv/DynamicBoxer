@@ -4,6 +4,10 @@ Coming next:
 - Your input/suggestions welcome !
 - See open issues for ideas https://github.com/mooreatv/DynamicBoxer/issues
 
+v3.11.06 Oct 24th 2023
+- Wrath is now 3.4.3
+- Fix bug / lua error with now gone EXECUTE_CHAT_LINE debug
+
 v3.11.05 Sept 16th 2023
 - Bug fix: restore the `/dbox enable` command (got lost in 3.11.3 when I removed the etrace code under same prefix)
 
