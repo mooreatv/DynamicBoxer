@@ -1,7 +1,7 @@
-## Interface: 30403
+## Interface: 40400
 ## Title: DynamicBoxer
 ## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
-## Notes: Wrath of the Lich King Classic Edition
+## Notes: Cataclysm Classic Edition
 ## Author: MooreaTV moorea@ymail.com
 ## Version: @project-version@
 ## DefaultState: Enabled

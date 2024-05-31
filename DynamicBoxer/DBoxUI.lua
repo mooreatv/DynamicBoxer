@@ -946,7 +946,7 @@ function DB:ShowBigInfo(autohide)
   end
   local s = f:addText(slotStr, fo):Place(offset, 20, "TOP", "BOTTOM")
   s:SetJustifyH("CENTER")
-  s:SetJustifyV("CENTER")
+  s:SetJustifyV("MIDDLE")
   local t = DB:GetFactionTexture(f, DB.faction)
   if t then
     local offx = 12
@@ -972,11 +972,11 @@ function DB:ShowBigInfo(autohide)
   class:PlaceRight(16, 0, "LEFT", "RIGHT")
   local n = f:addText(DB.shortName, fo):Place(0, -6, "TOP", "BOTTOM")
   n:SetJustifyH("CENTER")
-  n:SetJustifyV("CENTER")
+  n:SetJustifyV("MIDDLE")
   n:SetTextColor(.6, .9, 1, .9)
   local r = f:addText(DB.myRealm, fo):Place(0, 16, "TOP", "BOTTOM")
   r:SetJustifyH("CENTER")
-  r:SetJustifyV("CENTER")
+  r:SetJustifyV("MIDDLE")
   f:Scale(0) -- override padding
   DB:Debug("w % h % s % %", f:GetWidth(), f:GetHeight(), f:GetScale(), f:GetEffectiveScale())
 end
