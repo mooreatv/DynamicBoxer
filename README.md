@@ -32,6 +32,8 @@ Releases detail/changes are on https://github.com/mooreatv/DynamicBoxer/releases
 
 **New** You can now get DynamicBoxer benefits without requiring the use of the banned ISBoxer: just add MAMA: https://www.curseforge.com/wow/addons/mama-multiboxing
 
+This works on Wow classic era, hardcore, Season of Discovery, Cataclysm classic, Dragonflight and the upcoming War Within and even somewhat on legacy 3.3.5a
+
 ### Q&A
 
 #### Q: What does it do ?
