@@ -677,7 +677,7 @@ function DB:CreateOptionsPanel()
     end
   end
   -- Add the panel to the Interface Options
-  InterfaceOptions_AddCategory(DB.optionsPanel)
+  DB:ConfigPanel(DB.optionsPanel)
 end
 
 local slotToText = function(self, slot)

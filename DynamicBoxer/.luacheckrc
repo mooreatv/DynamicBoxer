@@ -39,7 +39,6 @@ globals = {
     "GetSpecialization",
     "GetSpecializationInfo",
     "GetUnitName",
-    "InterfaceOptions_AddCategory",
     "LeaveChannelByName",
     "LeaveParty",
     "LE_PARTY_CATEGORY_HOME",
