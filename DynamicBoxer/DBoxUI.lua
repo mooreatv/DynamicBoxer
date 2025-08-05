@@ -203,7 +203,7 @@ StaticPopupDialogs["DYNBOXER_SLAVE"] = {
   -- OnHide = DB.OnSlaveUIHide,
   EditBoxOnEnterPressed = function(self, data)
     local widget = self:GetParent()
-    local button1 = widget.button1 or widget.GetButton1()
+    local button1 = widget.button1 or widget:GetButton1()
     if button1:IsEnabled() then
       DB.OnSetupUIAccept(widget, data)
     end
@@ -224,7 +224,7 @@ StaticPopupDialogs["DYNBOXER_SLAVE"] = {
     end
     data.previous = text
     DB.OnSlaveUIShow(widget, data)
-    local button1 = widget.button1 or widget.GetButton1()
+    local button1 = widget.button1 or widget:GetButton1()
     if DB:IsValidToken(text) then
       button1:Enable()
     else
