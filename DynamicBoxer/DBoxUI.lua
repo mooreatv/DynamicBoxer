@@ -22,7 +22,7 @@ DB.useUIScale = true
 
 function DB.OnSlaveUIShow(widget, data)
   DB:Debug("Slave UI Show")
-  local e = widget.editBox
+  local e = widget.editBox or widget:GetEditBox()
   local newText = e:GetText()
   DB.fontString:SetFontObject(e:GetFontObject())
   -- just to get a starting length
@@ -54,14 +54,15 @@ end
 function DB.OnSetupUIAccept(widget, data, data2)
   DB:Debug("SetupUI Accept")
   DB:Debug(9, "SetupUI Accept w=% d1=% d2=%", widget, data, data2)
-  local token = widget.editBox:GetText()
+  local e = widget.editBox or widget:GetEditBox()
+  local token = e:GetText()
   -- returns isValid, master, tok1, tok2
   local valid, masterName, tok1, tok2 = DB:ParseToken(token)
   if not valid then
     DB:Warning("Invalid token % !", token)
     return true
   end
-  widget.editBox:SetMaxLetters(0)
+  e:SetMaxLetters(0)
   widget:Hide()
   DB.inUI = false
   if DB.MasterToken == token and DB.watched.enabled and not DB.newToken then
@@ -93,7 +94,8 @@ function DB.OnUICancel(widget, _data)
   DB.watched.enabled = false -- avoids a loop where we keep trying to ask user
   DB.inUI = false
   widget:Hide()
-  widget.editBox:SetMaxLetters(0)
+  local e = widget.editBox or widget:GetEditBox()
+  e:SetMaxLetters(0)
   if DB.MasterToken and #DB.MasterToken > 0 then
     DB:Warning("Escaped/cancelled from exchange token UI (use <return> key to close normally when done copy pasting)")
   else
@@ -110,17 +112,19 @@ end
 
 function DB.OnMasterUIShow(widget, data)
   DB:Debug("Master UI Show/Regen data is %", data)
-  local e = widget.editBox
+  local e = widget.editBox or widget:GetEditBox()
   local masterName, tok1, tok2
-  widget.button3:Enable()
+  local button2 = widget.button2 or widget:GetButton2()
+  local button3 = widget.button3 or widget:GetButton3()
+
   if data and data.masterName and data.token1 and data.token2 then
     -- there is existing data to just show/reuse
     masterName = data.masterName
     tok1 = data.token1
     tok2 = data.token2
-    widget.button2:Disable()
+    button2:Disable()
     if DB:WeAreMaster() then
-      widget.button3:Disable() -- remove Cancel on master as there is nothing to cancel
+      button3:Disable() -- remove Cancel on master as there is nothing to cancel
     end
     DB.newToken = false
   else
@@ -128,7 +132,7 @@ function DB.OnMasterUIShow(widget, data)
     masterName = DB.fullName
     tok1 = DB:RandomId(DB.randomIdLen)
     tok2 = DB:RandomId(DB.randomIdLen)
-    widget.button2:Enable()
+    button2:Enable()
     DB.newToken = true
   end
   local newText = DB:CreateToken(masterName, tok1, tok2)
@@ -152,8 +156,11 @@ end
 StaticPopupDialogs["DYNBOXER_MASTER"] = {
   text = "DynamicBoxer one time setup:\nCopy this and Paste in the other windows",
   button1 = OKAY,
+--  Button1 = OKAY, -- maybe new name for button1
   button2 = "Randomize",
+--  Button2 = "Randomize", -- new name for button2
   button3 = CANCEL,
+--  Button3 = CANCEL, -- new name for button3
   timeout = 0,
   whileDead = true,
   hideOnEscape = 1, -- doesn't help when there is an edit box, real stuff is:
@@ -196,7 +203,8 @@ StaticPopupDialogs["DYNBOXER_SLAVE"] = {
   -- OnHide = DB.OnSlaveUIHide,
   EditBoxOnEnterPressed = function(self, data)
     local widget = self:GetParent()
-    if widget.button1:IsEnabled() then
+    local button1 = widget.button1 or widget.GetButton1()
+    if button1:IsEnabled() then
       DB.OnSetupUIAccept(widget, data)
     end
   end,
@@ -216,10 +224,11 @@ StaticPopupDialogs["DYNBOXER_SLAVE"] = {
     end
     data.previous = text
     DB.OnSlaveUIShow(widget, data)
+    local button1 = widget.button1 or widget.GetButton1()
     if DB:IsValidToken(text) then
-      widget.button1:Enable()
+      button1:Enable()
     else
-      widget.button1:Disable()
+      button1:Disable()
     end
   end,
   hasEditBox = true
