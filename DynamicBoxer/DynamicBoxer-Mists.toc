@@ -1,7 +1,7 @@
-## Interface: 40402
+## Interface: 50500
 ## Title: DynamicBoxer
 ## Notes: Manage multiboxing teams dynamically and more (|cFF99E5FF/dbox|r)
-## Notes: Cataclysm Classic Edition
+## Notes: Mists of Pandaria Classic Edition
 ## Author: MooreaTV moorea@ymail.com
 ## Version: @project-version@
 ## DefaultState: Enabled
